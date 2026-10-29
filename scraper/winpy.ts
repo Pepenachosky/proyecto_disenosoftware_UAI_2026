@@ -1,5 +1,5 @@
 // Scraper de nombres de productos de Winpy (solo fetch + parser HTML).
-// Uso:  deno run --allow-net --allow-env winpy.ts [cpu|gpu|ram]
+// Uso:  deno run --env-file=.env --allow-net --allow-env winpy.ts [cpu|gpu|ram]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 
 import { DOMParser } from "npm:linkedom@0.18.5";
@@ -12,11 +12,20 @@ const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 type Category = "cpu" | "gpu" | "ram";
 
 // Solo se usan URLs sin filtros: Winpy prohíbe /*filtro=* en su robots.txt.
-// OJO: solo "cpu" fue verificada contra el HTML real; gpu y ram se asumen iguales.
-const CATEGORIES: Record<Category, string[]> = {
-  cpu: ["/partes-y-piezas/procesadores/"],
-  gpu: ["/partes-y-piezas/tarjetas-graficas/"],
-  ram: ["/memorias/ram-computadores/", "/memorias/ram-notebook/"],
+// Se usan las subpáginas de RAM para PC y notebook (se deja fuera la RAM de servidores).
+// "accept" es un seguro extra: solo se guardan nombres que lo cumplan.
+// OJO: cpu, gpu y el formato de /memorias/ se verificaron con HTML real; las
+// subpáginas de ram se asumen iguales.
+const CATEGORIES: Record<Category, { paths: string[]; accept?: RegExp }> = {
+  cpu: { paths: ["/partes-y-piezas/procesadores/"] },
+  gpu: {
+    paths: ["/partes-y-piezas/tarjetas-graficas/"],
+    accept: /^tarjeta gr[aá]fica/i, // descarta los "Kit Tarjeta gráfica + procesador"
+  },
+  ram: {
+    paths: ["/memorias/ram-computadores/", "/memorias/ram-notebook/"],
+    accept: /\bDDR[2-5]\b/i, // descarta pendrives, tarjetas SD, etc.
+  },
 };
 
 export interface ScrapedProduct {
@@ -125,11 +134,15 @@ if (import.meta.main) {
       console.error(`Categoría desconocida: ${cat} (usa cpu, gpu o ram)`);
       Deno.exit(1);
     }
-    const items: ScrapedProduct[] = [];
-    for (const path of CATEGORIES[cat]) {
-      items.push(...await scrapeCategory(path));
+    const { paths, accept } = CATEGORIES[cat];
+    const found = new Map<string, ScrapedProduct>(); // sin duplicados por URL
+    for (const path of paths) {
+      for (const p of await scrapeCategory(path)) found.set(p.url, p);
       await sleep(DELAY_MS);
     }
+    const items = [...found.values()].filter((p) => !accept || accept.test(p.name));
+    const descartados = found.size - items.length;
+    if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);
     console.log(`\n${cat}: ${items.length} productos`);
     for (const p of items.slice(0, 5)) console.log(`  - ${p.name}`);
     await save(items, cat);

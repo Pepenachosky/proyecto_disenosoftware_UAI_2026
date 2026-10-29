@@ -1,5 +1,5 @@
 // Scraper de nombres de productos de PC Express (solo fetch + parser HTML).
-// Uso:  deno run --env-file=.env --allow-net --allow-env pcexpress.ts [cpu]
+// Uso:  deno run --env-file=.env --allow-net --allow-env pcexpress.ts [cpu|ram|gpu]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 
 import { DOMParser } from "npm:linkedom@0.18.5";
@@ -9,25 +9,43 @@ const DELAY_MS = 5_000; // robots.txt no declara crawl-delay: 5 s por cortesía
 const MAX_PAGES = 10; // tope de páginas por subcategoría
 const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 
-type Category = "cpu";
+type Category = "cpu" | "ram" | "gpu";
 
-// Página general de procesadores: sus botones llevan a una subcategoría por socket.
+// Cada categoría parte de una página general cuyos botones llevan a subcategorías.
+//  - pick: qué botones se recorren (se descartan p. ej. "Ventilacion para CPU", "Pendrive").
+//  - accept: seguro extra, solo se guardan nombres que lo cumplan.
 // Nunca se usan sort, order, limit ni filter_*: su robots.txt los prohíbe.
-const GENERAL_URL = `${BASE}/index.php?route=product/category&path=460_473`;
+// OJO: el formato de cpu se verificó con HTML real de AM4; ram y gpu solo con la página general.
+const CATEGORIES: Record<Category, { path: string; pick: RegExp; accept: RegExp }> = {
+  cpu: { path: "460_473", pick: /^cpu\b/i, accept: /^procesador/i },
+  gpu: {
+    path: "460_475",
+    // Solo las subpáginas PCIe (AMD Radeon, NVIDIA, Profesionales, Intel Arc); se omite AGP.
+    pick: /^t \/ video pcie/i,
+    accept: /^tarjeta (de )?(video|gr[aá]fica)/i, // descarta puentes NVLink, soportes, etc.
+  },
+  ram: {
+    path: "72",
+    pick: /^memorias para (pc|notebook)$/i,
+    accept: /DDR[2-5]|DIMM/i, // descarta memorias SD / flash / pendrives
+  },
+};
+
+const generalUrl = (path: string) => `${BASE}/index.php?route=product/category&path=${path}`;
 
 export interface Subcategory {
   name: string;
   url: string;
 }
 
-/** Lee los botones de socket de la página general. Solo deja los "CPU ..." (descarta p. ej. "Ventilacion para CPU"). */
-export function parseSubcategories(html: string): Subcategory[] {
+/** Lee los botones de subcategoría de una página general y deja los que cumplan "pick". */
+export function parseSubcategories(html: string, path: string, pick: RegExp): Subcategory[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const found = new Map<string, Subcategory>();
-  for (const a of doc.querySelectorAll('a.btn[href*="path=460_473_"]')) {
+  for (const a of doc.querySelectorAll(`a.btn[href*="path=${path}_"]`)) {
     const name = a.textContent.replace(/\s+/g, " ").trim();
     const href = a.getAttribute("href");
-    if (!name || !href || !/^cpu\b/i.test(name)) continue;
+    if (!name || !href || !pick.test(name)) continue;
     found.set(href, { name, url: new URL(href, BASE).href });
   }
   return [...found.values()];
@@ -124,18 +142,19 @@ async function save(items: ScrapedProduct[], category: Category) {
 
 if (import.meta.main) {
   const cat = (Deno.args[0] ?? "cpu") as Category;
-  if (cat !== "cpu") {
-    console.error("Por ahora solo está disponible: cpu");
+  const cfg = CATEGORIES[cat];
+  if (!cfg) {
+    console.error("Categoría desconocida: usa cpu, ram o gpu");
     Deno.exit(1);
   }
 
-  console.log("Buscando los sockets en la página general de procesadores...");
-  const subs = parseSubcategories(await fetchHtml(GENERAL_URL));
+  console.log(`Buscando subcategorías de ${cat} en la página general...`);
+  const subs = parseSubcategories(await fetchHtml(generalUrl(cfg.path)), cfg.path, cfg.pick);
   if (subs.length === 0) {
-    console.error("No encontré botones de socket: ¿cambió el HTML de la página general?");
+    console.error("No encontré botones de subcategoría: ¿cambió el HTML de la página general?");
     Deno.exit(1);
   }
-  console.log(`Sockets encontrados: ${subs.map((s) => s.name).join(", ")}\n`);
+  console.log(`Encontradas: ${subs.map((s) => s.name).join(", ")}\n`);
 
   const found = new Map<string, ScrapedProduct>(); // sin duplicados por URL
   for (let i = 0; i < subs.length; i++) {
@@ -143,10 +162,9 @@ if (import.meta.main) {
     for (const p of await scrapeSubcategory(subs[i])) found.set(p.url, p);
   }
 
-  // Seguro extra: solo se guardan nombres que empiezan con "procesador".
-  const items = [...found.values()].filter((p) => /^procesador/i.test(p.name));
+  const items = [...found.values()].filter((p) => cfg.accept.test(p.name));
   const descartados = found.size - items.length;
-  console.log(`\n${cat}: ${items.length} productos` + (descartados ? ` (${descartados} descartados por no ser procesadores)` : ""));
+  console.log(`\n${cat}: ${items.length} productos` + (descartados ? ` (${descartados} descartados por no coincidir con la categoría)` : ""));
   for (const p of items.slice(0, 5)) console.log(`  - ${p.name}`);
   await save(items, cat);
 }
