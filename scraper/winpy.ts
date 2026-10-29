@@ -1,4 +1,4 @@
-// Scraper de nombres de productos de Winpy (solo fetch + parser HTML).
+// Scraper de productos de Winpy: nombre, precio y stock (solo fetch + parser HTML).
 // Uso:  deno run --env-file=.env --allow-net --allow-env winpy.ts [cpu|gpu|ram]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 
@@ -31,6 +31,16 @@ const CATEGORIES: Record<Category, { paths: string[]; accept?: RegExp }> = {
 export interface ScrapedProduct {
   name: string;
   url: string;
+  price: number | null; // CLP, entero
+  // true = Winpy muestra "Retiro Inmediato" o "Despacho Express" (hay stock a mano).
+  // null = el listado no dice nada (ver nota en parseListing).
+  inStock: boolean | null;
+}
+
+/** "$ 94.240" -> 94240 (los puntos son separador de miles en CLP). */
+function parsePrice(text: string | undefined): number | null {
+  const digits = (text ?? "").replace(/\D/g, "");
+  return digits ? Number(digits) : null;
 }
 
 /** Extrae productos y enlaces de paginación de una página de listado. */
@@ -45,7 +55,15 @@ export function parseListing(
     const name = link?.textContent.replace(/\s+/g, " ").trim();
     const href = link?.getAttribute("href");
     if (!name || !href) continue;
-    products.push({ name, url: new URL(href, BASE).href });
+
+    // Precio vigente: <p class="valor">$ 94.240</p> (el "-9%" de .descuento es solo informativo).
+    const price = parsePrice(article.querySelector("p.valor")?.textContent);
+
+    // Stock: los botones de .opciones solo aparecen cuando Winpy tiene el producto disponible.
+    // Un artículo con .opciones vacío no trae ninguna señal de stock: no se asume agotado.
+    const hasButton = article.querySelector(".opciones button.btnRetiroInmediato, .opciones button.btnExpress") !== null;
+
+    products.push({ name, url: new URL(href, BASE).href, price, inStock: hasButton ? true : null });
   }
 
   const pages = [...doc.querySelectorAll(".paginador a")]
@@ -95,11 +113,10 @@ async function save(items: ScrapedProduct[], category: Category) {
     console.log("Sin SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY: modo prueba, no se guarda.");
     return;
   }
-  const headers = {
-    apikey: KEY,
-    Authorization: `Bearer ${KEY}`,
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = { apikey: KEY, "Content-Type": "application/json" };
+  // Las claves nuevas (sb_secret_...) no son JWT y solo van en "apikey".
+  // La clave legacy service_role también se manda como Bearer.
+  if (!KEY.startsWith("sb_")) headers.Authorization = `Bearer ${KEY}`;
 
   const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/stores?slug=eq.winpy&select=id`, { headers });
   const stores = await storeRes.json();
@@ -112,6 +129,9 @@ async function save(items: ScrapedProduct[], category: Category) {
     name: p.name,
     url: p.url,
     category,
+    price: p.price,
+    in_stock: p.inStock,
+    price_updated_at: now,
     last_seen_at: now,
   }));
 
@@ -144,7 +164,7 @@ if (import.meta.main) {
     const descartados = found.size - items.length;
     if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);
     console.log(`\n${cat}: ${items.length} productos`);
-    for (const p of items.slice(0, 5)) console.log(`  - ${p.name}`);
+    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock}`);
     await save(items, cat);
   }
 }

@@ -1,4 +1,4 @@
-// Scraper de nombres de productos de PC Express (solo fetch + parser HTML).
+// Scraper de productos de PC Express: nombre, precio y stock (solo fetch + parser HTML).
 // Uso:  deno run --env-file=.env --allow-net --allow-env pcexpress.ts [cpu|ram|gpu]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 
@@ -54,6 +54,16 @@ export function parseSubcategories(html: string, path: string, pick: RegExp): Su
 export interface ScrapedProduct {
   name: string;
   url: string;
+  price: number | null; // CLP, entero (precio Transferencia, el único que muestra el listado)
+  // true = la tarjeta tiene botón "Agregar al carro".
+  // null = sin botón: el listado no dice si está agotado (nunca se vio uno agotado).
+  inStock: boolean | null;
+}
+
+/** "$728.900" -> 728900 (los puntos son separador de miles en CLP). */
+function parsePrice(text: string | undefined): number | null {
+  const digits = (text ?? "").replace(/\D/g, "");
+  return digits ? Number(digits) : null;
 }
 
 /** Extrae productos y número total de páginas de una subcategoría. */
@@ -63,11 +73,21 @@ export function parseListing(
   const doc = new DOMParser().parseFromString(html, "text/html");
   const products: ScrapedProduct[] = [];
 
-  for (const a of doc.querySelectorAll(".product-list__item .product-list__name a")) {
-    const name = a.textContent.replace(/\s+/g, " ").trim();
-    const href = a.getAttribute("href");
+  for (const item of doc.querySelectorAll(".product-list__item")) {
+    const a = item.querySelector(".product-list__name a");
+    const name = a?.textContent.replace(/\s+/g, " ").trim();
+    const href = a?.getAttribute("href");
     if (!name || !href) continue;
-    products.push({ name, url: new URL(href, BASE).href });
+
+    // Precio vigente: <p class="product-list__price">$728.900</p>. En las ofertas aparece
+    // además <span class="product-list__price-old"> (precio anterior), que se ignora:
+    // el selector ".product-list__price" no lo captura.
+    const price = parsePrice(item.querySelector(".product-list__price")?.textContent);
+
+    // Stock: botón "Agregar al carro" dentro de .product-list__actions.
+    const hasCart = item.querySelector(".product-list__actions button") !== null;
+
+    products.push({ name, url: new URL(href, BASE).href, price, inStock: hasCart ? true : null });
   }
 
   // Texto del pie: "Mostrando del 1 al 7 de 7 (1 páginas)"
@@ -109,11 +129,10 @@ async function save(items: ScrapedProduct[], category: Category) {
     console.log("Sin SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY: modo prueba, no se guarda.");
     return;
   }
-  const headers = {
-    apikey: KEY,
-    Authorization: `Bearer ${KEY}`,
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = { apikey: KEY, "Content-Type": "application/json" };
+  // Las claves nuevas (sb_secret_...) no son JWT y solo van en "apikey".
+  // La clave legacy service_role también se manda como Bearer.
+  if (!KEY.startsWith("sb_")) headers.Authorization = `Bearer ${KEY}`;
 
   const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/stores?slug=eq.pcexpress&select=id`, { headers });
   const stores = await storeRes.json();
@@ -126,6 +145,9 @@ async function save(items: ScrapedProduct[], category: Category) {
     name: p.name,
     url: p.url,
     category,
+    price: p.price,
+    in_stock: p.inStock,
+    price_updated_at: now,
     last_seen_at: now,
   }));
 
@@ -165,6 +187,6 @@ if (import.meta.main) {
   const items = [...found.values()].filter((p) => cfg.accept.test(p.name));
   const descartados = found.size - items.length;
   console.log(`\n${cat}: ${items.length} productos` + (descartados ? ` (${descartados} descartados por no coincidir con la categoría)` : ""));
-  for (const p of items.slice(0, 5)) console.log(`  - ${p.name}`);
+  for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock}`);
   await save(items, cat);
 }

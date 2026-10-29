@@ -133,10 +133,100 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - El listado por defecto oculta los productos agotados, por eso salen pocos productos.
 - Paginación de SP Digital: las tres categorías probadas tenían una sola página.
 
-**Por hacer:**
-- [ ] Agregar a los scrapers (Winpy, PC Express y SP Digital) el precio y el stock de cada producto.
-- [ ] Empezar a hacer el frontend.
-- [ ] Hacer la base de datos (la versión completa con precios, stock, sucursales y horarios; hoy solo existe `simple.sql`).
+---
+
+## Prompt 7: Precio y stock en los scrapers
+
+**Prompt (condensado):**
+> En base a estos 3 scrapers, además del nombre de cada producto, obtén el precio y si hay stock. Te pego el código fuente de Winpy (procesadores) y el de PC Express (RAM de PC).
+
+**Resultado obtenido:**
+- El asistente pidió ver primero el HTML real de cada tienda antes de escribir los selectores, para no dejar precios vacíos sin aviso.
+- **`winpy.ts`:** precio desde `p.valor`, guardado como entero en pesos chilenos. Stock: `true` si la tarjeta tiene el botón "Retiro Inmediato" o "Despacho Express", y `null` (no se sabe) si no trae ninguno, porque el listado nunca dice "agotado". Con el HTML real de procesadores: 40 de 40 con precio, 30 con stock y 10 sin señal de stock. Prueba: `test_winpy_price.ts`.
+- **`pcexpress.ts`:** precio vigente "Transferencia" (`.product-list__price`; en las ofertas se ignora el precio tachado). Stock: `true` si la tarjeta tiene el botón "Agregar al carro". Con el HTML real de RAM de PC: 20 de 20 con precio y stock (solo la página 1 de 4).
+- Ambos scrapers ahora mandan `price`, `in_stock` y `price_updated_at` al guardar en Supabase.
+
+**Decisiones propias:**
+- Pedir el precio y el stock en los tres scrapers.
+- Pegar el HTML real de Winpy y de PC Express (RAM de PC) para que el asistente probara con datos reales.
+- Ejecuté el scraper de PC Express y funcionó bien.
+- Ejecuté `winpy.ts cpu` con Supabase conectado: funcionó y los productos se guardaron con su precio y su stock.
+
+**Pendiente de verificar:**
+- Winpy: qué significa un producto sin botones de entrega (10 de 40, por ejemplo el Intel Core i3-12100): sin stock o entrega normal. Revisar su página de producto.
+- PC Express: 3 productos en oferta muestran un precio anterior más bajo que el vigente (por ejemplo, Kingston `kf432c16bb/8`: tachado $85.000, vigente $93.900). Hoy se guarda el vigente; falta confirmar en la página cuál es el real.
+- PC Express: cómo se ve un producto agotado (no apareció ninguno en el HTML).
+- PC Express: el formato de precios de CPU y GPU no se verificó (solo RAM de PC).
+- SP Digital sigue sin precio ni stock: falta el HTML de una tarjeta completa y de un producto agotado.
+
+---
+
+## Prompt 8: Base de datos completa
+
+**Prompt (condensado):**
+> Hagamos ahora la base de datos en Supabase.
+
+**Resultado obtenido:**
+- `database.sql`, que reemplaza a `simple.sql`. Tablas: `stores` y `products` (con precio, stock y fecha de precio), `price_history`, `store_branches`, `branch_hours`, `branch_stock`, `profiles` y `product_reviews`. Deja cargadas las 3 tiendas.
+- **Historial de precios automático:** un trigger agrega una fila a `price_history` cuando un producto nuevo entra o cambia de precio o de stock. Los scrapers no cambian. No duplica filas si nada cambió, y no registra productos sin precio.
+- **Sucursales:** coordenadas, un tramo horario por día y stock por sucursal. Incluye la función `nearby_branches(lat, lng, radio_km)` para buscar sucursales cercanas.
+- **Seguridad (RLS):** el frontend, con la clave pública, solo puede leer datos públicos. Escriben solo los scrapers con la clave secreta. Cada usuario solo puede crear, editar o borrar sus propias reseñas y ver su propio perfil.
+- Probado en un Postgres local que imita a Supabase: 14 pruebas (script re-ejecutable, historial, restricciones, cercanía de sucursales, perfil automático y permisos).
+
+**Decisiones propias:**
+- Hacer ahora la base de datos completa, en vez de seguir con la versión mínima.
+- Ejecutar `database.sql` en Supabase (los productos llegaron con precio y stock al correr el scraper de Winpy).
+
+**Supuestos del asistente por confirmar:**
+- Las "reseñas" son opiniones de los usuarios de la plataforma (si son las calificaciones de las tiendas, la tabla cambia).
+- Cada sucursal tiene un solo tramo horario por día, sin pausa de almuerzo.
+
+**Pendiente de verificar:**
+- Revisar que `price_history` se llene (y que una segunda corrida sin cambios no agregue filas); por ahora solo se confirmó `products`.
+- Las tablas de sucursales, horarios y stock por sucursal quedan vacías hasta tener esos scrapers.
+- Los perfiles son privados, así que el frontend no podría mostrar el nombre de quien escribió una reseña sin agregar una vista pública.
+
+---
+
+## Prompt 9: Conectar Supabase al proyecto
+
+**Prompt (condensado):**
+> Ayúdame a instalar Supabase en el proyecto. (Después aclaré que uso Vite, que instalé la librería con `deno install` en la carpeta raíz, que ya copié las claves, y pedí que me explicara la tabla `profiles`.)
+
+**Resultado obtenido:**
+- Supabase es un servicio en la nube, no se instala: se crea el proyecto, se ejecuta `database.sql` en el SQL Editor y se copian las claves de Settings → API Keys.
+- **Claves:** la clave pública (`sb_publishable_...`) va en el frontend; la secreta (`sb_secret_...`) solo en los scrapers y nunca en git. Según la documentación de Supabase, las claves antiguas `anon` y `service_role` se dan de baja a fines de 2026.
+- **Scrapers:** `winpy.ts` y `pcexpress.ts` se ajustaron para que la clave secreta nueva se mande solo en el encabezado `apikey` (las nuevas no son JWT). `spdigital.ts` falta.
+- Variables: `scraper/.env` con `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`; `frontend/.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Los `.env` van en `.gitignore`.
+- Se comprobó que `deno install npm:@supabase/supabase-js` hace lo mismo que `deno add` (agrega la entrada a `deno.json`). Vite necesita `"nodeModulesDir": "auto"` para encontrar el paquete.
+- Pasos para probar: correr `winpy.ts cpu`, revisar `products` y `price_history`, y volver a correrlo para ver que el historial no crece si los precios no cambiaron.
+- Explicación de `profiles`: tabla propia, ligada a `auth.users`, que guarda el nombre y el idioma (`es` o `en`) de cada usuario. Se crea sola al registrarse y cada usuario solo ve la suya.
+
+**Decisiones propias:**
+- Usar Vite en el frontend.
+- Instalar `@supabase/supabase-js` con Deno puro.
+- El frontend sigue siendo solo una página de placeholder, por eso el cliente de Supabase se crea más adelante.
+- Instalé la librería en la carpeta raíz; el asistente recomendó moverla a `frontend/` si este tiene su propio `deno.json`.
+- Creé `scraper/.env` con la URL y la clave secreta, y corrí `winpy.ts cpu`: funcionó y los datos llegaron a Supabase.
+- Comprobé que mi `.gitignore` de la raíz (línea `.env`) ignora `scraper/.env` con `git check-ignore -v`. `frontend/` tiene además su propio `.gitignore`.
+
+**Pendiente de verificar:**
+- Correr `pcexpress.ts` y las categorías RAM y GPU contra Supabase.
+- Ubicar `@supabase/supabase-js` en el `deno.json` correcto y agregar `nodeModulesDir`.
+- Aplicar a `spdigital.ts` el ajuste de la clave nueva.
+
+---
+
+## Por hacer (estado actual)
+
+- [x] Precio y stock en los scrapers de Winpy y PC Express.
+- [ ] Precio y stock en el scraper de SP Digital (falta el HTML de una tarjeta completa y de un producto agotado).
+- [x] Diseñar la base de datos completa (`database.sql`).
+- [x] Ejecutar `database.sql` en Supabase y probar `winpy.ts cpu` contra ella (productos con precio y stock guardados).
+- [ ] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
+- [ ] Probar PC Express, y RAM y GPU de Winpy y PC Express, contra los sitios reales y Supabase.
+- [ ] Scrapers de sucursales, horarios y stock por sucursal.
+- [ ] Empezar a hacer el frontend (hoy solo hay una página de placeholder).
 
 ---
 
