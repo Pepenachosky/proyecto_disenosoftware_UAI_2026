@@ -86,7 +86,57 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - Subpáginas de PC Express distintas de AM4, y su paginación (`&page=N`).
 - Incluí las GPU "Profesionales" de PC Express por consistencia con Winpy.
 - Conectar Supabase para guardar los datos.
-- Scraper de SP Digital (requiere navegador).
+- Scraper de SP Digital (requiere navegador), probablemente use playwright para estoq.
+
+---
+
+## Prompt 5: Análisis de SP Digital (tercera tienda)
+
+**Prompt (condensado):**
+> ¿Cómo que SP Digital bloquea las consultas automáticas? Te dejo el resultado de una prueba de `fetch` desde mi computador y el código fuente de su categoría de procesadores. Dime cómo extraer sus productos.
+
+**Resultado obtenido:**
+- Se aclaró que el bloqueo ocurrió con la herramienta web del asistente, desde un servidor, y no necesariamente afecta a un `fetch` desde el computador del proyecto. Se acordó no intentar saltarse ninguna verificación si apareciera.
+- Se entregó una prueba mínima (`test_spdigital.ts`) para comprobar desde el computador del proyecto. Resultado: estado 200 y HTML completo de la portada, sin bloqueo.
+- Del código fuente de la categoría de procesadores se concluyó que el sitio está hecho con Gatsby (React) y que cada producto trae nombre, URL relativa y precios (transferencia y otros medios de pago) dentro del HTML. Los nombres empiezan con "Procesador", así que se puede reutilizar el filtro de respaldo.
+- Se detectó un problema: el HTML inicial trae solo 8 productos y la paginación muestra una sola página. Lo más probable es que el resto se cargue con JavaScript. Se entregó una segunda prueba (`test_spdigital2.ts`) para confirmarlo.
+
+**Decisiones propias:**
+- Probar primero desde mi computador antes de asumir que se necesita un navegador automatizado (Playwright).
+- Pasar el código fuente de la categoría de procesadores como muestra del formato.
+
+**Pendiente de verificar:**
+- Ejecutar `test_spdigital2.ts` y contar cuántos productos ve un `fetch` simple frente a los que se ven en el navegador.
+- Si el resto se carga con JavaScript, decidir entre Playwright (con espera de 5 s y respetando `robots.txt`) y otra tienda como tercera fuente.
+- Escribir `spdigital.ts` con la misma estructura de los otros scrapers.
+
+---
+
+## Prompt 6: Scraper de SP Digital (CPU, RAM y GPU)
+
+**Prompt (condensado):**
+> Ya hice el test de `fetch` y funcionó. Empecemos con los procesadores de SP Digital. Te adjunto los scrapers de Winpy y PC Express para que sigas el mismo estilo. Después te paso el código fuente de RAM y GPU para extender el scraper.
+
+**Resultado obtenido:**
+- `scraper/spdigital.ts`, con la misma estructura que `winpy.ts` y `pcexpress.ts` (`parseListing`, `fetchHtml`, `scrapeCategory`, `save`, lotes de 100, categoría como argumento).
+- Usa solo `fetch` y `linkedom`: las tarjetas de producto vienen en el HTML inicial. Lo que se carga con JavaScript es el stock, que por ahora no se extrae. Por eso no hace falta Playwright.
+- Espera de 5 s entre peticiones (`robots.txt`), sin filtros ni carrito. Si el sitio responde 403, 429 o 503 el scraper se detiene, sin intentar esquivar el bloqueo.
+- Filtros de respaldo: CPU empieza con "Procesador", GPU con "Tarjeta de video", RAM contiene DDR2 a DDR5 (incluye RAM de notebook).
+- Parser probado con el HTML real: 8 de 8 procesadores, 14 de 14 memorias RAM y 5 de 5 tarjetas de video.
+
+**Decisiones propias:**
+- Mostrar los scrapers que ya tenía para mantener el mismo estilo.
+- Ir categoría por categoría, pasando el código fuente de cada una.
+
+**Pendiente de verificar:**
+- Ejecutar `spdigital.ts` contra el sitio real y contra Supabase (solo se probó el parser).
+- El listado por defecto oculta los productos agotados, por eso salen pocos productos.
+- Paginación de SP Digital: las tres categorías probadas tenían una sola página.
+
+**Por hacer:**
+- [ ] Agregar a los scrapers (Winpy, PC Express y SP Digital) el precio y el stock de cada producto.
+- [ ] Empezar a hacer el frontend.
+- [ ] Hacer la base de datos (la versión completa con precios, stock, sucursales y horarios; hoy solo existe `simple.sql`).
 
 ---
 

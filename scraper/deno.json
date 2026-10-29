@@ -1,6 +1,7 @@
 {
   "tasks": {
     "winpy": "deno run --allow-net --allow-env winpy.ts",
-    "pcexpress": "deno run --allow-net --allow-env pcexpress.ts"
+    "pcexpress": "deno run --allow-net --allow-env pcexpress.ts",
+    "spdigital": "deno run --allow-net --allow-env spdigital.ts"
   }
 }
