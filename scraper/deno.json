@@ -1,5 +1,6 @@
 {
   "tasks": {
-    "winpy": "deno run --allow-net --allow-env winpy.ts"
+    "winpy": "deno run --allow-net --allow-env winpy.ts",
+    "pcexpress": "deno run --allow-net --allow-env pcexpress.ts"
   }
 }
