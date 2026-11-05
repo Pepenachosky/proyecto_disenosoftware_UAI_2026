@@ -157,7 +157,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - PC Express: 3 productos en oferta muestran un precio anterior más bajo que el vigente (por ejemplo, Kingston `kf432c16bb/8`: tachado $85.000, vigente $93.900). Hoy se guarda el vigente; falta confirmar en la página cuál es el real.
 - PC Express: cómo se ve un producto agotado (no apareció ninguno en el HTML).
 - PC Express: el formato de precios de CPU y GPU no se verificó (solo RAM de PC).
-- SP Digital sigue sin precio ni stock: falta el HTML de una tarjeta completa y de un producto agotado.
+- SP Digital quedó resuelto después (ver Prompt 10).
 
 ---
 
@@ -213,20 +213,110 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 **Pendiente de verificar:**
 - Correr `pcexpress.ts` y las categorías RAM y GPU contra Supabase.
 - Ubicar `@supabase/supabase-js` en el `deno.json` correcto y agregar `nodeModulesDir`.
-- Aplicar a `spdigital.ts` el ajuste de la clave nueva.
+- El ajuste de la clave nueva en `spdigital.ts` quedó hecho en el Prompt 10.
+
+---
+
+## Prompt 10: Precio y stock de SP Digital
+
+**Prompt (condensado):**
+> Como los precios de SP Digital se obtienen por JavaScript, ¿se puede completar el scraper con `fetch` o debo usar Playwright? (Después pregunté qué buscar en la pestaña Network y pasé el JSON que encontré: primero el de Procesador Intel y luego el de todos los procesadores.)
+
+**Resultado obtenido:**
+- **Corrección de la premisa:** los precios ya venían en el HTML; lo que se cargaba con JavaScript era el stock. Se explicó cómo buscar en DevTools → Network (filtro Fetch/XHR) la petición que trae los datos.
+- **Hallazgo:** SP Digital está hecho con Gatsby y cada categoría tiene un JSON público, `/page-data/categories/<categoría>/page-data.json`, que la propia página pide. Trae para cada producto el nombre, el `slug`, los precios (`metadata.pricing`: `cash` = transferencia, `other` = otros medios) y el stock (`quantityAvailable`, `quantityInStore`, `quantityOnline`). También trae el horario de atención (`openingHours`) y dos bodegas. No hace falta Playwright.
+- **`scraper/spdigital.ts` reescrito** para leer ese JSON en vez de parsear HTML (ya no usa `linkedom`). Guarda el precio de transferencia (`cash`) y `in_stock = quantityAvailable > 0`. La URL del producto es `https://www.spdigital.cl/<slug>/`. Mantiene la espera de 5 s, se detiene ante 403, 429 o 503 sin intentar esquivar el bloqueo, y avisa si una categoría tiene más de una página. Envía la clave secreta nueva de Supabase solo en `apikey`.
+- **Pruebas** (`test_spdigital_price.ts`): con el JSON real, 8 de 8 procesadores con precio y stock; los 3 de Procesador Intel coinciden con los de la categoría completa; 10 casos límite (agotado, sin precio, precio mal formado, sin slug, varias páginas, etc.).
+- Ejecuté `spdigital.ts cpu` y funcionó.
+
+**Decisiones propias:**
+- Buscar yo mismo en la pestaña Network en vez de pasar a Playwright.
+- Pasar los dos JSON (Procesador Intel y todos los procesadores) para que el asistente viera el formato real.
+
+**Supuestos del asistente por confirmar:**
+- El campo `cash` es el precio de transferencia que muestra la web (por ejemplo, $229.990 para el i3-13100F). No se usa `pricing.priceRange`, porque no coincide con ese valor.
+
+**Pendiente de verificar:**
+- Los JSON de RAM y GPU (`componentes-memorias-ram` y `componentes-tarjeta-de-video`) se suponen con el mismo formato, pero no se han visto.
+- (Revisado después: el `robots.txt` de SP Digital sí permite `/page-data/`.)
+- El JSON trae solo la primera página (hasta 48 productos); hoy las categorías caben.
+- El listado oculta los productos agotados, por eso casi todo queda con `in_stock = true`.
+- Guardar `quantityInStore` y `quantityOnline` en `branch_stock` y usar `openingHours` cuando se hagan los datos por sucursal (hoy no se guardan).
+
+---
+
+## Prompt 11: Primera página del frontend (lista de productos)
+
+**Prompt (condensado):**
+> Tengo una base de datos y sus credenciales públicas están en un archivo `.env`. Quiero hacer una página de frontend para leer los datos. (Después pedí que, para partir, solo se muestre el nombre del producto y un precio de referencia. Pegué una captura de la estructura del proyecto y los errores que fueron apareciendo.)
+
+**Resultado obtenido:**
+- Tres archivos en `frontend/src/`: `supabase.ts` (cliente de Supabase con la clave pública), `App.tsx` y `App.css`.
+- Primera versión con buscador, filtro por tienda, orden y "solo con stock". La simplifiqué a lo que pedí: una tabla con **nombre** y **precio de referencia** (formato CLP), ordenada por nombre, con un máximo de 1000 filas por consulta. Los productos sin precio muestran "—".
+- Se corrigieron tres problemas al probarla:
+  - **Mayúsculas en los nombres de archivo:** mis archivos se llaman `app.tsx` y `app.css` (minúscula), y el asistente asumió `App`. Se corrigió el import dentro de `app.tsx` a `./app.css`, sin renombrar nada.
+  - **Pantalla en negro:** `supabase.ts` lanzaba un error porque en mi `.env` la clave se llama `VITE_SUPABASE_ANON_KEY`, no `VITE_SUPABASE_PUBLISHABLE_KEY`. Ahora `supabase.ts` acepta `VITE_SUPABASE_ANON_KEY`.
+  - **Reinicio de Vite:** hay que detener y volver a levantar Vite cada vez que cambia el `.env`.
+- Verificado: la página carga y muestra los productos de la base de datos.
+
+**Decisiones propias y correcciones al asistente:**
+- Partir con solo nombre y precio, y agregar el resto después.
+- Dejar los archivos en minúscula (`app.tsx`, `app.css`) en vez de renombrarlos.
+- Corregí al asistente: mi `main.tsx` importaba `./app.css` y `./app.tsx` en minúscula, no con mayúscula.
+- Usar al principio la clave `anon` que ya tenía en el `.env`. Después la cambié por la clave `sb_publishable_...`.
+
+**Supuestos del asistente por confirmar:**
+- La tabla `products` tiene las columnas `id`, `name` y `price` (la página funcionó, así que coinciden).
+
+**Pendiente de verificar:**
+- Paginar cuando haya más de 1000 productos.
+- `app.css` se importa dos veces (en `main.tsx` y en `app.tsx`); quitar uno.
+- Agregar tienda, buscador, filtro de stock, categorías y presupuesto.
+
+---
+
+## Prompt 12: Ejecutar todos los scrapers con un solo comando
+
+**Prompt (condensado):**
+> Ya cambié la clave `anon` por la `publishable` en el `.env`, y revisé que el `robots.txt` de SP Digital permite `/page-data/`. Necesito un `deno task` que ejecute los scrapers de forma automatizada, para que después, al hacer el deploy, corran una vez al día con un cronjob (eso lo veo después).
+
+**Resultado obtenido:**
+- Primero se hizo un script (`run_all.ts`) con resumen final y código de salida; después se descartó a favor de tareas en `scraper/deno.json`, que es más simple.
+- Tareas: `scrape:winpy`, `scrape:pcexpress` y `scrape:spdigital`, cada una con sus 3 categorías (cpu, ram y gpu) unidas con `;`, y la tarea `scrape`, que lanza las 3 tiendas en paralelo con `dependencies`.
+- Se usa `;` en vez de `&&`, para que si una categoría falla, las demás se ejecuten igual: siempre corren los 9 scrapers.
+- Las tiendas corren en paralelo (son sitios distintos) y las categorías de una misma tienda en serie, para respetar el `crawl-delay` de cada sitio.
+- No se puede elegir tienda ni categoría desde `deno task scrape`.
+- Limitación aceptada: con `;` el código de salida de cada tienda es el del último comando, así que un cronjob no detecta fallos de CPU o RAM, y no hay resumen final. Las tareas con `dependencies` requieren Deno 2.1 o más nuevo.
+
+**Decisiones propias:**
+- Dejar el cronjob del deploy para después.
+- Pedir que siempre se ejecuten todos los scrapers (CPU, RAM y GPU de las 3 tiendas), sin opción de elegir solo algunos. Los argumentos de tienda y categoría que tenía la primera versión se quitaron.
+- Ejecuté `deno task scrape` y funcionó muy bien.
+- Mantener mis permisos (`--allow-net --allow-env`) en vez de `-A` y agregar `--env-file=.env`. Las nuevas tareas reemplazan a mis tareas anteriores `winpy`, `pcexpress` y `spdigital` en `scraper/deno.json`.
+- Preferir tareas de `deno.json` en vez de un script completo, y usar `;` en lugar de `&&` para que no se detengan los demás scrapers si uno falla. El asistente recomendaba el script (por el resumen y el código de salida), pero elegí lo simple.
+- Cambiar la clave `anon` por la `publishable` en el `.env`.
+- Revisar yo mismo que el `robots.txt` de SP Digital permite `/page-data/`.
+
+**Pendiente de verificar:**
+- Revisar en Supabase que los datos de RAM y GPU de las 3 tiendas hayan llegado bien (la corrida de `deno task scrape` funcionó, pero solo se revisó la ejecución).
+- Con 3 tiendas en paralelo, la corrida dura lo que tarde la más lenta (Winpy, con 10 s entre peticiones).
 
 ---
 
 ## Por hacer (estado actual)
 
-- [x] Precio y stock en los scrapers de Winpy y PC Express.
-- [ ] Precio y stock en el scraper de SP Digital (falta el HTML de una tarjeta completa y de un producto agotado).
+- [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
 - [x] Diseñar la base de datos completa (`database.sql`).
 - [x] Ejecutar `database.sql` en Supabase y probar `winpy.ts cpu` contra ella (productos con precio y stock guardados).
+- [x] Primera página del frontend: lista de productos con nombre y precio, leída desde Supabase.
 - [ ] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
-- [ ] Probar PC Express, y RAM y GPU de Winpy y PC Express, contra los sitios reales y Supabase.
+- [ ] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas (los scrapers ya se ejecutaron con `deno task scrape`, falta confirmar que los datos lleguen bien).
+- [x] Revisar que el `robots.txt` de SP Digital permita `/page-data/` (lo permite).
+- [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
+- [ ] Al hacer el deploy, programar `deno task scrape` una vez al día con un cronjob.
 - [ ] Scrapers de sucursales, horarios y stock por sucursal.
-- [ ] Empezar a hacer el frontend (hoy solo hay una página de placeholder).
+- [ ] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
+- [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.
 
 ---
 

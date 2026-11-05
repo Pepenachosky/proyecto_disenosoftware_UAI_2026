@@ -1,0 +1,60 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters input[type="search"] {
+  flex: 1 1 220px;
+}
+
+.filters input[type="search"],
+.filters select {
+  padding: 8px;
+  font-size: 1rem;
+}
+
+.count {
+  opacity: 0.7;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}

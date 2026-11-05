@@ -1,7 +1,10 @@
 {
   "tasks": {
-    "winpy": "deno run --allow-net --allow-env winpy.ts",
-    "pcexpress": "deno run --allow-net --allow-env pcexpress.ts",
-    "spdigital": "deno run --allow-net --allow-env spdigital.ts"
+    "scrape": {
+      "dependencies": ["scrape:winpy", "scrape:pcexpress", "scrape:spdigital"]
+    },
+    "scrape:winpy": "deno run --allow-net --allow-env --env-file=.env winpy.ts cpu ; deno run --allow-net --allow-env --env-file=.env winpy.ts ram ; deno run --allow-net --allow-env --env-file=.env winpy.ts gpu",
+    "scrape:pcexpress": "deno run --allow-net --allow-env --env-file=.env pcexpress.ts cpu ; deno run --allow-net --allow-env --env-file=.env pcexpress.ts ram ; deno run --allow-net --allow-env --env-file=.env pcexpress.ts gpu",
+    "scrape:spdigital": "deno run --allow-net --allow-env --env-file=.env spdigital.ts cpu ; deno run --allow-net --allow-env --env-file=.env spdigital.ts ram ; deno run --allow-net --allow-env --env-file=.env spdigital.ts gpu"
   }
 }

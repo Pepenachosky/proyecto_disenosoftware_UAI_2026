@@ -1,20 +1,23 @@
-// Scraper de nombres de productos de SP Digital (solo fetch + parser HTML).
+// Scraper de productos de SP Digital: nombre, precio y stock (solo fetch, sin navegador).
 // Uso:  deno run --env-file=.env --allow-net --allow-env spdigital.ts [cpu|gpu|ram]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
-
-import { DOMParser } from "npm:linkedom@0.18.5";
+//
+// SP Digital está hecho con Gatsby: cada página de categoría tiene un JSON público
+// (/page-data/<categoría>/page-data.json) que la propia página pide para dibujarse.
+// Ese JSON trae nombre, precios y stock de cada producto, así que no hace falta
+// parsear HTML ni usar Playwright.
 
 const BASE = "https://www.spdigital.cl";
 const DELAY_MS = 5_000; // crawl-delay de SP Digital (robots.txt)
-const MAX_PAGES = 10; // tope de seguridad por categoría
 const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 
 type Category = "cpu" | "gpu" | "ram";
 
 // Solo páginas de categoría, sin filtros. robots.txt bloquea carrito y checkout.
 // "accept" es un seguro extra: solo se guardan nombres que lo cumplan.
-// OJO: cpu (8 productos), gpu (5) y ram (14, incluye notebook/SODIMM) se verificaron
-// con HTML real, todas de 1 sola página. El listado por defecto oculta los agotados.
+// OJO: el formato del JSON se verificó con la categoría de procesadores (8 productos).
+// RAM y GPU se asumen iguales (misma plantilla "product-list"); sus URLs de JSON
+// no se han probado.
 const CATEGORIES: Record<Category, { paths: string[]; accept: RegExp }> = {
   cpu: { paths: ["/categories/componentes-procesador/"], accept: /^procesador/i },
   gpu: {
@@ -30,39 +33,74 @@ const CATEGORIES: Record<Category, { paths: string[]; accept: RegExp }> = {
 export interface ScrapedProduct {
   name: string;
   url: string;
+  price: number | null; // CLP, entero (precio de transferencia = "cash" en el JSON)
+  // true = quantityAvailable > 0; false = 0. El listado por defecto oculta los agotados,
+  // así que en la práctica casi siempre será true.
+  inStock: boolean | null;
 }
 
-/** Extrae productos y enlaces de paginación de una página de listado. */
+// Forma mínima del JSON que usamos (el resto se ignora).
+interface PageData {
+  result?: {
+    pageContext?: {
+      defaultTotalPages?: number;
+      defaultTotalProducts?: number;
+      defaultProductsPerPage?: number;
+      content?: {
+        items?: Array<{
+          slug?: string;
+          name?: string;
+          metadata?: Array<{ key: string; value: string }>;
+          defaultVariant?: { quantityAvailable?: number | null } | null;
+        }>;
+      };
+    };
+  };
+}
+
+/** URL del JSON de una categoría: /categories/x/ -> /page-data/categories/x/page-data.json */
+export const pageDataUrl = (path: string) => `${BASE}/page-data${path}page-data.json`;
+
+/** Extrae los productos del JSON de una categoría. */
 export function parseListing(
-  html: string,
-): { products: ScrapedProduct[]; pages: string[] } {
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  jsonText: string,
+): { products: ScrapedProduct[]; totalPages: number; totalProducts: number } {
+  const ctx = (JSON.parse(jsonText) as PageData).result?.pageContext;
+  const items = ctx?.content?.items ?? [];
   const products: ScrapedProduct[] = [];
 
-  for (const card of doc.querySelectorAll(".Fractal-ProductCard__productcard--container")) {
-    // El primer enlace de la tarjeta solo trae la marca ("AMD"); el nombre
-    // completo está en el contenedor de descripción.
-    const link = card.querySelector(".Fractal-ProductCard--productDescriptionTextContainer a");
-    const name = link?.textContent.replace(/\s+/g, " ").trim();
-    const href = link?.getAttribute("href");
-    if (!name || !href) continue;
-    products.push({ name, url: new URL(href, BASE).href });
+  for (const it of items) {
+    const name = it.name?.replace(/\s+/g, " ").trim();
+    if (!name || !it.slug) continue;
+
+    // El precio de transferencia viene en metadata "pricing": {"sp-digital":{"cash":229990,"other":240340}}
+    // ("other" es el precio con otros medios de pago). No se usa pricing.priceRange: no coincide con la web.
+    let price: number | null = null;
+    const raw = it.metadata?.find((m) => m.key === "pricing")?.value;
+    if (raw) {
+      try {
+        const cash = JSON.parse(raw)?.["sp-digital"]?.cash;
+        if (Number.isInteger(cash) && cash > 0) price = cash;
+      } catch { /* JSON de precios mal formado: se deja null */ }
+    }
+
+    const qty = it.defaultVariant?.quantityAvailable;
+    const inStock = typeof qty === "number" ? qty > 0 : null;
+
+    products.push({ name, url: new URL(`/${it.slug}/`, BASE).href, price, inStock });
   }
 
-  // La página 1 viene como ".../?" (con "?" vacío): se quita para no pedirla dos veces.
-  // OJO: el formato de las páginas siguientes no está verificado (la prueba tenía 1 sola).
-  const pages = [...doc.querySelectorAll(".Fractal-Pagination--pagination a")]
-    .map((a) => a.getAttribute("href"))
-    .filter((h): h is string => !!h)
-    .map((h) => new URL(h, BASE).href.replace(/\?$/, ""));
-
-  return { products, pages };
+  return {
+    products,
+    totalPages: ctx?.defaultTotalPages ?? 1,
+    totalProducts: ctx?.defaultTotalProducts ?? products.length,
+  };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchHtml(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+async function fetchText(url: string): Promise<string> {
+  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
   if ([403, 429, 503].includes(res.status)) {
     // Si el sitio bloquea o pide verificación, se detiene: no se intenta esquivar.
     throw new Error(`${url} respondió ${res.status}: el sitio bloqueó la consulta. Se detiene el scraper.`);
@@ -71,30 +109,19 @@ async function fetchHtml(url: string): Promise<string> {
   return await res.text();
 }
 
-/** Recorre todas las páginas de una categoría respetando el crawl-delay. */
+/** Lee el JSON de una categoría. */
 async function scrapeCategory(path: string): Promise<ScrapedProduct[]> {
-  const first = new URL(path, BASE).href;
-  const queue = [first];
-  const visited = new Set<string>();
-  const found = new Map<string, ScrapedProduct>(); // sin duplicados por URL
-
-  while (queue.length && visited.size < MAX_PAGES) {
-    const url = queue.shift()!;
-    if (visited.has(url)) continue;
-    visited.add(url);
-
-    console.log(`Leyendo ${url}`);
-    const { products, pages } = parseListing(await fetchHtml(url));
-    if (products.length === 0) {
-      console.warn("  (sin productos: ¿cambió el HTML o apareció una verificación?)");
-    }
-    for (const p of products) found.set(p.url, p);
-    for (const p of pages) if (!visited.has(p) && !queue.includes(p)) queue.push(p);
-    console.log(`  ${products.length} productos`);
-
-    if (queue.length) await sleep(DELAY_MS);
+  const url = pageDataUrl(path);
+  console.log(`Leyendo ${url}`);
+  const { products, totalPages, totalProducts } = parseListing(await fetchText(url));
+  if (products.length === 0) console.warn("  (sin productos: ¿cambió el JSON o la URL?)");
+  // El JSON solo trae la primera página (hasta 48 productos). Las otras se piden desde el navegador
+  // con otra API; no se leen aquí.
+  if (totalPages > 1 || totalProducts > products.length) {
+    console.warn(`  OJO: la categoría tiene ${totalProducts} productos en ${totalPages} páginas; solo se leyó la primera (${products.length}).`);
   }
-  return [...found.values()];
+  console.log(`  ${products.length} productos`);
+  return products;
 }
 
 /** Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza. */
@@ -105,11 +132,10 @@ async function save(items: ScrapedProduct[], category: Category) {
     console.log("Sin SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY: modo prueba, no se guarda.");
     return;
   }
-  const headers = {
-    apikey: KEY,
-    Authorization: `Bearer ${KEY}`,
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = { apikey: KEY, "Content-Type": "application/json" };
+  // Las claves nuevas (sb_secret_...) no son JWT y solo van en "apikey".
+  // La clave legacy service_role también se manda como Bearer.
+  if (!KEY.startsWith("sb_")) headers.Authorization = `Bearer ${KEY}`;
 
   const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/stores?slug=eq.spdigital&select=id`, { headers });
   const stores = await storeRes.json();
@@ -122,6 +148,9 @@ async function save(items: ScrapedProduct[], category: Category) {
     name: p.name,
     url: p.url,
     category,
+    price: p.price,
+    in_stock: p.inStock,
+    price_updated_at: now,
     last_seen_at: now,
   }));
 
@@ -141,7 +170,7 @@ if (import.meta.main) {
   const cats = (arg ? [arg] : Object.keys(CATEGORIES)) as Category[];
   for (const cat of cats) {
     if (!CATEGORIES[cat]) {
-      console.error(`Categoría desconocida o aún no disponible: ${cat} (por ahora usa cpu, gpu o ram)`);
+      console.error(`Categoría desconocida: ${cat} (usa cpu, gpu o ram)`);
       Deno.exit(1);
     }
     const { paths, accept } = CATEGORIES[cat];
@@ -154,7 +183,8 @@ if (import.meta.main) {
     const descartados = found.size - items.length;
     if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);
     console.log(`\n${cat}: ${items.length} productos`);
-    for (const p of items.slice(0, 5)) console.log(`  - ${p.name}`);
+    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock}`);
     await save(items, cat);
+    if (cats.indexOf(cat) < cats.length - 1) await sleep(DELAY_MS);
   }
 }
