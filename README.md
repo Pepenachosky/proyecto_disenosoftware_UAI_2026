@@ -43,15 +43,17 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
 │       └── lib/                 Lógica pura con pruebas: search, offers, history
-├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts)
-│                        y el agrupador (group_key.ts, group.ts)
+├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
+│                        el agrupador (group_key.ts, group.ts) y deno.json con las tareas
 ├── supabase/
 │   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados)
 │   └── tests/           Pruebas de la migración 002 (run_002.sh, usa podman)
 ├── api/                 Reservado (vacío por ahora)
-├── docs/autoria.md      Registro de prompts y estado del proyecto
-├── deno.json            Tareas de scraping
-└── .env.example         Variables de entorno
+├── docs/
+│   ├── autoria.md       Registro de prompts y estado del proyecto
+│   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
+│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados
+└── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
 
 ## Tiendas
@@ -76,7 +78,7 @@ Tablas: `stores`, `products` (precio, stock, fecha de precio), `price_history`, 
   - `product_groups`: un producto "único" que junta las filas de varias tiendas (`products.group_id`; `group_locked` protege las correcciones manuales).
   - Reseñas por grupo en `product_reviews`: 1 a 5 estrellas, una por usuario y producto; el nombre del autor lo pone la base desde la cuenta de Google.
   - `saved_products`: los productos que guarda cada usuario para compararlos.
-- **RLS:** el frontend, con la clave pública, solo lee datos públicos; solo los scrapers (clave de servicio) escriben.
+- **RLS:** con la clave pública, cualquiera lee productos, precios, grupos y reseñas; un usuario con sesión iniciada solo escribe sus propias reseñas y sus propios guardados. Productos, precios y grupos solo los escriben los scrapers y el script de agrupado (clave de servicio).
 
 > Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002` es la migración nueva y también se ejecuta a mano (se puede correr más de una vez sin error).
 
@@ -84,12 +86,12 @@ Tablas: `stores`, `products` (precio, stock, fecha de precio), `price_history`, 
 
 ### Requisitos
 
-- [Deno](https://deno.com) y Node.js (para el frontend)
+- [Deno](https://deno.com) (scrapers y dependencias del frontend) y Node.js (herramientas del frontend: Vite, tsc, Oxlint)
 - Un proyecto de [Supabase](https://supabase.com) con el esquema creado
 
 ### 1. Variables de entorno
 
-Copia `.env.example` a `.env` (en la raíz, usado por los scrapers):
+Copia `.env.example` (en la raíz) a `scraper/.env`, que es el que leen los scrapers y el agrupado:
 
 ```
 SUPABASE_URL=
@@ -127,21 +129,23 @@ Sin variables de Supabase, los scrapers corren en **modo prueba**: muestran los 
 
 ```bash
 cd frontend
-npm install
-npm run dev       # servidor de desarrollo (http://localhost:5173)
-npm run build     # compilación de producción
-npm run lint      # Oxlint
+deno install      # instala las dependencias (el frontend usa deno.lock)
+deno task dev     # servidor de desarrollo (http://localhost:5173); también npm run dev
+deno task build   # compilación de producción
+deno task lint    # Oxlint
 ```
 
 El orden recomendado es: migración, scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
 ### 5. Pruebas
 
+Desde la raíz del repositorio:
+
 ```bash
-cd scraper && deno task test                  # pruebas del agrupador
-cd frontend && deno test --no-config src/lib/  # lógica pura del frontend (sin --no-config falla)
-cd frontend && npx tsc -b && npx oxlint && npx vite build
-bash supabase/tests/run_002.sh                # migración 002 en un Postgres local (necesita podman)
+(cd scraper && deno task test)                   # pruebas del agrupador
+(cd frontend && deno test --no-config src/lib/)  # lógica pura del frontend (sin --no-config falla)
+(cd frontend && npx tsc -b && npx oxlint && npx vite build)
+bash supabase/tests/run_002.sh                   # migración 002 en un Postgres local (necesita podman)
 ```
 
 ## Configurar inicio de sesión con Google

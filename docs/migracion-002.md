@@ -24,7 +24,8 @@ Se puede ejecutar más de una vez sin problemas (usa `if not exists`, `create or
 3. **Modifica `product_reviews`** (estaba vacía, así que no se pierde nada):
    - `product_id` se reemplaza por `group_id`, para que la reseña pertenezca al producto único y no a una tienda;
    - se agrega `author_name`, que llena un **trigger** desde el nombre de la cuenta de Google (`auth.identities`), no el navegador, para que nadie firme con un nombre falso;
-   - la nota debe estar entre 1 y 5 estrellas;
+   - el mismo trigger pone las fechas: `created_at` al crear (se ignora la que mande el navegador) y `updated_at` en cada cambio. Al editar, `created_at` no cambia y el usuario no puede mover su reseña a otro producto (`group_id` queda igual); desde el SQL Editor, sin sesión, sí se puede, para corregir grupos;
+   - la nota debe estar entre 1 y 5 estrellas y el comentario tiene como máximo 1000 caracteres;
    - cada persona puede dejar una sola reseña por producto.
 4. **Crea `saved_products`** con `user_id`, `group_id` y fecha. No se puede guardar dos veces el mismo producto.
 5. **Permisos (RLS)**:
@@ -49,3 +50,22 @@ Se puede ejecutar más de una vez sin problemas (usa `if not exists`, `create or
 -- Mover la fila 228 al grupo 15 y evitar que el agrupado automático la cambie
 update products set group_id = 15, group_locked = true where id = 228;
 ```
+
+Si la corrección deja un grupo **sin filas** (por ejemplo, el 42), sus reseñas y guardados siguen apuntando a él: hay que moverlos al grupo correcto. Como cada usuario tiene una sola reseña y un solo guardado por producto, primero se borran los que chocarían con uno que el usuario ya tiene en el destino y después se mueven los demás:
+
+```sql
+-- Pasar reseñas y guardados del grupo 42 (vacío) al 15
+begin;
+delete from product_reviews r
+ where r.group_id = 42
+   and exists (select 1 from product_reviews d where d.group_id = 15 and d.user_id = r.user_id);
+update product_reviews set group_id = 15 where group_id = 42;
+
+delete from saved_products s
+ where s.group_id = 42
+   and exists (select 1 from saved_products d where d.group_id = 15 and d.user_id = s.user_id);
+update saved_products set group_id = 15 where group_id = 42;
+commit;
+```
+
+El agrupado (`scraper/group.ts`) nunca borra grupos, a propósito: borrar un grupo borra en cascada sus reseñas y guardados. Un grupo vacío no aparece en el catálogo; si ya no tiene reseñas ni guardados, se puede borrar a mano (`delete from product_groups where id = 42;`).
