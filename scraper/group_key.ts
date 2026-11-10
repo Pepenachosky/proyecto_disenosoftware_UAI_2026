@@ -73,7 +73,7 @@ const RAM_BRANDS: Record<string, string> = {
   samsung: "Samsung", hikvision: "Hikvision",
 };
 const RAM_LINES = [
-  "fury beast", "fury renegade", "fury impact", "lancer blade", "lancer",
+  "fury beast", "fury renegade", "fury impact", "fury", "lancer blade", "lancer",
   "spectrix", "vengeance", "trident", "ripjaws",
 ];
 
@@ -90,14 +90,17 @@ function ramKey(t: string): GroupKey | null {
   const cap = kit ? `${kit[1]}x${kit[2]}gb` : t.match(/(?<![\d.])(\d+(?:\.\d+)?) ?gb/)?.[1];
   const capacity = kit ? cap : cap && `${cap}gb`;
   const speed = t.match(/(\d{4}) ?(?:mhz|mt\/s)/)?.[1];
-  const format = /so-?dimm|notebook/.test(t) ? "sodimm" : "dimm";
+  // sodimm > rdimm/registered > dimm
+  const format = /so-?dimm|notebook/.test(t) ? "sodimm" : /rdimm|registered/.test(t) ? "rdimm" : "dimm";
+  // ECC solo si no dice "non-ecc" / "no ecc".
+  const ecc = /\becc\b/.test(t) && !/\b(non|no)[- ]?ecc\b/.test(t);
 
   if (!type || !capacity || !speed) return null;
   return {
-    key: join([brand, line?.replace(/ /g, "-"), type, capacity, speed, format], "-"),
+    key: join([brand, line?.replace(/ /g, "-"), type, capacity, speed, format, ecc ? "ecc" : undefined], "-"),
     title: join([
       RAM_BRANDS[brand], line?.replace(/\b\w/g, (c) => c.toUpperCase()), type.toUpperCase(),
-      capacity.toUpperCase().replace("X", " x "), `${speed}MHz`, format === "sodimm" ? "SODIMM" : "DIMM",
+      capacity.toUpperCase().replace("X", " x "), `${speed}MHz`, format.toUpperCase(), ecc ? "ECC" : undefined,
     ], " "),
   };
 }

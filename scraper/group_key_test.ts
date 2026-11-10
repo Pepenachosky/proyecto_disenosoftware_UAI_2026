@@ -35,3 +35,13 @@ Deno.test("RAM: marca + línea + tipo + capacidad + velocidad + formato", () => 
   assertEquals(key("memoria ddr5 xpg lancer udimm adata 8gb 5600mhz black rgb p/n ax5u5600c468g-slabrbk", "ram"), "xpg-lancer-ddr5-8gb-5600-dimm");
   assertEquals(key("Memoria RAM para Notebook ADATA 16GB DDR5, 4800Mhz, SODIMM, Negro", "ram"), "adata-ddr5-16gb-4800-sodimm");
 });
+
+Deno.test("RAM: ECC/RDIMM y línea Fury genérica", () => {
+  const desktop = key("Memoria RAM Kingston de 16GB (DDR5, 5600MHz, DIMM)", "ram");
+  assertEquals(desktop, "kingston-ddr5-16gb-5600-dimm");
+  assertEquals(key("Memoria RAM Kingston Renegade Pro de 32GB (DDR5, 5600MHz, CL28, ECC, RDIMM)", "ram"), "kingston-ddr5-32gb-5600-rdimm-ecc");
+  assertEquals(key("Memoria RAM Kingston de 16GB (DDR5, 5600MHz, ECC, DIMM)", "ram"), "kingston-ddr5-16gb-5600-dimm-ecc");
+  assertEquals(groupKey("Memoria RAM Kingston de 16GB (DDR5, 5600MHz, ECC, DIMM)", "ram")?.title, "Kingston DDR5 16GB 5600MHz DIMM ECC");
+  assertEquals(key("memoria sodimm kingston fury impact ddr4 16gb 3200mhz / pc4-25600 - cl20 - 1.2 v - sin bufer - no ecc - negro p/n kf432s20ib16", "ram"), "kingston-fury-impact-ddr4-16gb-3200-sodimm");
+  assertEquals(key("memoria ddr5 kingston fury 16gb 5600mt/s cl36 black p/n kf556c36bbe-16", "ram"), "kingston-fury-ddr5-16gb-5600-dimm");
+});
