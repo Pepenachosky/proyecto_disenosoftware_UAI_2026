@@ -447,3 +447,51 @@ tr.stale {
 .chart-legend {
   color: CanvasText;
 }
+
+.compare {
+  width: auto;
+  min-width: 100%;
+}
+
+.compare th:first-child,
+.compare td:first-child {
+  position: sticky;
+  left: 0;
+  background: Canvas;
+  white-space: nowrap;
+}
+
+.compare-head {
+  position: relative;
+  min-width: 140px;
+  vertical-align: top;
+  padding-right: 28px;
+}
+
+.compare-head a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-head img {
+  object-fit: contain;
+}
+
+.compare-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.stale small {
+  display: block;
+}
+
+span.stale {
+  opacity: 0.55;
+}
