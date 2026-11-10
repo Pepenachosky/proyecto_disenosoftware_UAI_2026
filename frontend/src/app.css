@@ -457,8 +457,14 @@ tr.stale {
 .compare td:first-child {
   position: sticky;
   left: 0;
+  z-index: 1;
   background: Canvas;
   white-space: nowrap;
+}
+
+/* Esquina superior izquierda, sobre la primera columna y los encabezados. */
+.compare thead th:first-child {
+  z-index: 2;
 }
 
 .compare-head {
@@ -486,6 +492,11 @@ tr.stale {
   cursor: pointer;
   background: none;
   border: none;
+}
+
+.compare-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .stale small {

@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { fetchHistory } from "../data";
-import { buildChartData, type ChartPoint } from "../lib/history.ts";
+import { buildChartData, currentPrices, type ChartPoint } from "../lib/history.ts";
 import { clp, STORES, type Offer } from "../lib/offers.ts";
 
 // Colores por tienda (fijos, legibles en claro y oscuro). SP Digital va
@@ -25,11 +25,12 @@ const compactClp = new Intl.NumberFormat("es-CL", {
   style: "currency",
   currency: "CLP",
   notation: "compact",
-  maximumFractionDigits: 1,
+  maximumSignificantDigits: 3,
 });
 
-const shortDate = (d: string) => `${Number(d.slice(8, 10))}/${Number(d.slice(5, 7))}`;
-const longDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("es-CL");
+// Los días son fechas UTC (YYYY-MM-DD); t es su medianoche UTC en ms.
+const shortDate = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "UTC" });
+const longDate = new Intl.DateTimeFormat("es-CL", { dateStyle: "long", timeZone: "UTC" });
 
 type Result = { offers: Offer[]; data: ChartPoint[] | null; error: string | null };
 
@@ -41,7 +42,11 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
     const storeOfProduct = new Map(offers.map((o) => [o.id, o.store_id]));
     fetchHistory(offers.map((o) => o.id))
       .then((rows) => {
-        if (active) setResult({ offers, data: buildChartData(rows, storeOfProduct), error: null });
+        if (!active) return;
+        const data = buildChartData(rows, storeOfProduct, currentPrices(offers, new Date())).map(
+          (p) => ({ ...p, t: Date.parse(p.date + "T00:00:00Z") }),
+        );
+        setResult({ offers, data, error: null });
       })
       .catch((e) => {
         if (active) setResult({ offers, data: null, error: e instanceof Error ? e.message : String(e) });
@@ -64,8 +69,11 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
           <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
             <CartesianGrid stroke="rgba(128, 128, 128, 0.25)" vertical={false} />
             <XAxis
-              dataKey="date"
-              tickFormatter={shortDate}
+              dataKey="t"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              tickFormatter={(t: number) => shortDate.format(t)}
               tick={{ fill: "currentColor", fontSize: 12 }}
               stroke="rgba(128, 128, 128, 0.5)"
               minTickGap={16}
@@ -79,7 +87,7 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
             />
             <Tooltip
               formatter={(v) => (typeof v === "number" ? clp.format(v) : String(v))}
-              labelFormatter={(d) => longDate(String(d))}
+              labelFormatter={(t) => longDate.format(Number(t))}
               contentStyle={{ background: "Canvas", color: "CanvasText", borderRadius: 6 }}
             />
             <Legend formatter={(value) => <span className="chart-legend">{value}</span>} />

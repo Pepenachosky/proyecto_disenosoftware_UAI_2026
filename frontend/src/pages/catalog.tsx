@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchCatalog } from "../data.ts";
+import { useSearchParams } from "react-router";
+import { cachedCatalog, fetchCatalog } from "../data.ts";
 import {
   STORES,
   summarize,
@@ -19,25 +20,56 @@ const CATEGORY_LABELS: Record<Category, string> = {
 
 const PAGE_SIZE = 48;
 
+const isCategory = (v: string | null): v is Category => v === "cpu" || v === "gpu" || v === "ram";
+const isSort = (v: string | null): v is Sort =>
+  v === "name" || v === "price-asc" || v === "price-desc";
+
 export function Catalog() {
-  const [groups, setGroups] = useState<GroupWithOffers[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState<GroupWithOffers[]>(() => cachedCatalog() ?? []);
+  const [loading, setLoading] = useState(() => cachedCatalog() === null);
   const [error, setError] = useState<string | null>(null);
   const [now] = useState(() => new Date());
 
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<Category | "all">("all");
-  const [storeId, setStoreId] = useState("all");
-  const [onlyInStock, setOnlyInStock] = useState(false);
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState<Sort>("name");
-  const [page, setPage] = useState(1);
+  // Filtros, búsqueda y página viven en la URL (?q=&cat=&store=&max=&stock=&sort=&page=)
+  // para conservarlos al volver desde un producto o tras iniciar sesión.
+  // Los valores por defecto no se escriben.
+  const [params, setParams] = useSearchParams();
+  const query = params.get("q") ?? "";
+  const catParam = params.get("cat");
+  const category: Category | "all" = isCategory(catParam) ? catParam : "all";
+  const storeId = params.get("store") ?? "all";
+  const maxPrice = params.get("max") ?? "";
+  const onlyInStock = params.get("stock") === "1";
+  const sortParam = params.get("sort");
+  const sort: Sort = isSort(sortParam) ? sortParam : "name";
+  const page = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
+
+  const update = (changes: Record<string, string | null>, replace = false) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [k, v] of Object.entries(changes)) {
+          if (v == null || v === "") next.delete(k);
+          else next.set(k, v);
+        }
+        return next;
+      },
+      { replace },
+    );
+  // Cualquier cambio de filtro vuelve a la primera página.
+  const setFilter = (k: string, v: string | null, replace = false) =>
+    update({ [k]: v, page: null }, replace);
+  const setPage = (p: number) => update({ page: p > 1 ? String(p) : null });
 
   useEffect(() => {
+    let active = true;
     fetchCatalog()
-      .then(setGroups)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false));
+      .then((g) => active && setGroups(g))
+      .catch((e) => active && setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
   }, []);
 
   const entries = useMemo(
@@ -85,23 +117,10 @@ export function Catalog() {
   const current = Math.min(page, pages);
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  // Cualquier cambio de filtro vuelve a la primera página.
-  const reset = <T,>(set: (v: T) => void) => (v: T) => {
-    set(v);
-    setPage(1);
-  };
-
   const hasFilters =
     query || category !== "all" || storeId !== "all" || onlyInStock || maxPrice;
 
-  const clear = () => {
-    setQuery("");
-    setCategory("all");
-    setStoreId("all");
-    setOnlyInStock(false);
-    setMaxPrice("");
-    setPage(1);
-  };
+  const clear = () => update({ q: null, cat: null, store: null, stock: null, max: null, page: null });
 
   if (loading) return <main className="wrap">Cargando…</main>;
   if (error) return <main className="wrap error">Error: {error}</main>;
@@ -117,7 +136,7 @@ export function Catalog() {
             role="tab"
             aria-selected={category === c}
             className={category === c ? "tab active" : "tab"}
-            onClick={() => reset(setCategory)(c)}
+            onClick={() => setFilter("cat", c === "all" ? null : c)}
           >
             {c === "all" ? "Todos" : CATEGORY_LABELS[c]}
             <span className="badge">{counts[c] ?? 0}</span>
@@ -130,12 +149,12 @@ export function Catalog() {
           type="search"
           placeholder="Buscar producto (ej: ryzen 5 7600, rtx 4060, ddr5 32gb)…"
           value={query}
-          onChange={(e) => reset(setQuery)(e.target.value)}
+          onChange={(e) => setFilter("q", e.target.value, true)}
           aria-label="Buscar producto"
         />
         <select
           value={storeId}
-          onChange={(e) => reset(setStoreId)(e.target.value)}
+          onChange={(e) => setFilter("store", e.target.value === "all" ? null : e.target.value)}
           aria-label="Tienda"
         >
           <option value="all">Todas las tiendas</option>
@@ -151,12 +170,12 @@ export function Catalog() {
           step={10000}
           placeholder="Precio máx. (CLP)"
           value={maxPrice}
-          onChange={(e) => reset(setMaxPrice)(e.target.value)}
+          onChange={(e) => setFilter("max", e.target.value, true)}
           aria-label="Precio máximo"
         />
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as Sort)}
+          onChange={(e) => setFilter("sort", e.target.value === "name" ? null : e.target.value)}
           aria-label="Ordenar"
         >
           <option value="name">Nombre (A-Z)</option>
@@ -167,7 +186,7 @@ export function Catalog() {
           <input
             type="checkbox"
             checked={onlyInStock}
-            onChange={(e) => reset(setOnlyInStock)(e.target.checked)}
+            onChange={(e) => setFilter("stock", e.target.checked ? "1" : null)}
           />
           Solo con stock
         </label>

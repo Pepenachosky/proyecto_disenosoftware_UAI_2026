@@ -21,7 +21,33 @@ async function fetchAll<T>(
   return all;
 }
 
-export async function fetchCatalog(): Promise<GroupWithOffers[]> {
+// El catálogo se pide una vez por carga de página y se reutiliza (volver atrás
+// desde un producto no lo vuelve a descargar). Si falla, se olvida para reintentar.
+let catalogPromise: Promise<GroupWithOffers[]> | null = null;
+let catalogValue: GroupWithOffers[] | null = null;
+
+export function fetchCatalog(): Promise<GroupWithOffers[]> {
+  if (!catalogPromise) {
+    const p = loadCatalog();
+    catalogPromise = p;
+    p.then(
+      (groups) => {
+        if (catalogPromise === p) catalogValue = groups;
+      },
+      () => {
+        if (catalogPromise === p) catalogPromise = null;
+      },
+    );
+  }
+  return catalogPromise;
+}
+
+// El catálogo ya descargado, para pintarlo sin pasar por "Cargando…".
+export function cachedCatalog(): GroupWithOffers[] | null {
+  return catalogValue;
+}
+
+async function loadCatalog(): Promise<GroupWithOffers[]> {
   const [groups, offers] = await Promise.all([
     fetchAll<Group>((a, b) =>
       supabase.from("product_groups").select(GROUP_COLS).order("id").range(a, b)
@@ -48,6 +74,23 @@ export async function fetchGroup(slug: string): Promise<GroupWithOffers | null> 
     .eq("group_id", group.id);
   if (e2) throw new Error(e2.message);
   return { ...group, offers: (offers ?? []) as Offer[] };
+}
+
+// Grupos pedidos por id, incluidos los que se quedaron sin ofertas (a
+// diferencia de fetchCatalog, que los omite).
+export async function fetchGroupsByIds(ids: number[]): Promise<GroupWithOffers[]> {
+  if (ids.length === 0) return [];
+  const [groups, offers] = await Promise.all([
+    fetchAll<Group>((a, b) =>
+      supabase.from("product_groups").select(GROUP_COLS).in("id", ids).order("id").range(a, b)
+    ),
+    fetchAll<Offer>((a, b) =>
+      supabase.from("products").select(OFFER_COLS).in("group_id", ids).order("id").range(a, b)
+    ),
+  ]);
+  const byGroup = new Map<number, Offer[]>(groups.map((g) => [g.id, []]));
+  for (const o of offers) byGroup.get(o.group_id)?.push(o);
+  return groups.map((g) => ({ ...g, offers: byGroup.get(g.id)! }));
 }
 
 export async function fetchHistory(productIds: number[]): Promise<HistoryRow[]> {
@@ -107,7 +150,10 @@ export async function fetchSavedIds(): Promise<number[]> {
 }
 
 export async function addSaved(groupId: number): Promise<void> {
-  const { error } = await supabase.from("saved_products").insert({ group_id: groupId });
+  // Guardar dos veces no es error (ON CONFLICT DO NOTHING; no requiere UPDATE).
+  const { error } = await supabase
+    .from("saved_products")
+    .upsert({ group_id: groupId }, { onConflict: "user_id,group_id", ignoreDuplicates: true });
   if (error) throw new Error(error.message);
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../auth";
 import { useSaved } from "../saved";
-import { fetchCatalog } from "../data";
+import { fetchGroupsByIds } from "../data";
 import { LoginButton } from "../components/login-button.tsx";
 import {
   clp,
@@ -15,7 +15,7 @@ import {
 
 const CATEGORY_NAMES = { cpu: "CPU", gpu: "GPU", ram: "RAM" } as const;
 
-type Catalog = { groups: GroupWithOffers[] | null; error: string | null };
+type Loaded = { requested: Set<number>; groups: GroupWithOffers[]; error: string | null };
 
 function storeCell(group: GroupWithOffers, storeId: number, now: Date) {
   const offers = group.offers.filter((o) => o.store_id === storeId && o.price != null);
@@ -36,30 +36,36 @@ function storeCell(group: GroupWithOffers, storeId: number, now: Date) {
 
 export function SavedPage() {
   const { user, loading: authLoading } = useAuth();
-  const { ids, toggle, loading: savedLoading } = useSaved();
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const { ids, toggle, loading: savedLoading, pending } = useSaved();
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [now] = useState(() => new Date());
-  const userId = user?.id ?? null;
+
+  // Solo se vuelve a pedir si aparece un id que no está cargado; quitar una
+  // columna con ✕ filtra lo ya cargado, sin esperar a la red.
+  const needFetch = !savedLoading && [...ids].some((id) => !loaded?.requested.has(id));
+  const fetchKey = needFetch ? [...ids].sort((a, b) => a - b).join(",") : null;
 
   useEffect(() => {
-    if (!userId) return;
+    if (fetchKey === null) return;
+    const want = fetchKey.split(",").map(Number);
     let active = true;
-    fetchCatalog()
-      .then((groups) => active && setCatalog({ groups, error: null }))
+    fetchGroupsByIds(want)
+      .then((groups) => active && setLoaded({ requested: new Set(want), groups, error: null }))
       .catch((e) =>
-        active && setCatalog({ groups: null, error: e instanceof Error ? e.message : String(e) }),
+        active &&
+        setLoaded({ requested: new Set(), groups: [], error: e instanceof Error ? e.message : String(e) }),
       );
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [fetchKey]);
 
   const columns = useMemo(
     () =>
-      (catalog?.groups ?? [])
+      (loaded?.groups ?? [])
         .filter((g) => ids.has(g.id))
         .sort((a, b) => a.name.localeCompare(b.name, "es")),
-    [catalog, ids],
+    [loaded, ids],
   );
 
   if (authLoading) return <main className="wrap">Cargando…</main>;
@@ -72,8 +78,8 @@ export function SavedPage() {
       </main>
     );
   }
-  if (catalog?.error) return <main className="wrap error">Error: {catalog.error}</main>;
-  if (!catalog || savedLoading) return <main className="wrap">Cargando…</main>;
+  if (needFetch && loaded?.error) return <main className="wrap error">Error: {loaded.error}</main>;
+  if (savedLoading || needFetch) return <main className="wrap">Cargando…</main>;
 
   if (columns.length === 0) {
     return (
@@ -105,6 +111,7 @@ export function SavedPage() {
                     type="button"
                     className="compare-remove"
                     aria-label={`Quitar ${g.name}`}
+                    disabled={pending.has(g.id)}
                     onClick={() => void toggle(g.id)}
                   >
                     ✕

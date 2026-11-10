@@ -34,6 +34,8 @@ export function Reviews({ groupId }: { groupId: number }) {
 
   // Mientras se recarga se sigue mostrando la lista anterior del mismo producto.
   const current = list && list.key.startsWith(`${groupId}:`) ? list : null;
+  // Tras publicar o borrar, el formulario sigue ocupado hasta que llega la lista nueva.
+  const locked = busy || list?.key !== key;
   const reviews = current?.reviews ?? null;
   const mine = user && reviews ? (reviews.find((r) => r.user_id === user.id) ?? null) : null;
 
@@ -62,12 +64,12 @@ export function Reviews({ groupId }: { groupId: number }) {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (rating === 0 || busy) return;
+    if (rating === 0 || locked) return;
     void run(() => upsertReview(groupId, rating, comment.trim(), mine?.id));
   }
 
   function onDelete() {
-    if (!mine || !window.confirm("¿Borrar tu reseña?")) return;
+    if (!mine || locked || !window.confirm("¿Borrar tu reseña?")) return;
     void run(() => deleteReview(mine.id));
   }
 
@@ -112,11 +114,11 @@ export function Reviews({ groupId }: { groupId: number }) {
             aria-label="Comentario"
           />
           <div className="review-actions">
-            <button type="submit" disabled={busy || rating === 0}>
+            <button type="submit" disabled={locked || rating === 0}>
               {mine ? "Guardar cambios" : "Publicar"}
             </button>
             {mine && (
-              <button type="button" className="danger" disabled={busy} onClick={onDelete}>
+              <button type="button" className="danger" disabled={locked} onClick={onDelete}>
                 Borrar
               </button>
             )}

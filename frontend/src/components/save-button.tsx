@@ -4,7 +4,7 @@ import { LoginButton } from "./login-button";
 
 export function SaveButton({ groupId }: { groupId: number }) {
   const { user, loading } = useAuth();
-  const { ids, toggle, loading: savedLoading } = useSaved();
+  const { ids, toggle, loading: savedLoading, pending } = useSaved();
   if (loading) {
     return (
       <button type="button" className="save-button" disabled>
@@ -19,7 +19,7 @@ export function SaveButton({ groupId }: { groupId: number }) {
       type="button"
       className={saved ? "save-button on" : "save-button"}
       aria-pressed={saved}
-      disabled={savedLoading}
+      disabled={savedLoading || pending.has(groupId)}
       onClick={() => void toggle(groupId)}
     >
       {saved ? "★ Guardado" : "☆ Guardar para comparar"}
