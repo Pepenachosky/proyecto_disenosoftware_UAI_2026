@@ -303,6 +303,77 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 13: Buscador y filtros en el frontend
+
+**Prompt (condensado):**
+> En base a lo que está en graphify, necesito que me generes un frontend para esta aplicación donde pueda filtrar y buscar por tipo de producto y categoría los productos deseados. También añade un buscador de texto para buscar los productos.
+
+**Resultado obtenido:**
+- `frontend/src/app.tsx` reescrito con:
+  - pestañas de categoría (CPU, GPU y RAM) con contador;
+  - buscador sin tildes ni mayúsculas que exige todas las palabras escritas;
+  - filtro por tienda, precio máximo y "solo con stock";
+  - orden por nombre o precio y botón "Limpiar filtros";
+  - tabla con producto (enlace a la tienda), categoría, tienda, stock y precio;
+  - paginación de 50 filas.
+- La carga ahora trae todos los productos en páginas de 1000 (antes el máximo era 1000).
+- Verificado: `tsc`, `oxlint` y `vite build` sin errores. No se probó en el navegador en ese momento.
+
+**Decisiones propias:**
+- Pedir el frontend apoyándome en el grafo de graphify.
+- "Tipo de producto" se interpretó como categoría + tienda, porque la base no tiene otro nivel.
+
+**Supuestos del asistente por confirmar:**
+- Que "tipo de producto" significa categoría y tienda.
+
+**Pendiente de verificar:**
+- Probar la página en el navegador con los datos reales.
+
+---
+
+## Prompt 14: SSO con Google, subpágina de producto, reseñas, guardados y comparación
+
+**Prompt (condensado):**
+> Quiero integrar SSO para comentar reseñas en los productos, poder guardar productos para comparar precios entre ellos, y un gráfico de precio histórico por producto. Cada producto debe tener su propia subpágina que muestre todas las tiendas que lo venden. Usa superpowers y apóyate en graphify. (Describí el flujo: lista con filtros, clic en un producto, subpágina con las tiendas ordenadas de menor a mayor precio, comentarios con SSO abajo, botón de guardar y un gráfico que junte las tiendas SP Digital, Winpy y PC Express.)
+
+**Resultado obtenido:**
+- Con el brainstorming (y bocetos en el navegador) salió un diseño y un plan (`docs/superpowers/`). El asistente notó que cada fila de `products` es de una sola tienda y los nombres cambian entre tiendas (por ejemplo, el Ryzen 5 7600 en Winpy y en PC Express), así que hacía falta **agrupar**.
+- **Migración 002** (`supabase/migrations/002_grupos_resenas_guardados.sql`, explicada en `docs/migracion-002.md`): tabla `product_groups`, columnas `group_id` y `group_locked` en `products`, reseñas por grupo y tabla `saved_products`, con RLS. Se probó en un Postgres local con podman (13 casos: permisos, nombre no falsificable y ejecutable dos veces).
+- **Agrupador** (`scraper/group_key.ts` y `group.ts`, tarea `deno task group`): sobre los 417 productos salieron 252 grupos; 59 productos sin patrón quedan solos.
+- **Frontend:**
+  - lógica pura con 11 pruebas (`src/lib/`: búsqueda, ofertas vigentes e historial);
+  - rutas, sesión con Google y contexto de guardados;
+  - lista en cuadrícula;
+  - subpágina de producto con tiendas, gráfico de precio histórico (recharts) y reseñas con estrellas;
+  - página Guardados con comparación lado a lado.
+- Commits en `dev`: 9c6ac24, 396e851, a023a1b, 76c2572, 87f0abb, c97aab1, d5146f0 y 1b35c24.
+
+**Decisiones propias:**
+- Agrupar automáticamente aceptando errores por ahora, y corregir a mano después.
+- Lista en cuadrícula con imagen placeholder (`PlaceholderLC.png`), también en la subpágina.
+- Comparación con la opción A (tabla lado a lado), en una página "Guardados" del menú superior ligada al inicio de sesión.
+- Reseñas con estrellas y el nombre de la cuenta de Google.
+- Regla de ofertas vigentes: vista en los últimos 3 días y no agotada.
+- Pedí que se me explicara la migración 002 antes de seguir, y que se anotara en `docs/migracion-002.md`.
+- Elegí la ejecución con subagentes y pedí actualizar graphify, el README y esta autoría.
+
+**Supuestos del asistente por confirmar:**
+- El nombre de la reseña se toma de `auth.identities` (Google) y no de `raw_user_meta_data`, porque el usuario puede editar este último.
+- La migración borra todas las políticas viejas de `product_reviews`, porque el `database.sql` original no está en el repositorio.
+- Solo funciona en local (`localhost:5173`) por ahora.
+- Se usan react-router y recharts; `deno task group` es una tarea aparte y corre al final de `deno task scrape`.
+- Una oferta sin precio no es vigente.
+- RAM distingue ECC/RDIMM y la línea Fury; GPU agrupa por fabricante + chip + VRAM, así que variantes de una misma marca (por ejemplo, ASUS TUF y ROG Astral 5080) quedan juntas hasta corregirlas a mano.
+
+**Pendiente de verificar:**
+- Configurar Google OAuth en Google Cloud y en Supabase.
+- Ejecutar la migración 002 en Supabase y luego `deno task group` contra la base real.
+- Probar en el navegador: iniciar sesión, guardar y quitar, publicar, editar y borrar una reseña, el gráfico, `/producto/no-existe`, 360 px de ancho y modo oscuro.
+- Revisar grupos mal agrupados (GPU de una misma marca con distinto modelo de placa; RAM de distintos colores o variantes) y corregirlos con `group_locked`.
+- El bundle pesa unos 870 kB por recharts; se puede cargar el gráfico de forma diferida.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -315,7 +386,14 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
 - [ ] Al hacer el deploy, programar `deno task scrape` una vez al día con un cronjob.
 - [ ] Scrapers de sucursales, horarios y stock por sucursal.
-- [ ] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
+- [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
+- [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
+- [ ] Configurar Google OAuth en Google Cloud y en Supabase.
+- [ ] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
+- [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
+- [ ] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
+- [ ] Cargar el gráfico de forma diferida (el bundle pesa unos 870 kB por recharts).
+- [ ] Multilenguaje propio.
 - [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.
 
 ---
