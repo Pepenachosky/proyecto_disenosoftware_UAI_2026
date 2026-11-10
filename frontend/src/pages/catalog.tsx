@@ -1,19 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../supabase";
-
-type Category = "cpu" | "gpu" | "ram";
-
-type Product = {
-  id: string | number;
-  store_id: string | number;
-  name: string;
-  url: string | null;
-  category: Category | null;
-  price: number | null;
-  in_stock: boolean | null;
-};
-
-type Store = { id: string | number; name?: string; slug?: string };
+import { fetchCatalog } from "../data.ts";
+import {
+  STORES,
+  summarize,
+  type Category,
+  type GroupWithOffers,
+} from "../lib/offers.ts";
+import { matchesQuery } from "../lib/search.ts";
+import { ProductCard } from "../components/product-card.tsx";
 
 type Sort = "name" | "price-asc" | "price-desc";
 
@@ -23,39 +17,13 @@ const CATEGORY_LABELS: Record<Category, string> = {
   ram: "Memorias RAM",
 };
 
-const PAGE_SIZE = 50;
-const SUPABASE_PAGE = 1000;
-
-const clp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
-
-/** Minúsculas y sin tildes, para que "memoria" encuentre "Memória". */
-const normalize = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-
-async function fetchAllProducts(): Promise<Product[]> {
-  const all: Product[] = [];
-  for (let from = 0; ; from += SUPABASE_PAGE) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, store_id, name, url, category, price, in_stock")
-      .order("id")
-      .range(from, from + SUPABASE_PAGE - 1);
-    if (error) throw new Error(error.message);
-    all.push(...(data as Product[]));
-    if (data.length < SUPABASE_PAGE) break;
-  }
-  return all;
-}
+const PAGE_SIZE = 48;
 
 export function Catalog() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
+  const [groups, setGroups] = useState<GroupWithOffers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [now] = useState(() => new Date());
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category | "all">("all");
@@ -66,56 +34,52 @@ export function Catalog() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const [prods, storesRes] = await Promise.all([
-          fetchAllProducts(),
-          supabase.from("stores").select("*"),
-        ]);
-        setProducts(prods);
-        setStores((storesRes.data as Store[] | null) ?? []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchCatalog()
+      .then(setGroups)
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
-  const storeName = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of stores) map.set(String(s.id), s.name ?? s.slug ?? String(s.id));
-    return (id: string | number) => map.get(String(id)) ?? "—";
-  }, [stores]);
+  const entries = useMemo(
+    () =>
+      groups.map((group) => ({
+        group,
+        summary: summarize(group, now),
+        text: group.name + " " + group.offers.map((o) => o.name).join(" "),
+      })),
+    [groups, now],
+  );
 
   const filtered = useMemo(() => {
-    const words = normalize(query).split(/\s+/).filter(Boolean);
     const max = maxPrice ? Number(maxPrice) : null;
-    const list = products.filter((p) => {
-      if (category !== "all" && p.category !== category) return false;
-      if (storeId !== "all" && String(p.store_id) !== storeId) return false;
-      if (onlyInStock && p.in_stock === false) return false;
-      if (max != null && (p.price == null || p.price > max)) return false;
-      if (words.length) {
-        const name = normalize(p.name);
-        if (!words.every((w) => name.includes(w))) return false;
-      }
-      return true;
+    const list = entries.filter(({ group, summary, text }) => {
+      if (category !== "all" && group.category !== category) return false;
+      if (storeId !== "all" && !group.offers.some((o) => String(o.store_id) === storeId))
+        return false;
+      if (onlyInStock && summary.storeCount === 0) return false;
+      if (max != null && (summary.bestPrice == null || summary.bestPrice > max)) return false;
+      return matchesQuery(text, query);
     });
-    const byPrice = (a: Product, b: Product, dir: 1 | -1) =>
-      a.price == null ? 1 : b.price == null ? -1 : (a.price - b.price) * dir;
+    const byPrice = (a: (typeof list)[number], b: (typeof list)[number], dir: 1 | -1) => {
+      const pa = a.summary.bestPrice;
+      const pb = b.summary.bestPrice;
+      if (pa == null && pb == null) return 0;
+      if (pa == null) return 1;
+      if (pb == null) return -1;
+      return (pa - pb) * dir;
+    };
     return list.sort((a, b) =>
       sort === "price-asc" ? byPrice(a, b, 1)
       : sort === "price-desc" ? byPrice(a, b, -1)
-      : a.name.localeCompare(b.name, "es"),
+      : a.group.name.localeCompare(b.group.name, "es"),
     );
-  }, [products, query, category, storeId, onlyInStock, maxPrice, sort]);
+  }, [entries, query, category, storeId, onlyInStock, maxPrice, sort]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: products.length };
-    for (const p of products) if (p.category) c[p.category] = (c[p.category] ?? 0) + 1;
+    const c: Record<string, number> = { all: groups.length };
+    for (const g of groups) c[g.category] = (c[g.category] ?? 0) + 1;
     return c;
-  }, [products]);
+  }, [groups]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -175,9 +139,9 @@ export function Catalog() {
           aria-label="Tienda"
         >
           <option value="all">Todas las tiendas</option>
-          {stores.map((s) => (
+          {STORES.map((s) => (
             <option key={s.id} value={String(s.id)}>
-              {s.name ?? s.slug}
+              {s.name}
             </option>
           ))}
         </select>
@@ -215,53 +179,16 @@ export function Catalog() {
       </div>
 
       <p className="count">
-        {filtered.length} de {products.length} productos
+        {filtered.length} de {groups.length} productos
       </p>
 
       {filtered.length === 0 ? (
         <p className="empty">No hay productos que coincidan con los filtros.</p>
       ) : (
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Tienda</th>
-                <th>Stock</th>
-                <th className="num">Precio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    {p.url ? (
-                      <a href={p.url} target="_blank" rel="noreferrer noopener">
-                        {p.name}
-                      </a>
-                    ) : (
-                      p.name
-                    )}
-                  </td>
-                  <td>{p.category ? CATEGORY_LABELS[p.category] ?? p.category : "—"}</td>
-                  <td>{storeName(p.store_id)}</td>
-                  <td>
-                    {p.in_stock === true ? (
-                      <span className="stock yes">Disponible</span>
-                    ) : p.in_stock === false ? (
-                      <span className="stock no">Agotado</span>
-                    ) : (
-                      <span className="stock">—</span>
-                    )}
-                  </td>
-                  <td className="num">
-                    {p.price != null ? clp.format(p.price) : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid">
+          {visible.map(({ group }) => (
+            <ProductCard key={group.id} group={group} now={now} />
+          ))}
         </div>
       )}
 

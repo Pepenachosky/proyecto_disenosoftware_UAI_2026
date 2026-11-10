@@ -179,3 +179,67 @@ td a {
   white-space: nowrap;
   max-width: 40vw;
 }
+
+/* Cuadrícula de productos */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover {
+  border-color: #6d4aff;
+}
+
+.card-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.card-cat {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.card-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+
+.card-price {
+  font-weight: 600;
+}
+
+.card-price.none {
+  opacity: 0.6;
+}
+
+.card-stores {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 400px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
