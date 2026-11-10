@@ -58,3 +58,86 @@ td {
   text-align: right;
   white-space: nowrap;
 }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab,
+.pager button,
+.link {
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab {
+  padding: 8px 14px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+}
+
+.tab.active {
+  background: #6d4aff;
+  border-color: #6d4aff;
+  color: #fff;
+}
+
+.badge {
+  margin-left: 8px;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+.filters input[type="number"] {
+  padding: 8px;
+  font-size: 1rem;
+  width: 160px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: #6d4aff;
+  text-decoration: underline;
+}
+
+.empty {
+  padding: 32px 0;
+  text-align: center;
+  opacity: 0.7;
+}
+
+td a {
+  color: inherit;
+}
+
+.stock.yes {
+  color: #1e8e3e;
+}
+
+.stock.no {
+  color: #c0392b;
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pager button {
+  padding: 8px 14px;
+}
