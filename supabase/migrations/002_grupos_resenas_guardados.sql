@@ -54,13 +54,17 @@ alter table public.product_reviews add constraint product_reviews_rating_check
 
 alter table public.product_reviews alter column comment set default '';
 alter table public.product_reviews alter column comment set not null;
+alter table public.product_reviews drop constraint if exists product_reviews_comment_length_check;
+alter table public.product_reviews add constraint product_reviews_comment_length_check
+  check (char_length(comment) <= 1000);
 alter table public.product_reviews alter column created_at set default now();
 
 -- Una reseña por usuario y grupo.
 create unique index if not exists product_reviews_user_group_key
   on public.product_reviews (user_id, group_id);
 
--- Trigger: user_id, updated_at y author_name los pone la base, no el cliente.
+-- Trigger: user_id, created_at, updated_at y author_name los pone la base, no
+-- el cliente. Al editar no cambian created_at ni (con sesión) group_id.
 -- El nombre sale de auth.identities (Google primero, cualquier proveedor como
 -- respaldo), no de raw_user_meta_data, que el usuario puede editar.
 create or replace function public.product_reviews_set_author()
@@ -75,6 +79,16 @@ begin
   -- Sin sesión (script con clave secreta) se mantiene el user_id recibido.
   new.user_id := coalesce(auth.uid(), new.user_id);
   new.updated_at := now();
+  if tg_op = 'INSERT' then
+    new.created_at := now();
+  else
+    new.created_at := old.created_at;
+    -- Un usuario no mueve su reseña a otro grupo; sin sesión (SQL Editor o
+    -- clave secreta) sí se puede, para corregir grupos a mano.
+    if auth.uid() is not null then
+      new.group_id := old.group_id;
+    end if;
+  end if;
 
   select coalesce(i.identity_data->>'full_name', i.identity_data->>'name')
     into v_name

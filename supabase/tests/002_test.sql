@@ -228,6 +228,21 @@ do $$ begin
 end $$;
 rollback;
 
+-- Caso: guardar dos veces con ON CONFLICT DO NOTHING (lo que emite el upsert
+-- del frontend con ignoreDuplicates, sin user_id en el payload) no falla y
+-- deja una sola fila; no necesita política de UPDATE.
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+insert into public.saved_products (group_id) values (1) on conflict (user_id, group_id) do nothing;
+insert into public.saved_products (group_id) values (1) on conflict (user_id, group_id) do nothing;
+do $$ begin
+  if (select count(*) from public.saved_products) <> 1 then
+    raise exception 'FALLO: el guardado repetido dejó % filas', (select count(*) from public.saved_products);
+  end if;
+end $$;
+rollback;
+
 -- Caso: B no puede guardar a nombre de A.
 begin;
 set local role authenticated;
@@ -237,6 +252,69 @@ do $$ begin
   raise exception 'FALLO: B guardó a nombre de A';
 exception when insufficient_privilege then
   if sqlerrm not like '%row-level security%' then raise; end if;
+end $$;
+rollback;
+
+-- Caso: created_at enviado por el cliente se ignora al insertar; al editar
+-- no cambian group_id ni created_at.
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+do $$ declare r record; c timestamptz; begin
+  insert into public.product_reviews (group_id, rating, created_at) values (1, 4, '2000-01-01')
+    returning id, created_at into r;
+  if r.created_at < now() - interval '1 minute' then
+    raise exception 'FALLO: created_at del cliente quedó %', r.created_at;
+  end if;
+  c := r.created_at;
+  update public.product_reviews set group_id = 2, created_at = '2000-01-01', rating = 5
+    where id = r.id returning group_id, created_at into r;
+  if r.group_id <> 1 then
+    raise exception 'FALLO: el update movió la reseña al grupo %', r.group_id;
+  end if;
+  if r.created_at is distinct from c then
+    raise exception 'FALLO: el update cambió created_at a %', r.created_at;
+  end if;
+end $$;
+rollback;
+
+-- Caso: sin sesión (SQL Editor) sí se puede mover una reseña de grupo, para
+-- corregir grupos a mano (docs/migracion-002.md).
+begin;
+insert into public.product_reviews (group_id, user_id, rating) values (1, '00000000-0000-0000-0000-00000000000b', 4);
+update public.product_reviews set group_id = 2 where user_id = '00000000-0000-0000-0000-00000000000b';
+do $$ begin
+  if (select group_id from public.product_reviews where user_id = '00000000-0000-0000-0000-00000000000b') <> 2 then
+    raise exception 'FALLO: sin sesión no se pudo mover la reseña de grupo';
+  end if;
+end $$;
+rollback;
+
+-- Caso: un comentario de más de 1000 caracteres falla.
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+do $$ begin
+  insert into public.product_reviews (group_id, rating, comment) values (1, 5, repeat('a', 1001));
+  raise exception 'FALLO: se aceptó un comentario de 1001 caracteres';
+exception when check_violation then null;
+end $$;
+insert into public.product_reviews (group_id, rating, comment) values (1, 5, repeat('a', 1000));
+rollback;
+
+-- Caso: A puede borrar su propia reseña y su propio guardado.
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+insert into public.product_reviews (group_id, rating) values (1, 5);
+insert into public.saved_products (group_id) values (1);
+do $$ declare n int; begin
+  delete from public.product_reviews where group_id = 1;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FALLO: A borró % reseña(s) propias', n; end if;
+  delete from public.saved_products where group_id = 1;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FALLO: A borró % guardado(s) propios', n; end if;
 end $$;
 rollback;
 
