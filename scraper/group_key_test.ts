@@ -45,3 +45,9 @@ Deno.test("RAM: ECC/RDIMM y línea Fury genérica", () => {
   assertEquals(key("memoria sodimm kingston fury impact ddr4 16gb 3200mhz / pc4-25600 - cl20 - 1.2 v - sin bufer - no ecc - negro p/n kf432s20ib16", "ram"), "kingston-fury-impact-ddr4-16gb-3200-sodimm");
   assertEquals(key("memoria ddr5 kingston fury 16gb 5600mt/s cl36 black p/n kf556c36bbe-16", "ram"), "kingston-fury-ddr5-16gb-5600-dimm");
 });
+
+Deno.test("RAM: \"On-Die ECC\" de DDR5 de escritorio no marca ECC", () => {
+  assertEquals(key("Memoria RAM Kingston de 16GB (DDR5, 5600MHz, On-Die ECC, DIMM)", "ram"), "kingston-ddr5-16gb-5600-dimm");
+  assertEquals(key("memoria ddr5 kingston 16gb 5600mhz on die ecc dimm", "ram"), "kingston-ddr5-16gb-5600-dimm");
+  assertEquals(key("Memoria RAM Kingston de 16GB (DDR5, 5600MHz, On-Die ECC, ECC, RDIMM)", "ram"), "kingston-ddr5-16gb-5600-rdimm-ecc");
+});

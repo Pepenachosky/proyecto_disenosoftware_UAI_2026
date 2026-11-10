@@ -92,8 +92,10 @@ function ramKey(t: string): GroupKey | null {
   const speed = t.match(/(\d{4}) ?(?:mhz|mt\/s)/)?.[1];
   // sodimm > rdimm/registered > dimm
   const format = /so-?dimm|notebook/.test(t) ? "sodimm" : /rdimm|registered/.test(t) ? "rdimm" : "dimm";
-  // ECC solo si no dice "non-ecc" / "no ecc".
-  const ecc = /\becc\b/.test(t) && !/\b(non|no)[- ]?ecc\b/.test(t);
+  // ECC solo si no dice "non-ecc" / "no ecc". El "On-Die ECC" de toda DDR5 de
+  // escritorio no es memoria ECC.
+  const noOnDie = t.replace(/\bon[- ]?die[- ]?ecc\b/g, " ");
+  const ecc = /\becc\b/.test(noOnDie) && !/\b(non|no)[- ]?ecc\b/.test(noOnDie);
 
   if (!type || !capacity || !speed) return null;
   return {
