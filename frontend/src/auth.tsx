@@ -7,7 +7,6 @@ type AppUser = { id: string; name: string };
 type AuthValue = {
   user: AppUser | null;
   loading: boolean;
-  signIn(): Promise<void>;
   signOut(): Promise<void>;
 };
 
@@ -44,13 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      async signIn() {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: window.location.href },
-        });
-        if (error) throw new Error(error.message);
-      },
       async signOut() {
         const { error } = await supabase.auth.signOut();
         if (error) throw new Error(error.message);

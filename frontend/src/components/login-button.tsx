@@ -1,10 +1,35 @@
-import { useAuth } from "../auth";
+import { useEffect, useRef } from "react";
+import { googleIdentity } from "../google";
 
-export function LoginButton({ label = "Iniciar sesión con Google" }: { label?: string }) {
-  const { signIn } = useAuth();
-  return (
-    <button type="button" className="login-button" onClick={() => void signIn().catch((e) => alert(e.message))}>
-      {label}
-    </button>
-  );
+export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const draw = () => {
+      void googleIdentity().then((id) => {
+        const el = ref.current;
+        if (cancelled || !id || !el) return;
+        el.replaceChildren();
+        id.renderButton(el, {
+          type: "standard",
+          theme: media.matches ? "filled_black" : "outline",
+          size,
+          text: "signin_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+          locale: "es",
+        });
+      });
+    };
+    draw();
+    media.addEventListener("change", draw);
+    return () => {
+      cancelled = true;
+      media.removeEventListener("change", draw);
+    };
+  }, [size]);
+
+  return <div className="google-button" ref={ref} />;
 }

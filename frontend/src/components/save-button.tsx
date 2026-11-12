@@ -12,7 +12,14 @@ export function SaveButton({ groupId }: { groupId: number }) {
       </button>
     );
   }
-  if (!user) return <LoginButton label="Inicia sesión para guardar" />;
+  if (!user) {
+    return (
+      <div>
+        <p>Inicia sesión para guardar</p>
+        <LoginButton />
+      </div>
+    );
+  }
   const saved = ids.has(groupId);
   return (
     <button

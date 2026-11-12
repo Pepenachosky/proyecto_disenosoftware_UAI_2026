@@ -302,7 +302,6 @@ td a {
 }
 
 .save-button,
-.product .login-button,
 .review-actions button {
   font: inherit;
   padding: 8px 14px;
@@ -505,4 +504,12 @@ tr.stale {
 
 span.stale {
   opacity: 0.55;
+}
+
+.google-button {
+  min-height: 40px;
+}
+
+.nav-user .google-button {
+  min-height: 32px;
 }
