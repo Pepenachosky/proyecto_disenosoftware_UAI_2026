@@ -13,12 +13,12 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (hecho en código; falta probarlo con Google y Supabase reales)
 - [ ] Multilenguaje propio
 - [ ] Geolocalización de tiendas: mostrar la distancia de cada tienda a la ubicación del usuario y sus horarios de funcionamiento (por hacer, ver nota abajo)
-- [ ] Mostrar la imagen del producto si está disponible (por hacer). Hoy se usa una imagen genérica (`/placeholder.png`). `product_groups.image_url` ya existe y el frontend la usa si tiene valor, pero ningún scraper guarda imágenes ni `group.ts` las copia al grupo; falta extraer la URL de la imagen en cada tienda y completar el grupo.
+- [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
 
 > **Por hacer: geolocalización y horarios de las tiendas.** Falta implementar en la app (1) pedir la ubicación del usuario y mostrar a qué distancia queda cada tienda y sucursal, y (2) mostrar los horarios de funcionamiento de cada una. La base ya tiene las tablas `store_branches` (sucursales y ubicación), `branch_hours` (horarios) y `branch_stock` (unidades por sucursal) y la función `nearby_branches(lat, lng, radio_km)`, pero están vacías: ningún scraper las llena y el frontend no las usa. Hay que escribir los scrapers de sucursales y horarios (y, de paso, guardar `quantityInStore` y `quantityOnline` de SP Digital) y luego la vista en el frontend.
 
-Dos pasos son **manuales**: configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)) y ejecutar la migración 002 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md)).
+Tres pasos son **manuales**: configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)) y ejecutar las migraciones 002 y 003 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md) y [`docs/migracion-003.md`](docs/migracion-003.md)).
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
 
@@ -47,15 +47,17 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
 │       └── lib/                 Lógica pura con pruebas: search, offers, history
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
-│                        el agrupador (group_key.ts, group.ts) y deno.json con las tareas
+│                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
+│                        y deno.json con las tareas
 ├── supabase/
-│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados)
-│   └── tests/           Pruebas de la migración 002 (run_002.sh, usa podman)
+│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto)
+│   └── tests/           Pruebas de las migraciones 002 y 003 (run_002.sh, usa podman)
 ├── api/                 Reservado (vacío por ahora)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
 │   ├── configurar-google.md  Paso a paso del inicio de sesión con Google
 │   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
+│   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
 │   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
@@ -82,9 +84,10 @@ Tablas: `stores`, `products` (precio, stock, fecha de precio), `price_history`, 
   - `product_groups`: un producto "único" que junta las filas de varias tiendas (`products.group_id`; `group_locked` protege las correcciones manuales).
   - Reseñas por grupo en `product_reviews`: 1 a 5 estrellas, una por usuario y producto; el nombre del autor lo pone la base desde la cuenta de Google.
   - `saved_products`: los productos que guarda cada usuario para compararlos.
+- **Migración 003** (`supabase/migrations/003_imagen_producto.sql`, explicada en [`docs/migracion-003.md`](docs/migracion-003.md)) agrega `products.image_url`. Los scrapers de SP Digital y Winpy la llenan y `group.ts` copia una foto por grupo a `product_groups.image_url`.
 - **RLS:** con la clave pública, cualquiera lee productos, precios, grupos y reseñas; un usuario con sesión iniciada solo escribe sus propias reseñas y sus propios guardados. Productos, precios y grupos solo los escriben los scrapers y el script de agrupado (clave de servicio).
 
-> Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002` es la migración nueva y también se ejecuta a mano (se puede correr más de una vez sin error).
+> Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002` y la `003` son migraciones nuevas y también se ejecutan a mano (se puede correr más de una vez sin error).
 
 ## Puesta en marcha
 
@@ -112,9 +115,9 @@ VITE_SUPABASE_ANON_KEY=
 
 > Nunca expongas `SUPABASE_SERVICE_ROLE_KEY` en el frontend. Los archivos `.env` están en `.gitignore`.
 
-### 2. Migración 002
+### 2. Migraciones 002 y 003
 
-En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md).
+En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md) y [`docs/migracion-003.md`](docs/migracion-003.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
 
 ### 3. Scrapers y agrupado
 
@@ -139,17 +142,17 @@ deno task build   # compilación de producción
 deno task lint    # Oxlint
 ```
 
-El orden recomendado es: migración, scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
+El orden recomendado es: migraciones (002 y 003), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
 ### 5. Pruebas
 
 Desde la raíz del repositorio:
 
 ```bash
-(cd scraper && deno task test)                   # pruebas del agrupador
+(cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
 (cd frontend && deno test --no-config src/lib/)  # lógica pura del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
-bash supabase/tests/run_002.sh                   # migración 002 en un Postgres local (necesita podman)
+bash supabase/tests/run_002.sh                   # migraciones 002 y 003 en un Postgres local (necesita podman)
 ```
 
 ## Configurar inicio de sesión con Google
