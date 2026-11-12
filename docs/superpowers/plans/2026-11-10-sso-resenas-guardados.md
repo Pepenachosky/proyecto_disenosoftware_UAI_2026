@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Nota (2026-11-12):** el botón de inicio de sesión de este plan (`LoginButton` con `label` e inicio por redirección con `signInWithOAuth`) fue reemplazado por el botón oficial de Google. Ver [`2026-11-12-boton-google-oficial.md`](2026-11-12-boton-google-oficial.md). Este plan queda como registro histórico.
+
 **Goal:** Agrupar las filas de las 3 tiendas en productos únicos y construir sobre eso un frontend con cuadrícula, subpágina de producto (tiendas, gráfico histórico, reseñas con estrellas), guardados con tabla comparativa e inicio de sesión con Google.
 
 **Architecture:** La migración SQL 002 agrega `product_groups`, `products.group_id`/`group_locked`, rehace `product_reviews` (por grupo, con nombre puesto por trigger) y crea `saved_products`, con RLS. Un script Deno (`scraper/group.ts`) calcula una clave por producto y asigna grupos. El frontend React carga el catálogo completo, agrupa en el cliente con funciones puras probadas y usa `react-router` para `/`, `/producto/:slug` y `/guardados`. Supabase Auth maneja Google.
