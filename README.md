@@ -165,7 +165,7 @@ El botón de inicio de sesión lo dibuja el script oficial de Google Identity Se
 1. En Google Cloud Console, crea un cliente OAuth de tipo "Aplicación web" y agrega como orígenes de JavaScript autorizados `http://localhost:5173` y `http://localhost`.
 2. En Supabase → Authentication → Sign In / Providers → Google: activa el proveedor, pega el Client ID y el Client Secret, y deja el ID en la lista **Client IDs** (sin activar *Skip nonce check*).
 3. Pon el mismo ID de cliente en `frontend/.env` como `VITE_GOOGLE_CLIENT_ID` y reinicia `deno task dev`.
-4. Al desplegar: agrega el dominio final como origen autorizado en Google, define `VITE_GOOGLE_CLIENT_ID` en las variables del hosting y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
+4. Al desplegar: agrega el dominio final como origen autorizado en Google, define `VITE_GOOGLE_CLIENT_ID` en las variables del hosting (Vite incrusta las `VITE_*` al compilar, así que hay que volver a desplegar después de definirla) y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
 
 La guía paso a paso (pantalla de consentimiento, usuarios de prueba, cómo probarlo y errores comunes) está en [`docs/configurar-google.md`](docs/configurar-google.md).
 

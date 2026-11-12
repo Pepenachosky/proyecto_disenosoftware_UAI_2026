@@ -19,6 +19,7 @@ Entrar a https://console.cloud.google.com.
 3. **Crear las credenciales** en **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**:
    - Tipo de aplicación: **Aplicación web**.
    - **Orígenes de JavaScript autorizados**: `http://localhost:5173` **y** `http://localhost`. Google pide los dos para las pruebas locales con este botón.
+   - Google puede tardar desde unos minutos hasta varias horas en aplicar los orígenes nuevos. Si aparece "The given origin is not allowed for the given client ID" justo después de agregarlos, esperar y reintentar.
    - **URIs de redireccionamiento autorizados**: no se necesitan para este botón. Si ya estaba configurada, se puede dejar.
    - Al crear, Google muestra un **ID de cliente** y un **Secreto de cliente**. Copiar ambos.
 
@@ -41,6 +42,7 @@ VITE_GOOGLE_CLIENT_ID=<ID de cliente>
 ```
 
 Es un dato público; el secreto de cliente no va aquí, solo en Supabase. Después de editar el `.env`, reiniciar `deno task dev`.
+
 ## 4. Probar
 
 ```
@@ -58,7 +60,8 @@ El inicio de sesión funciona aunque no se haya ejecutado la migración 002. Per
 | `Unsupported provider: provider is not enabled` | Google no quedó activado o guardado en Supabase. |
 | "Acceso bloqueado" o "app no verificada" | El correo no está en **Usuarios de prueba**. |
 | `The given origin is not allowed for the given client ID` | Falta el origen (`http://localhost:5173` o `http://localhost`, o el dominio real) en los orígenes de JavaScript autorizados en Google. |
-| `Nonces mismatch` o `Passed nonce and nonce in id_token should either both exist or not` | Se activó algo distinto en Supabase (por ejemplo, **Skip nonce check**). Debe quedar desactivado. |
+| `Nonces mismatch` o `Passed nonce and nonce in id_token should either both exist or not` | El nonce enviado no coincide con el del token (por ejemplo, la página corría una versión vieja del código). Recargar la página. No activar **Skip nonce check** para esquivarlo: debe quedar desactivado. |
+| `Unacceptable audience in id_token` | `VITE_GOOGLE_CLIENT_ID` en `frontend/.env` no coincide con ninguno de los IDs de la lista **Client IDs** del proveedor Google en Supabase. |
 | El botón no aparece | Falta `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`, no se reinició `deno task dev` o el navegador bloquea el script de Google. |
 
 ## Al hacer el deploy
@@ -67,5 +70,7 @@ Con este botón basta con dos cosas:
 
 - en Google, agregar el dominio real como **origen autorizado**;
 - en las variables de entorno de Vercel, definir `VITE_GOOGLE_CLIENT_ID`.
+
+Vite incrusta las variables `VITE_*` al compilar, así que después de definir `VITE_GOOGLE_CLIENT_ID` en Vercel hay que volver a desplegar.
 
 La Site URL y las Redirect URLs de Supabase no se usan para este botón. Además, el hosting debe servir `index.html` para todas las rutas (por ejemplo, `/producto/...`), porque la app usa rutas del navegador.

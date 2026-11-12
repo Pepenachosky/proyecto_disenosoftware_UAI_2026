@@ -21,7 +21,7 @@ export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
           logo_alignment: "left",
           locale: "es",
         });
-      });
+      }).catch((e) => console.warn("No se pudo dibujar el botón de Google:", e));
     };
     draw();
     media.addEventListener("change", draw);
