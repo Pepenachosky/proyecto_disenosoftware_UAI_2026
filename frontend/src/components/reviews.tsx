@@ -100,7 +100,10 @@ export function Reviews({ groupId }: { groupId: number }) {
       )}
 
       {!user ? (
-        <LoginButton label="Iniciar sesión con Google para comentar" />
+        <>
+          <p>Inicia sesión para dejar tu reseña</p>
+          <LoginButton />
+        </>
       ) : reviews ? (
         <form className="review-form" onSubmit={onSubmit}>
           <span className="review-form-title">{mine ? "Tu reseña" : "Escribe una reseña"}</span>

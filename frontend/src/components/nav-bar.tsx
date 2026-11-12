@@ -17,7 +17,7 @@ export function NavBar() {
             <button type="button" onClick={() => void signOut()}>Salir</button>
           </>
         ) : (
-          <LoginButton />
+          <LoginButton size="medium" />
         )}
       </div>
     </nav>
