@@ -11,6 +11,7 @@ import {
   type Offer,
 } from "../lib/offers.ts";
 import { PriceChart } from "../components/price-chart.tsx";
+import { ProductImage } from "../components/product-image.tsx";
 import { Reviews } from "../components/reviews.tsx";
 import { SaveButton } from "../components/save-button.tsx";
 
@@ -67,11 +68,7 @@ export function ProductPage() {
   return (
     <main className="wrap product">
       <header className="product-head">
-        <img
-          className="product-img"
-          src={group.image_url ?? "/placeholder.png"}
-          alt={group.name}
-        />
+        <ProductImage className="product-img" src={group.image_url} alt={group.name} />
         <div className="product-info">
           <span className="product-cat">{CATEGORY_NAMES[group.category]}</span>
           <h1 className="product-name">{group.name}</h1>
