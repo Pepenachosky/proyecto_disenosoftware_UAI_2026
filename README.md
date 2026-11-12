@@ -51,6 +51,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 ├── api/                 Reservado (vacío por ahora)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
+│   ├── configurar-google.md  Paso a paso del inicio de sesión con Google
 │   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
 │   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
@@ -156,6 +157,8 @@ El inicio de sesión usa Google a través de Supabase Auth. Es un paso manual:
 2. En Supabase → Authentication → Sign In / Providers → Google: activa el proveedor y pega el Client ID y el Client Secret.
 3. En Supabase → Authentication → URL Configuration: pon Site URL `http://localhost:5173` y Redirect URLs `http://localhost:5173/**`.
 4. Al desplegar: agrega el dominio final en esas mismas URLs y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
+
+La guía paso a paso (pantalla de consentimiento, usuarios de prueba, cómo probarlo y errores comunes) está en [`docs/configurar-google.md`](docs/configurar-google.md).
 
 ## Arquitectura (resumen del grafo de conocimiento)
 
