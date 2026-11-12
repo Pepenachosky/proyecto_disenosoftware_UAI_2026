@@ -374,6 +374,36 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 15: Correcciones, guía de Google y ejecución diaria automática
+
+**Prompt (condensado):**
+> Revisión y correcciones tras la entrega anterior. Pregunté si los scripts de auth, Supabase y guardados no deberían ir en una carpeta `backend` o `api` (usando graphify para visualizar el proyecto), y pedí que el scraper y el agrupador se ejecuten solos una vez al día. Pregunté si Vercel podía correr ese cron. Después pedí commitear a `origin dev` y actualizar esta autoría.
+
+**Resultado obtenido:**
+- **Correcciones** (commits en `dev`):
+  - `31bdbf7`: el trigger de reseñas fija `created_at` y `group_id`, y el comentario tiene largo máximo (con pruebas nuevas en `supabase/tests/002_test.sql`).
+  - `4fafcae`: el "On-Die ECC" de la DDR5 ya no marca el grupo como ECC (`group_key.ts`, con prueba).
+  - `e7f4e66`: Guardados muestra también grupos sin ofertas; el catálogo guarda búsqueda, filtros, orden y página en la URL; el gráfico llega hasta hoy con eje de tiempo; guardar/quitar ignora clics repetidos.
+  - `3424069`: README al día (`scraper/.env`, `deno install`, RLS, pruebas desde la raíz y cómo vaciar un grupo a mano).
+- **Documentación:** guía `docs/configurar-google.md` (paso a paso del inicio de sesión con Google) y `frontend/vercel.json`, con un rewrite a `index.html` para que funcionen las rutas como `/producto/...` al desplegar (commit `3e94cda`).
+- **Ejecución diaria:** `.github/workflows/scrape.yml` (GitHub Actions) corre todos los días a las 07:00 UTC, o a mano con *Run workflow*. Ejecuta las pruebas del agrupador y luego `deno task scrape` (los 9 scrapers y el agrupado). Usa los secrets `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` (commit `d7cd4ec`).
+- **Sobre la carpeta `backend`/`api`:** según el grafo, auth, guardados y Supabase son código de cliente (React sobre Supabase con RLS), así que no corresponde moverlos a un backend. La parte de servidor real ya está en `scraper/` y `supabase/`. La carpeta `api/` sigue vacía y reservada.
+
+**Decisiones propias:**
+- Usar GitHub Actions y no el cron de Vercel: las funciones serverless tienen un tope de tiempo, los scrapers son de Deno y la corrida es lenta por los `crawl-delay`.
+- Dejar Vercel solo para el frontend.
+- No mover los scripts de auth y guardados a un backend.
+
+**Supuestos del asistente por confirmar:**
+- La hora del cron (07:00 UTC, de madrugada en Chile) y el límite de 180 minutos por corrida.
+- El workflow no se ha probado: los `schedule` de GitHub solo corren desde la rama por defecto (`main`).
+
+**Pendiente de verificar:**
+- Hacer merge de `dev` a `main`, crear los dos secrets en el repo y lanzar el workflow a mano para comprobar que termina bien.
+- Decidir qué hacer con la carpeta `api/` vacía (borrarla o usarla).
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -384,7 +414,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas (los scrapers ya se ejecutaron con `deno task scrape`, falta confirmar que los datos lleguen bien).
 - [x] Revisar que el `robots.txt` de SP Digital permita `/page-data/` (lo permite).
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
-- [ ] Al hacer el deploy, programar `deno task scrape` una vez al día con un cronjob.
+- [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
+- [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [ ] Scrapers de sucursales, horarios y stock por sucursal.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
