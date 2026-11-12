@@ -444,11 +444,18 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 **Resultado obtenido:**
 - **Commits en `dev`:**
   - `7aa4bae`: nonce para el inicio de sesión (`frontend/src/lib/nonce.ts`, con pruebas).
-  - `4724a07`: botón oficial de Google con `signInWithIdToken` (`frontend/src/google.ts`). Se quitó el flujo con redirección.
-  - Este commit de documentación: `docs/configurar-google.md`, README y esta autoría.
-- **Plan:** `docs/superpowers/plans/2026-11-12-boton-google-oficial.md`.
-- **Documentación:** `docs/configurar-google.md` y el README con los pasos nuevos (orígenes en Google Cloud, `VITE_GOOGLE_CLIENT_ID`, Client IDs en Supabase).
-- **Grafo:** se actualizó el grafo de conocimiento con graphify.
+  - `4724a07`: botón oficial de Google con `signInWithIdToken` (`frontend/src/google.ts`). `LoginButton` ahora es el espacio donde Google dibuja su botón, en los 4 lugares (barra superior, reseñas, guardar y Guardados). Se quitó el flujo con redirección.
+  - `767d8d6`: `docs/configurar-google.md`, README y esta autoría.
+  - `3a6a1e3`: ajustes de la revisión final: la causa correcta del error de nonce (no activar "Skip nonce check"), el error "Unacceptable audience", volver a desplegar en Vercel después de definir la variable, la demora de Google en aplicar orígenes nuevos, y un `.catch` para que un error al dibujar el botón quede como aviso en la consola.
+- **Proceso:** brainstorming → plan (`docs/superpowers/plans/2026-11-12-boton-google-oficial.md`) → una tarea por subagente con revisión de cada una → revisión final de la rama completa, sin problemas que bloquearan. Pruebas: 17 del frontend pasan, build y lint sin errores nuevos.
+- **Cómo funciona:**
+  - El script de Google se carga una sola vez.
+  - Google recibe el nonce con hash y, al iniciar sesión, entrega un token.
+  - La app pasa ese token a Supabase junto con el nonce original.
+  - La sesión que queda es la misma de antes, así que reseñas, guardados y "Salir" no cambian.
+  - Si falta `VITE_GOOGLE_CLIENT_ID` o el script no carga, no se muestra el botón (solo un aviso en la consola).
+- **Documentación:** `docs/configurar-google.md` y el README con los pasos nuevos (orígenes `http://localhost:5173` y `http://localhost` en Google Cloud, `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`, Client IDs en Supabase) y una tabla de errores comunes.
+- **Grafo:** se actualizó el grafo de conocimiento con graphify (código y documentos).
 
 **Decisiones propias:**
 - Usar el script oficial de Google.
@@ -484,8 +491,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Geolocalización de tiendas (por hacer, más adelante): mostrar la distancia de cada tienda y sucursal a la ubicación del usuario, y sus horarios de funcionamiento. Las tablas `store_branches`, `branch_hours` y `branch_stock` y la función `nearby_branches` ya existen pero están vacías y sin usar; faltan los scrapers de sucursales y horarios (y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la vista en el frontend.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
-- [ ] Configurar Google OAuth en Google Cloud y en Supabase.
-- [ ] Configurar el botón de Google: orígenes en Google Cloud, `VITE_GOOGLE_CLIENT_ID` y probar el inicio de sesión.
+- [ ] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
 - [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
 - [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
 - [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
