@@ -436,6 +436,38 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 17: Botón oficial de Google
+
+**Prompt (condensado):**
+> Pedí reemplazar los botones caseros de inicio de sesión (arriba en cada página y en las reseñas de la página de producto) por el botón con el diseño oficial de Google. Ante dos opciones (un botón propio siguiendo la guía de marca o el botón que dibuja el script oficial de Google Identity Services), pregunté el esfuerzo de la segunda y la elegí porque me pareció más segura; el asistente aclaró que ambas son seguras y que la diferencia es de experiencia (el script puede mostrar "Continuar como…"). Pedí obligar a usar el script oficial: sin respaldo si no carga y sin el aviso flotante (One Tap). Pedí también los pasos para Supabase y Google Cloud Console.
+
+**Resultado obtenido:**
+- **Commits en `dev`:**
+  - `7aa4bae`: nonce para el inicio de sesión (`frontend/src/lib/nonce.ts`, con pruebas).
+  - `4724a07`: botón oficial de Google con `signInWithIdToken` (`frontend/src/google.ts`). Se quitó el flujo con redirección.
+  - Este commit de documentación: `docs/configurar-google.md`, README y esta autoría.
+- **Plan:** `docs/superpowers/plans/2026-11-12-boton-google-oficial.md`.
+- **Documentación:** `docs/configurar-google.md` y el README con los pasos nuevos (orígenes en Google Cloud, `VITE_GOOGLE_CLIENT_ID`, Client IDs en Supabase).
+- **Grafo:** se actualizó el grafo de conocimiento con graphify.
+
+**Decisiones propias:**
+- Usar el script oficial de Google.
+- Sin respaldo si el script no carga.
+- Sin One Tap.
+
+**Supuestos del asistente por confirmar:**
+- Tema claro u oscuro según el sistema.
+- Tamaño mediano en la barra y grande en el resto.
+- Frases de contexto fuera del botón, porque Google no permite cambiar su texto.
+- Los errores de inicio de sesión se muestran con `alert`.
+- El nonce se crea una vez por carga de página.
+
+**Pendiente de verificar:**
+- Agregar los orígenes en Google Cloud, poner `VITE_GOOGLE_CLIENT_ID` en `frontend/.env` (y en Vercel al publicar) y revisar la lista Client IDs en Supabase.
+- Probar iniciar y cerrar sesión, reseñas y guardados.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -453,6 +485,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
 - [ ] Configurar Google OAuth en Google Cloud y en Supabase.
+- [ ] Configurar el botón de Google: orígenes en Google Cloud, `VITE_GOOGLE_CLIENT_ID` y probar el inicio de sesión.
 - [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
 - [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
 - [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.

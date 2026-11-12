@@ -27,7 +27,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 | Capa | Tecnología |
 |---|---|
 | Frontend | React 19 + TypeScript + Vite, react-router (rutas), recharts (gráfico), lint con Oxlint |
-| Autenticación | Supabase Auth con Google (SSO) |
+| Autenticación | Supabase Auth con el botón oficial de Google (Google Identity Services) |
 | Scrapers | Deno + TypeScript |
 | Base de datos | Supabase (PostgreSQL, con RLS) |
 
@@ -111,7 +111,10 @@ Y crea `frontend/.env` con la clave **pública**:
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_GOOGLE_CLIENT_ID=
 ```
+
+`VITE_GOOGLE_CLIENT_ID` es el ID de cliente OAuth de Google (público; ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)). Sin él, el botón de iniciar sesión no aparece.
 
 > Nunca expongas `SUPABASE_SERVICE_ROLE_KEY` en el frontend. Los archivos `.env` están en `.gitignore`.
 
@@ -157,12 +160,12 @@ bash supabase/tests/run_002.sh                   # migraciones 002 y 003 en un P
 
 ## Configurar inicio de sesión con Google
 
-El inicio de sesión usa Google a través de Supabase Auth. Es un paso manual:
+El botón de inicio de sesión lo dibuja el script oficial de Google Identity Services; la app recibe el token de Google y se lo pasa a Supabase Auth (`signInWithIdToken`). Es un paso manual:
 
-1. En Google Cloud Console, crea un cliente OAuth de tipo "Aplicación web" con la URI de redirección `https://<proyecto>.supabase.co/auth/v1/callback` (cambia `<proyecto>` por el de tu proyecto de Supabase).
-2. En Supabase → Authentication → Sign In / Providers → Google: activa el proveedor y pega el Client ID y el Client Secret.
-3. En Supabase → Authentication → URL Configuration: pon Site URL `http://localhost:5173` y Redirect URLs `http://localhost:5173/**`.
-4. Al desplegar: agrega el dominio final en esas mismas URLs y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
+1. En Google Cloud Console, crea un cliente OAuth de tipo "Aplicación web" y agrega como orígenes de JavaScript autorizados `http://localhost:5173` y `http://localhost`.
+2. En Supabase → Authentication → Sign In / Providers → Google: activa el proveedor, pega el Client ID y el Client Secret, y deja el ID en la lista **Client IDs** (sin activar *Skip nonce check*).
+3. Pon el mismo ID de cliente en `frontend/.env` como `VITE_GOOGLE_CLIENT_ID` y reinicia `deno task dev`.
+4. Al desplegar: agrega el dominio final como origen autorizado en Google, define `VITE_GOOGLE_CLIENT_ID` en las variables del hosting y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
 
 La guía paso a paso (pantalla de consentimiento, usuarios de prueba, cómo probarlo y errores comunes) está en [`docs/configurar-google.md`](docs/configurar-google.md).
 
