@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { clp, summarize, type GroupWithOffers } from "../lib/offers.ts";
+import { ProductImage } from "./product-image.tsx";
 
 const CATEGORY_NAMES = { cpu: "CPU", gpu: "GPU", ram: "RAM" } as const;
 
@@ -7,9 +8,9 @@ export function ProductCard({ group, now }: { group: GroupWithOffers; now: Date 
   const { bestPrice, storeCount } = summarize(group, now);
   return (
     <Link to={"/producto/" + group.slug} className="card">
-      <img
+      <ProductImage
         className="card-img"
-        src={group.image_url ?? "/placeholder.png"}
+        src={group.image_url}
         alt={group.name}
         loading="lazy"
       />

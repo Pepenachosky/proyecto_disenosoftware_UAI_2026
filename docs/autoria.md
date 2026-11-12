@@ -404,6 +404,38 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 16: Imagen de los productos
+
+**Prompt (condensado):**
+> Pedí implementar la extracción de la imagen de los productos para mostrarla en el frontend, trabajando de forma estructurada con superpowers (brainstorming, plan y ejecución con subagentes y revisión por tarea), anotar el prompt resumido en esta autoría y actualizar graphify. Noté que el frontend ya mostraba `image_url` con un placeholder. Ante el bloqueo de PC Express (responde 403 a las imágenes pedidas desde otro sitio) elegí respetarlo y dejar el placeholder. Pedí una sola foto por producto y dije que no había que preocuparse por el cron diario (07:00 UTC) respecto al orden de la migración.
+
+**Resultado obtenido:**
+- **Commits en `dev`:**
+  - `18d5af5`: migración 003, columna `products.image_url` (`supabase/migrations/003_imagen_producto.sql`, prueba en `supabase/tests/003_test.sql`, `run_002.sh` ahora corre también la 003, explicada en `docs/migracion-003.md`).
+  - `bb82cc6`: SP Digital guarda la imagen del producto (`media[0].limitedUrl` de 512 px de la primera entrada IMAGE, o `thumbnail.url` si no hay; solo https; prueba en `scraper/spdigital_test.ts`).
+  - `126b4d1`: Winpy guarda la imagen en tamaño completo (el `<img>` de cada artículo sin el prefijo `tumb_`; solo https; prueba en `scraper/winpy_test.ts`).
+  - `8866b14`: el agrupado elige la imagen del grupo (`pickGroupImage` en `group.ts`, SP Digital > Winpy) y la escribe en `product_groups.image_url`; las filas con `group_locked` no se consideran (prueba en `scraper/group_test.ts`).
+  - `d95ff75`: placeholder cuando la imagen no carga (`frontend/src/components/product-image.tsx`, usado en la tarjeta, la página del producto y Guardados).
+- **PC Express:** no se extrae imagen; usa el placeholder.
+- **Plan:** `docs/superpowers/plans/2026-11-12-imagen-producto.md`.
+- **Grafo:** se actualizó el grafo de conocimiento con `graphify update .`.
+
+**Decisiones propias:**
+- Respetar el bloqueo de PC Express y mostrar el placeholder.
+- Una sola foto por producto.
+
+**Supuestos del asistente por confirmar:**
+- La prioridad SP Digital > Winpy para elegir la foto del grupo.
+- Los tamaños: SP Digital 512 px y Winpy tamaño completo.
+- Las imágenes se enlazan directo desde la tienda (no se copian a Supabase Storage).
+- Las filas con `group_locked` no aportan foto al grupo.
+
+**Verificado por el autor:**
+- Migración 003 ejecutada en Supabase, scrapers y agrupado corridos contra la base real.
+- En el navegador la imagen del producto se ve nítida, y cuando no hay imagen aparece el placeholder.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -416,12 +448,15 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
-- [ ] Scrapers de sucursales, horarios y stock por sucursal.
+- [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
+- [ ] Geolocalización de tiendas (por hacer, más adelante): mostrar la distancia de cada tienda y sucursal a la ubicación del usuario, y sus horarios de funcionamiento. Las tablas `store_branches`, `branch_hours` y `branch_stock` y la función `nearby_branches` ya existen pero están vacías y sin usar; faltan los scrapers de sucursales y horarios (y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la vista en el frontend.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
 - [ ] Configurar Google OAuth en Google Cloud y en Supabase.
-- [ ] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
+- [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
+- [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
 - [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
+- [ ] Foto de los grupos corregidos a mano: hoy `group.ts` no lee las filas con `group_locked = true`, así que un grupo formado solo por ellas queda con el placeholder. Hacer que esas filas también aporten foto antes de corregir los grupos de GPU y RAM.
 - [ ] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
 - [ ] Cargar el gráfico de forma diferida (el bundle pesa unos 870 kB por recharts).
 - [ ] Multilenguaje propio.

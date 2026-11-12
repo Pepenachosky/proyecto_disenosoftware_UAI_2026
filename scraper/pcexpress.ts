@@ -1,6 +1,9 @@
 // Scraper de productos de PC Express: nombre, precio y stock (solo fetch + parser HTML).
 // Uso:  deno run --env-file=.env --allow-net --allow-env pcexpress.ts [cpu|ram|gpu]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
+//
+// No se guarda la imagen: PC Express responde 403 a sus imágenes cuando las pide otra página
+// (protección contra hotlinking) y se respeta ese bloqueo.
 
 import { DOMParser } from "npm:linkedom@0.18.5";
 

@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useSaved } from "../saved";
 import { fetchGroupsByIds } from "../data";
 import { LoginButton } from "../components/login-button.tsx";
+import { ProductImage } from "../components/product-image.tsx";
 import {
   clp,
   offerStatus,
@@ -117,11 +118,12 @@ export function SavedPage() {
                     ✕
                   </button>
                   <Link to={"/producto/" + g.slug}>
-                    <img
-                      src={g.image_url ?? "/placeholder.png"}
+                    <ProductImage
+                      src={g.image_url}
                       alt=""
                       width={70}
                       height={70}
+                      loading="lazy"
                     />
                     <span>{g.name}</span>
                   </Link>

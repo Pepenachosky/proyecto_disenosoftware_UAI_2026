@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Prueba la migración 002 en un Postgres 17 desechable (podman):
-# stub de Supabase -> migración -> migración otra vez -> pruebas.
+# Prueba las migraciones 002 y 003 en un Postgres 17 desechable (podman):
+# stub de Supabase -> 002 (dos veces) -> pruebas 002 -> 003 (dos veces) -> pruebas 003.
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
@@ -26,3 +26,6 @@ run_sql supabase/tests/002_stub.sql "-c client_min_messages=warning"
 run_sql supabase/migrations/002_grupos_resenas_guardados.sql "-c client_min_messages=warning"
 run_sql supabase/migrations/002_grupos_resenas_guardados.sql "-c client_min_messages=warning"
 run_sql supabase/tests/002_test.sql ""
+run_sql supabase/migrations/003_imagen_producto.sql "-c client_min_messages=warning"
+run_sql supabase/migrations/003_imagen_producto.sql "-c client_min_messages=warning"
+run_sql supabase/tests/003_test.sql ""

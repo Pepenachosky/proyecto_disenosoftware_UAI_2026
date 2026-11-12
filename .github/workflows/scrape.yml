@@ -28,7 +28,7 @@ jobs:
             echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}"
             echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           } > .env
-      - name: Pruebas del agrupador
+      - name: Pruebas de los scrapers y el agrupador
         run: deno task test
       - name: Scrapers y agrupado
         run: deno task scrape

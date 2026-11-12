@@ -1,4 +1,4 @@
-// Scraper de productos de Winpy: nombre, precio y stock (solo fetch + parser HTML).
+// Scraper de productos de Winpy: nombre, precio, stock e imagen (solo fetch + parser HTML).
 // Uso:  deno run --env-file=.env --allow-net --allow-env winpy.ts [cpu|gpu|ram]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 
@@ -35,12 +35,30 @@ export interface ScrapedProduct {
   // true = Winpy muestra "Retiro Inmediato" o "Despacho Express" (hay stock a mano).
   // null = el listado no dice nada (ver nota en parseListing).
   inStock: boolean | null;
+  imageUrl: string | null; // solo https, en tamaño completo; null si el artículo no trae imagen
 }
 
 /** "$ 94.240" -> 94240 (los puntos son separador de miles en CLP). */
 function parsePrice(text: string | undefined): number | null {
   const digits = (text ?? "").replace(/\D/g, "");
   return digits ? Number(digits) : null;
+}
+
+/**
+ * Imagen en tamaño completo: resuelve el src contra BASE y quita el prefijo "tumb_"
+ * (miniatura de 140 px) del nombre del archivo. Solo https; cualquier otra cosa da null.
+ */
+export function fullImageUrl(src: string | null | undefined): string | null {
+  if (!src) return null;
+  let url: URL;
+  try {
+    url = new URL(src, BASE);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  url.pathname = url.pathname.replace(/\/tumb_([^/]*)$/, "/$1");
+  return url.href;
 }
 
 /** Extrae productos y enlaces de paginación de una página de listado. */
@@ -63,7 +81,9 @@ export function parseListing(
     // Un artículo con .opciones vacío no trae ninguna señal de stock: no se asume agotado.
     const hasButton = article.querySelector(".opciones button.btnRetiroInmediato, .opciones button.btnExpress") !== null;
 
-    products.push({ name, url: new URL(href, BASE).href, price, inStock: hasButton ? true : null });
+    const imageUrl = fullImageUrl(article.querySelector("img")?.getAttribute("src"));
+
+    products.push({ name, url: new URL(href, BASE).href, price, inStock: hasButton ? true : null, imageUrl });
   }
 
   const pages = [...doc.querySelectorAll(".paginador a")]
@@ -131,6 +151,7 @@ async function save(items: ScrapedProduct[], category: Category) {
     category,
     price: p.price,
     in_stock: p.inStock,
+    image_url: p.imageUrl,
     price_updated_at: now,
     last_seen_at: now,
   }));
@@ -164,7 +185,7 @@ if (import.meta.main) {
     const descartados = found.size - items.length;
     if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);
     console.log(`\n${cat}: ${items.length} productos`);
-    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock}`);
+    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock} | img: ${p.imageUrl ? "sí" : "no"}`);
     await save(items, cat);
   }
 }
