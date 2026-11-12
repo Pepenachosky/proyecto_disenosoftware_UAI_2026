@@ -430,8 +430,9 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - Las imágenes se enlazan directo desde la tienda (no se copian a Supabase Storage).
 - Las filas con `group_locked` no aportan foto al grupo.
 
-**Pendiente de verificar:**
-- Ejecutar la migración 003 en Supabase antes de que corra el cron con este código, correr `deno task scrape` y revisar las fotos en el navegador.
+**Verificado por el autor:**
+- Migración 003 ejecutada en Supabase, scrapers y agrupado corridos contra la base real.
+- En el navegador la imagen del producto se ve nítida, y cuando no hay imagen aparece el placeholder.
 
 ---
 
@@ -452,8 +453,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
 - [ ] Configurar Google OAuth en Google Cloud y en Supabase.
-- [ ] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
-- [ ] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador.
+- [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
+- [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
 - [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
 - [ ] Foto de los grupos corregidos a mano: hoy `group.ts` no lee las filas con `group_locked = true`, así que un grupo formado solo por ellas queda con el placeholder. Hacer que esas filas también aporten foto antes de corregir los grupos de GPU y RAM.
 - [ ] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
