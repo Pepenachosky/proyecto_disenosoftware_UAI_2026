@@ -416,7 +416,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
-- [ ] Scrapers de sucursales, horarios y stock por sucursal.
+- [ ] Imagen del producto: mostrarla cuando esté disponible. Hoy se usa una imagen genérica (`/placeholder.png`). `product_groups.image_url` ya existe y el frontend la usa si tiene valor, pero ningún scraper guarda imágenes ni `group.ts` las copia al grupo; falta extraer la URL de la imagen en cada tienda y completar el grupo.
+- [ ] Geolocalización de tiendas (por hacer, más adelante): mostrar la distancia de cada tienda y sucursal a la ubicación del usuario, y sus horarios de funcionamiento. Las tablas `store_branches`, `branch_hours` y `branch_stock` y la función `nearby_branches` ya existen pero están vacías y sin usar; faltan los scrapers de sucursales y horarios (y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la vista en el frontend.
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
 - [ ] Configurar Google OAuth en Google Cloud y en Supabase.

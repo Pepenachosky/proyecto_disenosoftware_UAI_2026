@@ -12,8 +12,11 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (hecho en código; falta probarlo con Google y Supabase reales)
 - [ ] Multilenguaje propio
-- [ ] Scrapers de sucursales, horarios y stock por sucursal
-- [ ] Cronjob diario de scraping al hacer el deploy
+- [ ] Geolocalización de tiendas: mostrar la distancia de cada tienda a la ubicación del usuario y sus horarios de funcionamiento (por hacer, ver nota abajo)
+- [ ] Mostrar la imagen del producto si está disponible (por hacer). Hoy se usa una imagen genérica (`/placeholder.png`). `product_groups.image_url` ya existe y el frontend la usa si tiene valor, pero ningún scraper guarda imágenes ni `group.ts` las copia al grupo; falta extraer la URL de la imagen en cada tienda y completar el grupo.
+- [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
+
+> **Por hacer: geolocalización y horarios de las tiendas.** Falta implementar en la app (1) pedir la ubicación del usuario y mostrar a qué distancia queda cada tienda y sucursal, y (2) mostrar los horarios de funcionamiento de cada una. La base ya tiene las tablas `store_branches` (sucursales y ubicación), `branch_hours` (horarios) y `branch_stock` (unidades por sucursal) y la función `nearby_branches(lat, lng, radio_km)`, pero están vacías: ningún scraper las llena y el frontend no las usa. Hay que escribir los scrapers de sucursales y horarios (y, de paso, guardar `quantityInStore` y `quantityOnline` de SP Digital) y luego la vista en el frontend.
 
 Dos pasos son **manuales**: configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)) y ejecutar la migración 002 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md)).
 
