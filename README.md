@@ -58,7 +58,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │   ├── configurar-google.md  Paso a paso del inicio de sesión con Google
 │   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
 │   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
-│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados
+│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, e imagen de producto
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
 
