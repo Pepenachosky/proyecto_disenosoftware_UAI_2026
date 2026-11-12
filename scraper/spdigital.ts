@@ -1,10 +1,10 @@
-// Scraper de productos de SP Digital: nombre, precio y stock (solo fetch, sin navegador).
+// Scraper de productos de SP Digital: nombre, precio, stock e imagen (solo fetch, sin navegador).
 // Uso:  deno run --env-file=.env --allow-net --allow-env spdigital.ts [cpu|gpu|ram]
 // Sin variables de entorno de Supabase solo muestra los productos (modo prueba).
 //
 // SP Digital está hecho con Gatsby: cada página de categoría tiene un JSON público
 // (/page-data/<categoría>/page-data.json) que la propia página pide para dibujarse.
-// Ese JSON trae nombre, precios y stock de cada producto, así que no hace falta
+// Ese JSON trae nombre, precios, stock e imagen de cada producto, así que no hace falta
 // parsear HTML ni usar Playwright.
 
 const BASE = "https://www.spdigital.cl";
@@ -37,6 +37,7 @@ export interface ScrapedProduct {
   // true = quantityAvailable > 0; false = 0. El listado por defecto oculta los agotados,
   // así que en la práctica casi siempre será true.
   inStock: boolean | null;
+  imageUrl: string | null; // solo https; null si el producto no trae imagen
 }
 
 // Forma mínima del JSON que usamos (el resto se ignora).
@@ -52,6 +53,8 @@ interface PageData {
           name?: string;
           metadata?: Array<{ key: string; value: string }>;
           defaultVariant?: { quantityAvailable?: number | null } | null;
+          thumbnail?: { url?: string | null } | null;
+          media?: Array<{ type?: string; limitedUrl?: string | null; thumbnailUrl?: string | null }> | null;
         }>;
       };
     };
@@ -60,6 +63,10 @@ interface PageData {
 
 /** URL del JSON de una categoría: /categories/x/ -> /page-data/categories/x/page-data.json */
 export const pageDataUrl = (path: string) => `${BASE}/page-data${path}page-data.json`;
+
+/** Devuelve la URL solo si es https; cualquier otra cosa da null. */
+const httpsOrNull = (u: unknown): string | null =>
+  typeof u === "string" && u.startsWith("https://") ? u : null;
 
 /** Extrae los productos del JSON de una categoría. */
 export function parseListing(
@@ -87,7 +94,12 @@ export function parseListing(
     const qty = it.defaultVariant?.quantityAvailable;
     const inStock = typeof qty === "number" ? qty > 0 : null;
 
-    products.push({ name, url: new URL(`/${it.slug}/`, BASE).href, price, inStock });
+    // Imagen: la de 512 px (limitedUrl) del primer medio IMAGE; si no sirve, thumbnail.url (256 px).
+    const imageUrl =
+      it.media?.filter((m) => m.type === "IMAGE").map((m) => httpsOrNull(m.limitedUrl)).find((u) => u) ??
+        httpsOrNull(it.thumbnail?.url);
+
+    products.push({ name, url: new URL(`/${it.slug}/`, BASE).href, price, inStock, imageUrl });
   }
 
   return {
@@ -150,6 +162,7 @@ async function save(items: ScrapedProduct[], category: Category) {
     category,
     price: p.price,
     in_stock: p.inStock,
+    image_url: p.imageUrl,
     price_updated_at: now,
     last_seen_at: now,
   }));
@@ -183,7 +196,7 @@ if (import.meta.main) {
     const descartados = found.size - items.length;
     if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);
     console.log(`\n${cat}: ${items.length} productos`);
-    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock}`);
+    for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock} | img: ${p.imageUrl ? "sí" : "no"}`);
     await save(items, cat);
     if (cats.indexOf(cat) < cats.length - 1) await sleep(DELAY_MS);
   }
