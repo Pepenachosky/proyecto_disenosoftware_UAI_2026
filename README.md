@@ -23,6 +23,7 @@ Varios pasos son **manuales**:
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
 - Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
 - Generar la lista de regiones y comunas: `cd scraper && deno task comunas` (escribe `frontend/src/data/comunas.ts`; sin ese archivo el frontend no compila). La consulta a Overpass (OpenStreetMap) aún no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada.
+- Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia, negarla y ver las listas, elegir una comuna y recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves" (la 004 carga lo que dice su sitio: "Lunes a Martes").
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
@@ -167,7 +168,7 @@ Desde la raíz del repositorio:
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
 (cd frontend && deno test --no-config src/lib/)  # lógica pura del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
-bash supabase/tests/run_002.sh                   # migraciones 002 y 003 en un Postgres local (necesita podman)
+bash supabase/tests/run_002.sh                   # migraciones 002 a 004 en un Postgres local (necesita podman)
 ```
 
 ## Configurar inicio de sesión con Google

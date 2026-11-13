@@ -1,6 +1,6 @@
 # Autoría: registro de prompts
 
-Registro de los prompts usados con Claude (asistente de IA) durante el proyecto. Las primeras interacciones de la conversación (más de 30) están condensadas en los primeros 3 prompts, redactados a partir de lo que se pidió realmente. Los prompts siguientes se agregaron uno por etapa y se irán agregando prompts nuevos al final.
+Registro de los prompts usados con Claude (asistente de IA) durante el proyecto. Las primeras interacciones de la conversación (más de 30) están condensadas en los primeros 3 prompts, redactados a partir de lo que se pidió realmente. Los prompts siguientes se agregan uno por etapa, al final.
 
 - **Proyecto:** plataforma de comparación de precios de RAM, GPU y procesadores
 - **Stack:** React + TypeScript + Deno, Supabase (PostgreSQL)
