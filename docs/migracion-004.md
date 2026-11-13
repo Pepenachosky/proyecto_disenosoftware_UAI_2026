@@ -1,6 +1,21 @@
-# Migración 004: tiendas físicas (borrador)
+# Migración 004: tiendas físicas
 
-> Borrador pendiente de aprobación del autor. Solo contiene la sección "Datos de las tiendas"; el resto (SQL, cómo ejecutarla) se agrega después.
+Archivo: `supabase/migrations/004_ubicacion_tiendas.sql`
+
+## Cómo ejecutarla
+
+1. Abrir el proyecto en Supabase → **SQL Editor**.
+2. Pegar el contenido de `004_ubicacion_tiendas.sql` y presionar **Run**.
+
+Se puede ejecutar más de una vez sin problemas ni filas duplicadas. Para corregir un horario o un dato de una tienda, se edita la migración y se vuelve a ejecutar.
+
+## Qué hace
+
+- Crea el índice único `store_branches_store_id_key`: una sola sucursal por tienda.
+- Cambia la clave primaria de `branch_hours` a `(branch_id, weekday, opens)`, porque PC Express tiene dos tramos el mismo día.
+- Carga una sucursal por tienda (dirección, comuna en `city`, coordenadas y teléfono) y su horario, con los datos de la sección siguiente. Los horarios se borran y se vuelven a insertar en cada ejecución.
+- Activa RLS en ambas tablas: lectura pública (`anon` y `authenticated`) y ninguna política de escritura.
+- Winpy: el texto oficial dice "Lunes a Martes 09:00 a 19:00", y así se cargó (lunes y martes hasta las 19:00; miércoles a viernes hasta las 18:00).
 
 ## Datos de las tiendas
 
