@@ -1,6 +1,6 @@
 # Autoría: registro de prompts
 
-Registro de los prompts usados con Claude (asistente de IA) durante el proyecto. Las más de 30 interacciones de la conversación están condensadas en 3 prompts, redactados a partir de lo que se pidió realmente. Se irán agregando prompts nuevos al final.
+Registro de los prompts usados con Claude (asistente de IA) durante el proyecto. Las primeras interacciones de la conversación (más de 30) están condensadas en los primeros 3 prompts, redactados a partir de lo que se pidió realmente. Los prompts siguientes se agregaron uno por etapa y se irán agregando prompts nuevos al final.
 
 - **Proyecto:** plataforma de comparación de precios de RAM, GPU y procesadores
 - **Stack:** React + TypeScript + Deno, Supabase (PostgreSQL)
@@ -475,6 +475,59 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 18: Geolocalización y horarios de las tiendas
+
+**Prompt (condensado):**
+> Pedí mostrar en la página de cada producto la dirección de cada tienda, la distancia desde el usuario, si está abierta o cerrada y su horario, y poder ordenar las ofertas por precio o distancia, trabajando con superpowers (brainstorming con bocetos, diseño, plan y ejecución con subagentes). Elegí las tarjetas (opción B). Dije que lo ideal es que el usuario dé permiso de ubicación y que, sin permiso, elija región y comuna de una lista, con la distancia medida desde el centro de la comuna. Pedí un archivo fijo de comunas generado una sola vez desde OpenStreetMap, ignorar el stock por sucursal y suponer que cada tienda tiene una sola sucursal (la casa matriz). Aprobé las direcciones y horarios tal como están en los sitios oficiales, incluido el "Lunes a Martes" de Winpy. Pedí no commitear en `dev` (todo en `feat/geolocalizacion`). Cuando los servidores de Overpass respondían 502/504 pedí detener la generación de comunas y correrla a mano más adelante.
+
+**Resultado obtenido:**
+- **Commits en `feat/geolocalizacion`:**
+  - `c4e1dc9`: diseño y plan (`docs/superpowers/specs/2026-11-12-geolocalizacion-horarios-design.md` y su plan).
+  - `747c5e0`: dirección, coordenadas y horario de las 3 tiendas, con sus fuentes (`docs/migracion-004.md`).
+  - `51c2da7` y `3e6c695`: script que genera el archivo de regiones y comunas (`scraper/comunas.ts`, `deno task comunas`), con reintentos, timeout y solo comunas miembros de la región.
+  - `9cc763c`: migración 004 (`supabase/migrations/004_ubicacion_tiendas.sql`): dirección, coordenadas y horario de las tiendas, sucursal única por tienda, RLS de lectura.
+  - `5b7deb8`: distancia y estado abierta/cerrada con hora de Chile (lógica pura en `frontend/src/lib/`, con pruebas).
+  - `82fc8b9`: ordenar ofertas por distancia.
+  - `81df122` y `35462e9`: ubicación del usuario con GPS o comuna (`frontend/src/location.tsx`), y la lib de ubicación sin depender del archivo de comunas generado.
+  - `5711656`: tarjetas de tienda con distancia, horario y orden.
+- **Proceso:** brainstorming con bocetos, diseño (revisado por un subagente), plan, y un subagente por tarea con revisión de cada una.
+- **Comunas:** la lista de regiones y comunas se obtiene con Overpass (OpenStreetMap), siguiendo región, provincias y comunas por pertenencia (`subarea`). Nominatim se usó solo para geocodificar las 3 direcciones de las tiendas.
+- **Horarios:** PC Express cierra a almorzar, así que la clave primaria de `branch_hours` pasó a `(branch_id, weekday, opens)` para guardar dos tramos el mismo día.
+- **Quedó fuera:** stock por sucursal (`branch_stock`) y `nearby_branches`, sin usar.
+- **Plan:** `docs/superpowers/plans/2026-11-12-geolocalizacion-horarios.md`.
+- **Grafo:** se actualizó el grafo de conocimiento con `graphify update .`.
+
+**Decisiones propias:**
+- Mostrar las tiendas como tarjetas (opción B).
+- Sin permiso de ubicación, elegir región y comuna de una lista, midiendo la distancia desde el centro de la comuna.
+- Archivo fijo de comunas generado una vez desde OpenStreetMap.
+- Ignorar el stock por sucursal.
+- Una sola sucursal por tienda (la casa matriz).
+- Aprobar las direcciones y horarios como están en los sitios oficiales, incluido el "Lunes a Martes" de Winpy.
+- Ejecutar con subagentes y no commitear en `dev`.
+- Detener la generación de comunas por los errores 502/504 de Overpass y correrla a mano más adelante.
+
+**Supuestos del asistente por confirmar:**
+- Datos de las tiendas escritos a mano en la migración 004, sin scrapers.
+- La app pide la ubicación al navegador en la primera visita a un producto; si se niega o falla, aparecen las listas de región y comuna.
+- Se guarda en `localStorage` el modo elegido (navegador o comuna) y la comuna; las coordenadas exactas del GPS no se guardan.
+- "Cambiar" abre las listas, con un botón "Usar mi ubicación" para volver al modo navegador.
+- Distancia en línea recta (Haversine), con una decimal y coma decimal.
+- Abierta o cerrada según la hora de Chile (`America/Santiago`), no la del computador.
+- Al ordenar, las ofertas vigentes van antes que las atenuadas; en "Distancia", el empate se resuelve por precio.
+- Una tienda sin dirección u horario muestra un aviso y queda al final al ordenar por distancia.
+- El orden elegido no se recuerda entre visitas (parte en Precio).
+- Se usa el horario de atención presencial (retiro y pago en tienda).
+- Coordenadas de las tiendas obtenidas con Nominatim a partir de la dirección oficial.
+
+**Pendiente de verificar:**
+- Generar `frontend/src/data/comunas.ts` con `cd scraper && deno task comunas` (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada).
+- Ejecutar la migración 004 en Supabase (SQL Editor).
+- Probar en el navegador: aceptar la ubicación, ordenar por distancia, negar la ubicación y ver las listas, elegir una comuna, recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
+- Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -488,7 +541,10 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
-- [ ] Geolocalización de tiendas (por hacer, más adelante): mostrar la distancia de cada tienda y sucursal a la ubicación del usuario, y sus horarios de funcionamiento. Las tablas `store_branches`, `branch_hours` y `branch_stock` y la función `nearby_branches` ya existen pero están vacías y sin usar; faltan los scrapers de sucursales y horarios (y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la vista en el frontend.
+- [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (hecho en código, rama `feat/geolocalizacion`). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
+- [ ] Generar `frontend/src/data/comunas.ts` con `cd scraper && deno task comunas` (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo).
+- [ ] Ejecutar la migración 004 en Supabase y probar distancias y horarios en el navegador (ubicación aceptada y negada, comuna, "Cambiar", "Ver horario", 360 px y modo oscuro).
+- [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
 - [ ] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
