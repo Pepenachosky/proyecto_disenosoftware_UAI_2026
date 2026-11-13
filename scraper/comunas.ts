@@ -1,7 +1,8 @@
 // Genera frontend/src/data/comunas.ts: las 16 regiones de Chile y sus 346 comunas, cada una con
 // el punto que OpenStreetMap marca como su centro (nodo admin_centre; si no, label; si no, el
 // center de la relación). Overpass se usa solo al correr este script, no en producción.
-//   deno task comunas
+//   deno task comunas               (reutiliza las regiones ya descargadas en .cache/comunas/)
+//   deno task comunas --sin-cache   (descarga todo de nuevo)
 
 export type Comuna = { name: string; lat: number; lng: number };
 export type Region = { name: string; comunas: Comuna[] };
@@ -137,7 +138,7 @@ export function verificarSinDuplicados(regiones: Region[]): void {
 }
 
 /** Consulta una región y la interpreta; reintenta ante cualquier fallo (red, timeout, cuerpo inválido, truncado, sin bounds). */
-async function pedir(iso: string, nombre: string): Promise<{ region: Region; dudosas: string[] }> {
+async function pedir(iso: string, nombre: string): Promise<{ json: OverpassResponse; region: Region; dudosas: string[] }> {
   for (let intento = 1; intento <= 8; intento++) {
     try {
       const res = await fetch(ENDPOINTS[(intento - 1) % ENDPOINTS.length], {
@@ -152,7 +153,7 @@ async function pedir(iso: string, nombre: string): Promise<{ region: Region; dud
       }
       const json: unknown = await res.json();
       if (!esRespuestaValida(json)) throw new Error("respuesta truncada o sin elements");
-      return parseRegion(json, nombre);
+      return { json, ...parseRegion(json, nombre) };
     } catch (e) {
       console.error(`Overpass falló para ${iso} (intento ${intento}): ${e instanceof Error ? e.message : e}`);
     }
@@ -161,15 +162,37 @@ async function pedir(iso: string, nombre: string): Promise<{ region: Region; dud
   throw new Error(`Overpass no respondió para ${iso}`);
 }
 
+const CACHE_DIR = ".cache/comunas";
+
+/** Región guardada de una corrida anterior; null si no existe o no sirve (se vuelve a descargar). */
+async function leerCache(iso: string, nombre: string): Promise<{ region: Region; dudosas: string[] } | null> {
+  try {
+    const json: unknown = JSON.parse(await Deno.readTextFile(`${CACHE_DIR}/${iso}.json`));
+    return esRespuestaValida(json) ? parseRegion(json, nombre) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
+  const sinCache = Deno.args.includes("--sin-cache");
+  await Deno.mkdir(CACHE_DIR, { recursive: true });
   const regiones: Region[] = [];
   const todasDudosas: string[] = [];
   for (const { iso, name } of REGIONES_OFICIALES) {
-    const { region, dudosas } = await pedir(iso, name);
+    let hit = sinCache ? null : await leerCache(iso, name);
+    if (hit) {
+      console.log(`${name}: desde caché`);
+    } else {
+      const { json, ...r } = await pedir(iso, name);
+      await Deno.writeTextFile(`${CACHE_DIR}/${iso}.json`, JSON.stringify(json));
+      hit = r;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    const { region, dudosas } = hit;
     regiones.push(region);
     todasDudosas.push(...dudosas.map((d) => `${d} (${name})`));
     console.log(`${name}: ${region.comunas.length} comunas`);
-    await new Promise((r) => setTimeout(r, 1000));
   }
   verificarSinDuplicados(regiones);
   if (todasDudosas.length) console.log(`Comunas dudosas (fuera de los bounds de su región):\n  ${todasDudosas.join("\n  ")}`);
