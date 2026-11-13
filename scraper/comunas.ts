@@ -62,6 +62,7 @@ export function parseRegion(json: OverpassResponse, regionName: string): { regio
   for (const e of json.elements) {
     if (e.type !== "relation" || e.tags?.admin_level !== "8") continue;
     const name = e.tags.name;
+    if (!name) throw new Error(`Relación ${e.id} (admin_level 8) sin nombre en la región ${regionName}`);
     const miembro = (rol: string) => {
       for (const m of e.members ?? []) {
         if (m.type === "node" && m.role === rol && nodos.has(m.ref)) return nodos.get(m.ref);
@@ -98,12 +99,17 @@ ${cuerpo}
 `;
 }
 
+// Solo comunas que son miembros de la región (región → provincias → comunas, o comunas directas
+// con rol "subarea"). No se usa `rel(area.a)`: arrastraría comunas de regiones vecinas que cruzan
+// el límite regional y de comunas de Perú, Bolivia y Argentina.
 function consulta(iso: string): string {
   return `[out:json][timeout:180];
 rel["ISO3166-2"="${iso}"]->.r;
 .r out bb tags;
-.r map_to_area->.a;
-rel(area.a)["boundary"="administrative"]["admin_level"="8"]->.c;
+rel(r.r:"subarea")->.p;
+rel(r.p:"subarea")->.pp;
+(.p; .pp;)->.q;
+rel.q["boundary"="administrative"]["admin_level"="8"]->.c;
 .c out body center;
 node(r.c:"admin_centre");
 out;
@@ -111,15 +117,45 @@ node(r.c:"label");
 out;`;
 }
 
-async function pedir(iso: string): Promise<OverpassResponse> {
+/** Una respuesta sirve si trae `elements` y Overpass no avisó de un error en tiempo de ejecución (resultado truncado). */
+export function esRespuestaValida(json: unknown): json is OverpassResponse {
+  const j = json as { elements?: unknown; remark?: unknown } | null;
+  if (!j || !Array.isArray(j.elements)) return false;
+  return !(typeof j.remark === "string" && j.remark.includes("runtime error"));
+}
+
+/** Una comuna solo puede estar en una región; si aparece en dos, el filtro de la consulta falló. */
+export function verificarSinDuplicados(regiones: Region[]): void {
+  const vistas = new Map<string, string>();
+  for (const r of regiones) {
+    for (const c of r.comunas) {
+      const otra = vistas.get(c.name);
+      if (otra) throw new Error(`La comuna ${c.name} aparece en dos regiones: ${otra} y ${r.name}`);
+      vistas.set(c.name, r.name);
+    }
+  }
+}
+
+/** Consulta una región y la interpreta; reintenta ante cualquier fallo (red, timeout, cuerpo inválido, truncado, sin bounds). */
+async function pedir(iso: string, nombre: string): Promise<{ region: Region; dudosas: string[] }> {
   for (let intento = 1; intento <= 8; intento++) {
-    const res = await fetch(ENDPOINTS[(intento - 1) % ENDPOINTS.length], {
-      method: "POST",
-      headers: { "User-Agent": USER_AGENT, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ data: consulta(iso) }),
-    });
-    if (res.ok) return await res.json();
-    console.error(`Overpass respondió ${res.status} para ${iso} (intento ${intento})`);
+    try {
+      const res = await fetch(ENDPOINTS[(intento - 1) % ENDPOINTS.length], {
+        method: "POST",
+        headers: { "User-Agent": USER_AGENT, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ data: consulta(iso) }),
+        signal: AbortSignal.timeout(200_000), // el servidor corta a los 180 s
+      });
+      if (!res.ok) {
+        await res.body?.cancel();
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json: unknown = await res.json();
+      if (!esRespuestaValida(json)) throw new Error("respuesta truncada o sin elements");
+      return parseRegion(json, nombre);
+    } catch (e) {
+      console.error(`Overpass falló para ${iso} (intento ${intento}): ${e instanceof Error ? e.message : e}`);
+    }
     await new Promise((r) => setTimeout(r, 5000 * Math.min(intento, 4)));
   }
   throw new Error(`Overpass no respondió para ${iso}`);
@@ -129,12 +165,13 @@ async function main() {
   const regiones: Region[] = [];
   const todasDudosas: string[] = [];
   for (const { iso, name } of REGIONES_OFICIALES) {
-    const { region, dudosas } = parseRegion(await pedir(iso), name);
+    const { region, dudosas } = await pedir(iso, name);
     regiones.push(region);
     todasDudosas.push(...dudosas.map((d) => `${d} (${name})`));
     console.log(`${name}: ${region.comunas.length} comunas`);
     await new Promise((r) => setTimeout(r, 1000));
   }
+  verificarSinDuplicados(regiones);
   if (todasDudosas.length) console.log(`Comunas dudosas (fuera de los bounds de su región):\n  ${todasDudosas.join("\n  ")}`);
   const total = regiones.reduce((n, r) => n + r.comunas.length, 0);
   if (regiones.length !== TOTAL_REGIONES || total !== TOTAL_COMUNAS) {

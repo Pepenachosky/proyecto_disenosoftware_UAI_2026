@@ -1,5 +1,5 @@
-import { assertEquals } from "jsr:@std/assert@1";
-import { type OverpassResponse, parseRegion, toModule } from "./comunas.ts";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1";
+import { esRespuestaValida, type OverpassResponse, parseRegion, toModule, verificarSinDuplicados } from "./comunas.ts";
 
 // Respuesta mínima de Overpass: la región con sus bounds, tres comunas y los nodos de sus miembros.
 const fixture: OverpassResponse = {
@@ -54,4 +54,37 @@ Deno.test("toModule produce TypeScript válido con los mismos datos", () => {
   assertEquals(src.includes("2026-11-13"), true);
   const m = src.match(/JSON\.parse\(`([\s\S]*?)`\)/);
   assertEquals(JSON.parse(m![1]), regiones);
+});
+
+Deno.test("parseRegion lanza si una comuna no tiene nombre", () => {
+  const sinNombre: OverpassResponse = {
+    elements: [
+      { type: "relation", id: 1, tags: { "ISO3166-2": "CL-XX" }, bounds: { minlat: -34, minlon: -72, maxlat: -33, maxlon: -70 } },
+      { type: "relation", id: 20, tags: { admin_level: "8" }, center: { lat: -33.5, lon: -71 }, members: [] },
+    ],
+  };
+  assertThrows(() => parseRegion(sinNombre, "Región X"), Error, "sin nombre");
+});
+
+Deno.test("parseRegion ignora relaciones que no son comunas (admin_level distinto de 8)", () => {
+  const json: OverpassResponse = {
+    elements: [
+      ...fixture.elements,
+      { type: "relation", id: 30, tags: { name: "Provincia", admin_level: "6" }, center: { lat: -33.5, lon: -71 }, members: [] },
+    ],
+  };
+  assertEquals(parseRegion(json, "Región X").region.comunas.length, 3);
+});
+
+Deno.test("verificarSinDuplicados lanza si una comuna está en dos regiones", () => {
+  const c = { name: "Colchane", lat: -19.3, lng: -68.6 };
+  verificarSinDuplicados([{ name: "A", comunas: [c] }, { name: "B", comunas: [{ ...c, name: "Otra" }] }]);
+  assertThrows(() => verificarSinDuplicados([{ name: "A", comunas: [c] }, { name: "B", comunas: [c] }]), Error, "Colchane");
+});
+
+Deno.test("esRespuestaValida rechaza respuestas truncadas o sin elements", () => {
+  assertEquals(esRespuestaValida({ elements: [] }), true);
+  assertEquals(esRespuestaValida({ elements: [], remark: "runtime error: Query timed out" }), false);
+  assertEquals(esRespuestaValida({ remark: "algo" }), false);
+  assertEquals(esRespuestaValida(null), false);
 });
