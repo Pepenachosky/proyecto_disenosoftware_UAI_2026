@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { fetchGroup } from "../data";
+import { fetchBranches, fetchGroup, type Branch } from "../data";
 import {
   clp,
-  offerStatus,
   sortOffers,
+  type SortBy,
   STORES,
   summarize,
   type GroupWithOffers,
-  type Offer,
 } from "../lib/offers.ts";
+import { distanceKm } from "../lib/geo.ts";
+import { useUserLocation } from "../location.tsx";
+import { LocationBar } from "../components/location-bar.tsx";
+import { StoreCard } from "../components/store-card.tsx";
 import { PriceChart } from "../components/price-chart.tsx";
 import { ProductImage } from "../components/product-image.tsx";
 import { Reviews } from "../components/reviews.tsx";
@@ -23,20 +26,50 @@ const CATEGORY_NAMES = {
 
 const storeName = (id: number | null) => STORES.find((s) => s.id === id)?.name ?? "Tienda";
 
-function statusLabel(o: Offer, now: Date): { text: string; className: string } {
-  const status = offerStatus(o, now);
-  if (status === "agotado") return { text: "Agotado", className: "stock no" };
-  if (status === "sin-datos") return { text: "Sin datos recientes", className: "stock" };
-  if (o.in_stock === true) return { text: "Disponible", className: "stock yes" };
-  return { text: "Stock no informado", className: "stock" };
-}
-
 type Result = { slug: string; group: GroupWithOffers | null; error: string | null };
 
 export function ProductPage() {
   const { slug = "" } = useParams();
   const [result, setResult] = useState<Result | null>(null);
   const [now] = useState(() => new Date());
+  const { location, start } = useUserLocation();
+  const [branches, setBranches] = useState<Branch[] | null>(null);
+  const [branchesFailed, setBranchesFailed] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("precio");
+
+  const point =
+    location.estado === "gps" || location.estado === "comuna" ? location.point : null;
+
+  // Sin ubicación no hay orden por distancia: se vuelve a precio.
+  if (!point && sortBy === "distancia") setSortBy("precio");
+
+  useEffect(() => {
+    start();
+  }, [start]);
+
+  useEffect(() => {
+    let active = true;
+    fetchBranches().then(
+      (b) => active && setBranches(b),
+      () => active && setBranchesFailed(true),
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const branchByStore = useMemo(
+    () => new Map((branches ?? []).map((b) => [b.store_id, b] as const).reverse()),
+    [branches],
+  );
+  const distanceByStore = useMemo(() => {
+    const m = new Map<number, number>();
+    if (!point) return m;
+    for (const [id, b] of branchByStore) {
+      if (b.lat != null && b.lng != null) m.set(id, distanceKm(point, { lat: b.lat, lng: b.lng }));
+    }
+    return m;
+  }, [point, branchByStore]);
 
   useEffect(() => {
     let active = true;
@@ -63,7 +96,7 @@ export function ProductPage() {
   }
 
   const { bestPrice, bestStoreId } = summarize(group, now);
-  const offers = sortOffers(group.offers, now);
+  const offers = sortOffers(group.offers, now, sortBy, distanceByStore);
 
   return (
     <main className="wrap product">
@@ -88,39 +121,36 @@ export function ProductPage() {
         {offers.length === 0 ? (
           <p className="empty">Ninguna tienda tiene este producto.</p>
         ) : (
-          <div className="table-scroll">
-            <table className="offers">
-              <thead>
-                <tr>
-                  <th>Tienda</th>
-                  <th>Estado</th>
-                  <th className="num">Precio</th>
-                  <th>
-                    <span className="sr-only">Enlace</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {offers.map((o) => {
-                  const status = statusLabel(o, now);
-                  return (
-                    <tr key={o.id} className={offerStatus(o, now) === "vigente" ? undefined : "stale"}>
-                      <td>{storeName(o.store_id)}</td>
-                      <td className={status.className}>{status.text}</td>
-                      <td className="num">{o.price != null ? clp.format(o.price) : "—"}</td>
-                      <td>
-                        {o.url ? (
-                          <a href={o.url} target="_blank" rel="noreferrer noopener">
-                            Ir a la tienda ↗
-                          </a>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <LocationBar />
+            <div className="sort-toggle">
+              <span>Ordenar por:</span>
+              <button type="button" aria-pressed={sortBy === "precio"} onClick={() => setSortBy("precio")}>
+                Precio
+              </button>
+              <button
+                type="button"
+                aria-pressed={sortBy === "distancia"}
+                disabled={!point}
+                onClick={() => setSortBy("distancia")}
+              >
+                Distancia
+              </button>
+            </div>
+            {branchesFailed && <p className="store-note">No se pudo cargar la ubicación de las tiendas.</p>}
+            <ul className="store-list">
+              {offers.map((o) => (
+                <li key={o.id}>
+                  <StoreCard
+                    offer={o}
+                    branch={branchByStore.get(o.store_id) ?? null}
+                    distance={distanceByStore.get(o.store_id) ?? null}
+                    now={now}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
 
