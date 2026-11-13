@@ -1,8 +1,8 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import type { Region } from "../data/comunas.ts";
+import type { RegionLike } from "./user-location.ts";
 import { findComuna, parseSaved, readSaved, requestPosition, writeSaved } from "./user-location.ts";
 
-const regiones: Region[] = [
+const regiones: RegionLike[] = [
   { name: "Metropolitana", comunas: [{ name: "Santiago", lat: -33.45, lng: -70.66 }] },
   { name: "Valparaíso", comunas: [{ name: "Viña del Mar", lat: -33.02, lng: -71.55 }] },
 ];

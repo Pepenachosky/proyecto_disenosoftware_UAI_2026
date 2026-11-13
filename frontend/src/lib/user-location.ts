@@ -1,5 +1,7 @@
-import type { Region } from "../data/comunas.ts";
 import type { LatLng } from "./geo.ts";
+
+// Forma estructural de las regiones (el archivo generado la cumple), para que lib no dependa de él.
+export type RegionLike = { name: string; comunas: { name: string; lat: number; lng: number }[] };
 
 // Lo único que se guarda en el navegador: el modo y, si corresponde, la comuna.
 // Las coordenadas del GPS nunca se guardan.
@@ -7,12 +9,12 @@ export type SavedLocation = { modo: "gps" } | { modo: "comuna"; region: string; 
 
 export const STORAGE_KEY = "ubicacion";
 
-export function findComuna(regiones: Region[], region: string, comuna: string): LatLng | null {
+export function findComuna(regiones: RegionLike[], region: string, comuna: string): LatLng | null {
   const c = regiones.find((r) => r.name === region)?.comunas.find((x) => x.name === comuna);
   return c ? { lat: c.lat, lng: c.lng } : null;
 }
 
-export function parseSaved(raw: string | null, regiones: Region[]): SavedLocation | null {
+export function parseSaved(raw: string | null, regiones: RegionLike[]): SavedLocation | null {
   if (!raw) return null;
   try {
     const v = JSON.parse(raw);
@@ -31,7 +33,7 @@ export function parseSaved(raw: string | null, regiones: Region[]): SavedLocatio
 
 export function readSaved(
   storage: Pick<Storage, "getItem"> | null,
-  regiones: Region[],
+  regiones: RegionLike[],
 ): SavedLocation | null {
   try {
     return parseSaved(storage?.getItem(STORAGE_KEY) ?? null, regiones);
