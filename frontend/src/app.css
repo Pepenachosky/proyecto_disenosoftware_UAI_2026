@@ -513,3 +513,41 @@ span.stale {
 .nav-user .google-button {
   min-height: 32px;
 }
+
+.location-bar {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.location-bar p {
+  margin: 0 0 8px;
+}
+
+.location-bar > p:only-child {
+  margin: 0;
+}
+
+.location-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.location-bar .link-button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+}
+
+@media (max-width: 400px) {
+  .location-form {
+    flex-direction: column;
+  }
+}
