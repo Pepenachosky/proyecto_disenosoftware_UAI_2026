@@ -14,7 +14,7 @@ Se puede ejecutar más de una vez sin problemas ni filas duplicadas. Para correg
 - Crea el índice único `store_branches_store_id_key`: una sola sucursal por tienda.
 - Cambia la clave primaria de `branch_hours` a `(branch_id, weekday, opens)`, porque PC Express tiene dos tramos el mismo día.
 - Carga una sucursal por tienda (dirección, comuna en `city`, coordenadas y teléfono) y su horario, con los datos de la sección siguiente. Los horarios se borran y se vuelven a insertar en cada ejecución.
-- Activa RLS en ambas tablas: lectura pública (`anon` y `authenticated`) y ninguna política de escritura.
+- Activa RLS en ambas tablas: borra todas las políticas que hubiera (por ejemplo, una abierta de la base original) y deja solo dos de lectura pública (`anon` y `authenticated`); ninguna política de escritura.
 - Winpy: el texto oficial dice "Lunes a Martes 09:00 a 19:00", y así se cargó (lunes y martes hasta las 19:00; miércoles a viernes hasta las 18:00).
 
 ## Datos de las tiendas

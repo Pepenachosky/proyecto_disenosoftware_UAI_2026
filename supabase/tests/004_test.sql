@@ -85,4 +85,38 @@ do $$ begin
 end $$;
 rollback;
 
+-- Caso: solo quedan las dos políticas de lectura (la política vieja abierta se eliminó).
+do $$ begin
+  if (select count(*) from pg_policies where schemaname='public'
+        and tablename in ('store_branches','branch_hours')) <> 2
+     or exists (select 1 from pg_policies where schemaname='public'
+        and tablename in ('store_branches','branch_hours') and cmd <> 'SELECT') then
+    raise exception 'FALLO: quedan políticas distintas de las dos de lectura';
+  end if;
+end $$;
+
+-- Caso: anon no puede insertar; update y delete no afectan filas (RLS no lanza error).
+begin;
+set local role anon;
+do $$ declare n int; begin
+  begin
+    insert into public.store_branches (store_id, name) values ((select min(store_id) from public.store_branches), 'x');
+    raise exception 'FALLO: anon pudo insertar en store_branches';
+  exception when insufficient_privilege then null;
+  end;
+  update public.store_branches set name = 'hack';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FALLO: anon actualizó store_branches'; end if;
+  delete from public.store_branches;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FALLO: anon borró store_branches'; end if;
+  update public.branch_hours set closes = '23:59';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FALLO: anon actualizó branch_hours'; end if;
+  delete from public.branch_hours;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FALLO: anon borró branch_hours'; end if;
+end $$;
+rollback;
+
 do $$ begin raise notice 'OK 004'; end $$;

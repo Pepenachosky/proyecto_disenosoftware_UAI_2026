@@ -106,11 +106,16 @@ create policy price_history_read on public.price_history for select to anon, aut
 -- profiles es privada en la base real: cada usuario ve solo la suya.
 create policy profiles_read_own on public.profiles for select to authenticated using (id = auth.uid());
 create policy old_open on public.product_reviews for all using (true);
+-- Políticas viejas abiertas en las tablas de tiendas físicas (la 004 debe eliminarlas).
+create policy old_open on public.store_branches for all using (true);
+create policy old_open on public.branch_hours for all using (true);
 
 grant select on public.stores, public.products, public.price_history to anon, authenticated;
 grant select on public.profiles to authenticated;
 -- Como los permisos por defecto de Supabase: product_reviews abierta a nivel de grants.
 grant select, insert, update, delete on public.product_reviews to anon, authenticated;
 -- service_role (clave secreta) puede todo sobre las tablas existentes.
+-- Igual que Supabase: anon y authenticated tienen todos los permisos por defecto en las tablas de tiendas.
+grant select, insert, update, delete on public.store_branches, public.branch_hours to anon, authenticated;
 grant all on all tables in schema public to service_role;
 grant usage, select on all sequences in schema public to service_role;

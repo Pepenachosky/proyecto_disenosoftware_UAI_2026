@@ -68,6 +68,14 @@ join public.store_branches b on b.store_id = s.id;
 alter table public.store_branches enable row level security;
 alter table public.branch_hours enable row level security;
 
+-- Se borran todas las políticas existentes (no se conocen sus nombres) para
+-- que ninguna vieja deje la escritura abierta.
+do $$ declare p record; begin
+  for p in select policyname, tablename from pg_policies
+           where schemaname='public' and tablename in ('store_branches','branch_hours') loop
+    execute format('drop policy %I on public.%I', p.policyname, p.tablename);
+  end loop; end $$;
+
 drop policy if exists store_branches_read on public.store_branches;
 create policy store_branches_read on public.store_branches
   for select to anon, authenticated using (true);
