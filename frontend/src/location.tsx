@@ -38,18 +38,30 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const startedRef = useRef(false);
   // Evita que un GPS lento pise una comuna elegida después.
   const seqRef = useRef(0);
+  // Último estado con punto, para volver a él si falla "Usar mi ubicación".
+  const previoRef = useRef<UserLocation | null>(null);
 
   const requestGps = useCallback(() => {
     const seq = ++seqRef.current;
-    setLocation({ estado: "buscando" });
+    setLocation((actual) => {
+      if (actual.estado === "gps" || actual.estado === "comuna") previoRef.current = actual;
+      return { estado: "buscando" };
+    });
     const geo = typeof navigator === "undefined" ? undefined : navigator.geolocation;
-    requestPosition(geo, 10000).then((point) => {
+    const aceptar = (point: LatLng) => {
       if (seq !== seqRef.current) return;
-      if (point) {
-        writeSaved(getStorage(), { modo: "gps" });
-        setLocation({ estado: "gps", point });
-      } else {
-        setLocation({ estado: "elegir" });
+      previoRef.current = null;
+      writeSaved(getStorage(), { modo: "gps" });
+      setLocation({ estado: "gps", point });
+    };
+    // Si el usuario acepta el permiso después del respaldo, igual se usa.
+    requestPosition(geo, 10000, aceptar).then((point) => {
+      if (seq !== seqRef.current) return;
+      if (point) aceptar(point);
+      else {
+        const previo = previoRef.current;
+        previoRef.current = null;
+        setLocation(previo ?? { estado: "elegir" });
       }
     });
   }, []);
@@ -72,6 +84,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     const point = findComuna(REGIONES, region, comuna);
     if (!point) return;
     seqRef.current++;
+    previoRef.current = null;
     writeSaved(getStorage(), { modo: "comuna", region, comuna });
     setLocation({ estado: "comuna", region, comuna, point });
   }, []);

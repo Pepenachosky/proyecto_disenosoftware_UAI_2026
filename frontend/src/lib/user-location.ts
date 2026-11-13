@@ -59,17 +59,27 @@ export type GeoLike = {
   ): void;
 };
 
-// null si no hay geolocalización, si falla o si pasa timeoutMs.
+// null si no hay geolocalización, si falla o si pasa timeoutMs. Si el usuario
+// acepta el permiso después del respaldo, onLate recibe la posición tardía.
 export function requestPosition(
   geo: GeoLike | undefined,
   timeoutMs: number,
+  onLate?: (p: LatLng) => void,
 ): Promise<LatLng | null> {
   if (!geo) return Promise.resolve(null);
   return new Promise((resolve) => {
     // Respaldo propio por si el navegador nunca responde.
-    const timer = setTimeout(() => resolve(null), timeoutMs);
+    let vencido = false;
+    const timer = setTimeout(() => {
+      vencido = true;
+      resolve(null);
+    }, timeoutMs);
     const fin = (p: LatLng | null) => {
       clearTimeout(timer);
+      if (vencido) {
+        if (p) onLate?.(p);
+        return;
+      }
       resolve(p);
     };
     try {

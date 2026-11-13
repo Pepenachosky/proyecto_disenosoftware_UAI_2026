@@ -60,6 +60,11 @@ export function LocationBar() {
         >
           Usar mi ubicación
         </button>
+        {cambiando && (
+          <button type="button" onClick={() => setCambiando(false)}>
+            Cancelar
+          </button>
+        )}
       </div>
       <small>La distancia se mide desde el centro de la comuna.</small>
     </div>

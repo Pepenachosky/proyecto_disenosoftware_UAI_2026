@@ -31,7 +31,7 @@ export function StoreCard({ offer, branch, distance, now }: Props) {
         {distance != null && ` · ${formatKm(distance)}`}
       </p>
       <p className="store-meta">
-        <span className={open?.open ? "open" : "closed"}>{statusText(open)}</span>
+        <span className={open == null ? "unknown" : open.open ? "open" : "closed"}>{statusText(open)}</span>
         <span className={stock.className}>{stock.text}</span>
         {offer.url ? (
           <a href={offer.url} target="_blank" rel="noreferrer noopener">

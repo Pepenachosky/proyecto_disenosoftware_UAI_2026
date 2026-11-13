@@ -40,12 +40,14 @@ export function ProductPage() {
   const point =
     location.estado === "gps" || location.estado === "comuna" ? location.point : null;
 
-  // Sin ubicación no hay orden por distancia: se vuelve a precio.
-  if (!point && sortBy === "distancia") setSortBy("precio");
+  // Sin ubicación no hay orden por distancia: se usa precio sin perder la elección.
+  const effectiveSort: SortBy = point ? sortBy : "precio";
 
+  // Se pide la ubicación solo cuando hay tiendas que mostrar.
+  const hasOffers = result?.slug === slug && (result.group?.offers.length ?? 0) > 0;
   useEffect(() => {
-    start();
-  }, [start]);
+    if (hasOffers) start();
+  }, [hasOffers, start]);
 
   useEffect(() => {
     let active = true;
@@ -96,7 +98,7 @@ export function ProductPage() {
   }
 
   const { bestPrice, bestStoreId } = summarize(group, now);
-  const offers = sortOffers(group.offers, now, sortBy, distanceByStore);
+  const offers = sortOffers(group.offers, now, effectiveSort, distanceByStore);
 
   return (
     <main className="wrap product">
@@ -125,13 +127,13 @@ export function ProductPage() {
             <LocationBar />
             <div className="sort-toggle">
               <span>Ordenar por:</span>
-              <button type="button" aria-pressed={sortBy === "precio"} onClick={() => setSortBy("precio")}>
+              <button type="button" aria-pressed={effectiveSort === "precio"} onClick={() => setSortBy("precio")}>
                 Precio
               </button>
               <button
                 type="button"
-                aria-pressed={sortBy === "distancia"}
-                disabled={!point}
+                aria-pressed={effectiveSort === "distancia"}
+                disabled={!point || distanceByStore.size === 0}
                 onClick={() => setSortBy("distancia")}
               >
                 Distancia

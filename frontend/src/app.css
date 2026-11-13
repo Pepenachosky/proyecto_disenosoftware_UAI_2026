@@ -338,10 +338,6 @@ td a {
   margin-top: 32px;
 }
 
-tr.stale {
-  opacity: 0.55;
-}
-
 .sort-toggle {
   display: flex;
   align-items: center;
