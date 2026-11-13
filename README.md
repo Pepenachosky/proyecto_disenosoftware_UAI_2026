@@ -22,7 +22,8 @@ Varios pasos son **manuales**:
 
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
 - Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
-- Generar la lista de regiones y comunas: `cd scraper && deno task comunas` (escribe `frontend/src/data/comunas.ts`; sin ese archivo el frontend no compila). La consulta a Overpass (OpenStreetMap) aún no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada.
+- Generar la lista de regiones y comunas **una sola vez**: `cd scraper && deno task comunas` (escribe `frontend/src/data/comunas.ts`, que se guarda en el repositorio; solo se vuelve a generar si cambian las comunas). La consulta a Overpass (OpenStreetMap) aún no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada. Guarda cada región descargada en `scraper/.cache/comunas/` (ignorado por git), así que si falla se puede repetir y retoma donde quedó; `deno task comunas --sin-cache` descarga todo de nuevo.
+- **Orden antes de fusionar la rama:** (1) generar `comunas.ts` y revisar las comunas dudosas, (2) hacer commit de `frontend/src/data/comunas.ts` en `feat/geolocalizacion`, (3) ejecutar la migración 004 en Supabase antes de desplegar (si no, todas las tarjetas dicen "Sin dirección registrada"), (4) probar en el navegador, (5) recién entonces fusionar. Vercel compila con `tsc -b && vite build`; fusionar sin `comunas.ts` rompe todo el despliegue.
 - Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia, negarla y ver las listas, elegir una comuna y recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves" (la 004 carga lo que dice su sitio: "Lunes a Martes").
 
@@ -156,9 +157,9 @@ deno task build   # compilación de producción
 deno task lint    # Oxlint
 ```
 
-Antes de compilar el frontend hay que generar `frontend/src/data/comunas.ts` con `deno task comunas`.
+`frontend/src/data/comunas.ts` se guarda en el repositorio (se genera una sola vez con `deno task comunas` en `scraper/`); sin ese archivo el frontend no compila.
 
-El orden recomendado es: migraciones (002 a 004), `deno task comunas`, scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
+El orden recomendado es: migraciones (002 a 004), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
 ### 5. Pruebas
 

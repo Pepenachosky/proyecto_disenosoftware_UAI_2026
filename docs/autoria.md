@@ -521,8 +521,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - Coordenadas de las tiendas obtenidas con Nominatim a partir de la dirección oficial.
 
 **Pendiente de verificar:**
-- Generar `frontend/src/data/comunas.ts` con `cd scraper && deno task comunas` (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada).
-- Ejecutar la migración 004 en Supabase (SQL Editor).
+- Generar `frontend/src/data/comunas.ts` una sola vez con `cd scraper && deno task comunas` y hacer commit del archivo (el archivo se guarda en el repositorio; solo se vuelve a generar si cambian las comunas). Sin él el frontend no compila y Vercel (`tsc -b && vite build`) falla. La consulta de Overpass no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada. Las regiones descargadas se guardan en `scraper/.cache/comunas/` (ignorado por git) para retomar una corrida fallida; `--sin-cache` descarga todo de nuevo.
+- Ejecutar la migración 004 en Supabase (SQL Editor) antes de desplegar; si no, todas las tarjetas muestran "Sin dirección registrada".
 - Probar en el navegador: aceptar la ubicación, ordenar por distancia, negar la ubicación y ver las listas, elegir una comuna, recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 
@@ -542,7 +542,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
 - [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (hecho en código, rama `feat/geolocalizacion`). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
-- [ ] Generar `frontend/src/data/comunas.ts` con `cd scraper && deno task comunas` (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo).
+- [ ] Generar `frontend/src/data/comunas.ts` una sola vez con `cd scraper && deno task comunas` y hacer commit (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo).
+- [ ] Orden para fusionar `feat/geolocalizacion`: (1) generar `comunas.ts` y revisar las dudosas, (2) commit del archivo en la rama, (3) migración 004 en Supabase antes de desplegar, (4) probar en el navegador, (5) recién entonces fusionar a `main`.
 - [ ] Ejecutar la migración 004 en Supabase y probar distancias y horarios en el navegador (ubicación aceptada y negada, comuna, "Cambiar", "Ver horario", 360 px y modo oscuro).
 - [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
