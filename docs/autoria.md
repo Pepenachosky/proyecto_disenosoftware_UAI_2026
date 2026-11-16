@@ -523,7 +523,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 **Pendiente de verificar:**
 - ~~Generar `frontend/src/data/comunas.ts` con `deno task comunas`~~: reemplazado en el Prompt 19 (sin comunas; distancias solo con permiso de ubicación).
 - Ejecutar la migración 004 en Supabase (SQL Editor) antes de desplegar; si no, todas las tarjetas muestran "Sin dirección registrada".
-- Probar en el navegador: aceptar la ubicación, ordenar por distancia, negar la ubicación y ver las listas, elegir una comuna, recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
+- ~~Probar en el navegador con listas de región y comuna~~: reemplazado por la prueba del Prompt 19 (sin comunas), más "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 
 ---
