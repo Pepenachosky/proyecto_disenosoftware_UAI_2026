@@ -76,9 +76,30 @@ function byPrice(a: Offer, b: Offer): number {
   return a.price - b.price;
 }
 
-export function sortOffers(offers: Offer[], now: Date): Offer[] {
-  const current = offers.filter((o) => isCurrent(o, now)).sort(byPrice);
-  const rest = offers.filter((o) => !isCurrent(o, now)).sort(byPrice);
+export type SortBy = "precio" | "distancia";
+
+// Menor distancia primero; sin distancia al final; empate → precio.
+function byDistance(d: Map<number, number>) {
+  return (a: Offer, b: Offer): number => {
+    const da = d.get(a.store_id);
+    const db = d.get(b.store_id);
+    if (da != null && db != null && da !== db) return da - db;
+    if (da == null && db != null) return 1;
+    if (da != null && db == null) return -1;
+    return byPrice(a, b);
+  };
+}
+
+// Vigentes primero y atenuadas después; dentro de cada bloque, por precio o distancia.
+export function sortOffers(
+  offers: Offer[],
+  now: Date,
+  by: SortBy = "precio",
+  distanceByStore: Map<number, number> = new Map(),
+): Offer[] {
+  const cmp = by === "distancia" ? byDistance(distanceByStore) : byPrice;
+  const current = offers.filter((o) => isCurrent(o, now)).sort(cmp);
+  const rest = offers.filter((o) => !isCurrent(o, now)).sort(cmp);
   return [...current, ...rest];
 }
 

@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import { groupOffers } from "./lib/offers.ts";
 import type { Group, GroupWithOffers, Offer } from "./lib/offers.ts";
 import type { HistoryRow } from "./lib/history.ts";
+import type { HoursRow } from "./lib/hours.ts";
 
 const PAGE = 1000;
 const GROUP_COLS = "id, slug, name, category, image_url";
@@ -57,6 +58,40 @@ async function loadCatalog(): Promise<GroupWithOffers[]> {
     ),
   ]);
   return groupOffers(groups, offers);
+}
+
+export type Branch = {
+  store_id: number;
+  address: string | null;
+  city: string | null;
+  lat: number | null;
+  lng: number | null;
+  branch_hours: HoursRow[];
+};
+
+// Las sucursales se piden una vez por carga de página; si falla, se olvida
+// la promesa para poder reintentar.
+let branchesPromise: Promise<Branch[]> | null = null;
+
+export function fetchBranches(): Promise<Branch[]> {
+  if (!branchesPromise) {
+    const p = loadBranches();
+    branchesPromise = p;
+    p.catch(() => {
+      if (branchesPromise === p) branchesPromise = null;
+    });
+  }
+  return branchesPromise;
+}
+
+async function loadBranches(): Promise<Branch[]> {
+  return fetchAll<Branch>((a, b) =>
+    supabase
+      .from("store_branches")
+      .select("store_id, address, city, lat, lng, branch_hours(weekday, opens, closes)")
+      .order("store_id")
+      .range(a, b)
+  );
 }
 
 export async function fetchGroup(slug: string): Promise<GroupWithOffers | null> {

@@ -12,13 +12,19 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (hecho en código; falta probarlo con Google y Supabase reales)
 - [ ] Multilenguaje propio
-- [ ] Geolocalización de tiendas: mostrar la distancia de cada tienda a la ubicación del usuario y sus horarios de funcionamiento (por hacer, ver nota abajo)
+- [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (fusionado en `dev`; falta ejecutar la migración 004 y confirmar en el navegador que aparecen las distancias). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
 
-> **Por hacer: geolocalización y horarios de las tiendas.** Falta implementar en la app (1) pedir la ubicación del usuario y mostrar a qué distancia queda cada tienda y sucursal, y (2) mostrar los horarios de funcionamiento de cada una. La base ya tiene las tablas `store_branches` (sucursales y ubicación), `branch_hours` (horarios) y `branch_stock` (unidades por sucursal) y la función `nearby_branches(lat, lng, radio_km)`, pero están vacías: ningún scraper las llena y el frontend no las usa. Hay que escribir los scrapers de sucursales y horarios (y, de paso, guardar `quantityInStore` y `quantityOnline` de SP Digital) y luego la vista en el frontend.
+> **Quedó fuera de la geolocalización:** el stock por sucursal (`branch_stock`, y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la función `nearby_branches`, que siguen sin usarse. Cada tienda tiene una sola sucursal (su casa matriz), cargada a mano en la migración 004 desde los sitios oficiales.
 
-Tres pasos son **manuales**: configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)) y ejecutar las migraciones 002 y 003 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md) y [`docs/migracion-003.md`](docs/migracion-003.md)).
+Varios pasos son **manuales**:
+
+- Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
+- Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
+- **Antes de hacer push de `dev`** (si Vercel despliega desde ahí): ejecutar la migración 004 en Supabase; si no, todas las tarjetas dicen "Sin dirección registrada".
+- Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia; negarla y ver que no hay distancias ni botón "Distancia" y que aparece "Usar mi ubicación" con la nota; aceptar el permiso después de los 10 s; "Ver horario", 360 px y modo oscuro. En Firefox con Fedora y Hyprland el navegador no entrega la ubicación (se agota el tiempo, `ERROR 3`, con y sin geoclue), así que conviene probar desde el celular u otro navegador, o simular la ubicación en Chrome (DevTools → Sensors → Location).
+- Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves" (la 004 carga lo que dice su sitio: "Lunes a Martes").
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
 
@@ -42,23 +48,25 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── supabase.ts          Cliente de Supabase (clave pública)
 │       ├── auth.tsx             Sesión con Google
 │       ├── saved.tsx            Contexto de productos guardados
+│       ├── location.tsx         Ubicación del usuario (solo con permiso del navegador)
 │       ├── data.ts              Consultas a la base de datos
 │       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
-│       └── lib/                 Lógica pura con pruebas: search, offers, history
+│       └── lib/                 Lógica pura con pruebas: search, offers, history, distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
 │                        y deno.json con las tareas
 ├── supabase/
-│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto)
-│   └── tests/           Pruebas de las migraciones 002 y 003 (run_002.sh, usa podman)
+│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas)
+│   └── tests/           Pruebas de las migraciones 002 a 004 (run_002.sh, usa podman)
 ├── api/                 Reservado (vacío por ahora)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
 │   ├── configurar-google.md  Paso a paso del inicio de sesión con Google
 │   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
 │   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
-│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, e imagen de producto
+│   ├── migracion-004.md Migración 004 (dirección, coordenadas y horario de las tiendas) y sus fuentes
+│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto y geolocalización
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
 
@@ -85,9 +93,10 @@ Tablas: `stores`, `products` (precio, stock, fecha de precio), `price_history`, 
   - Reseñas por grupo en `product_reviews`: 1 a 5 estrellas, una por usuario y producto; el nombre del autor lo pone la base desde la cuenta de Google.
   - `saved_products`: los productos que guarda cada usuario para compararlos.
 - **Migración 003** (`supabase/migrations/003_imagen_producto.sql`, explicada en [`docs/migracion-003.md`](docs/migracion-003.md)) agrega `products.image_url`. Los scrapers de SP Digital y Winpy la llenan y `group.ts` copia una foto por grupo a `product_groups.image_url`.
+- **Migración 004** (`supabase/migrations/004_ubicacion_tiendas.sql`, explicada en [`docs/migracion-004.md`](docs/migracion-004.md)) carga una sucursal por tienda (dirección, coordenadas y horario de atención presencial, con la fuente anotada), deja un índice único para que cada tienda tenga una sola, cambia la clave de `branch_hours` a `(branch_id, weekday, opens)` (PC Express cierra a almorzar y tiene dos tramos al día) y activa RLS de solo lectura.
 - **RLS:** con la clave pública, cualquiera lee productos, precios, grupos y reseñas; un usuario con sesión iniciada solo escribe sus propias reseñas y sus propios guardados. Productos, precios y grupos solo los escriben los scrapers y el script de agrupado (clave de servicio).
 
-> Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002` y la `003` son migraciones nuevas y también se ejecutan a mano (se puede correr más de una vez sin error).
+> Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002`, la `003` y la `004` son migraciones nuevas y también se ejecutan a mano (se puede correr más de una vez sin error).
 
 ## Puesta en marcha
 
@@ -118,9 +127,9 @@ VITE_GOOGLE_CLIENT_ID=
 
 > Nunca expongas `SUPABASE_SERVICE_ROLE_KEY` en el frontend. Los archivos `.env` están en `.gitignore`.
 
-### 2. Migraciones 002 y 003
+### 2. Migraciones 002, 003 y 004
 
-En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md) y [`docs/migracion-003.md`](docs/migracion-003.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
+En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql` y `supabase/migrations/004_ubicacion_tiendas.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
 
 ### 3. Scrapers y agrupado
 
@@ -145,7 +154,7 @@ deno task build   # compilación de producción
 deno task lint    # Oxlint
 ```
 
-El orden recomendado es: migraciones (002 y 003), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
+El orden recomendado es: migraciones (002 a 004), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
 ### 5. Pruebas
 
@@ -155,7 +164,7 @@ Desde la raíz del repositorio:
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
 (cd frontend && deno test --no-config src/lib/)  # lógica pura del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
-bash supabase/tests/run_002.sh                   # migraciones 002 y 003 en un Postgres local (necesita podman)
+bash supabase/tests/run_002.sh                   # migraciones 002 a 004 en un Postgres local (necesita podman)
 ```
 
 ## Configurar inicio de sesión con Google
@@ -175,6 +184,6 @@ El grafo generado con graphify (`graphify-out/`, ignorado por git) muestra tres 
 
 - **Scrapers** (`winpy.ts`, `pcexpress.ts`, `spdigital.ts`): comparten la misma forma (`CATEGORIES`, `parseListing`, `parsePrice`, `scrapeCategory`, `ScrapedProduct`) y escriben a Supabase vía su API REST.
 - **Supabase**: núcleo del sistema; el esquema, el trigger de historial y las políticas RLS se conectan a scrapers y frontend.
-- **Frontend**: rutas con react-router (catálogo, `/producto/:slug`, guardados); consulta `product_groups` y `products` con el cliente de `supabase.ts`, formatea precios en CLP y solo cuenta como oferta vigente la vista en los últimos 3 días y con stock.
+- **Frontend**: rutas con react-router (catálogo, `/producto/:slug`, guardados); consulta `product_groups`, `products` y las sucursales con el cliente de `supabase.ts`, calcula la distancia en línea recta a la ubicación del usuario (solo si da permiso de ubicación) y si cada tienda está abierta con la hora de Chile, formatea precios en CLP y solo cuenta como oferta vigente la vista en los últimos 3 días y con stock.
 
 No se detectaron ciclos de importación.

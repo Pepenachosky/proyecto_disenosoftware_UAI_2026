@@ -84,6 +84,52 @@ Deno.test("sortOffers", () => {
   assertEquals(input, copy);
 });
 
+const dist = (o: Record<number, number>) => new Map(Object.entries(o).map(([k, v]) => [Number(k), v]));
+const ids = (os: Offer[]) => os.map((o) => o.store_id);
+
+Deno.test("sortOffers por distancia", () => {
+  const input = [
+    offer({ id: 1, store_id: 1, price: 300 }),
+    offer({ id: 2, store_id: 2, price: 100 }),
+    offer({ id: 3, store_id: 3, price: 200 }),
+  ];
+  assertEquals(ids(sortOffers(input, now, "distancia", dist({ 1: 2, 2: 9, 3: 5 }))), [1, 3, 2]);
+});
+
+Deno.test("sortOffers: sin distancia va al final", () => {
+  const input = [
+    offer({ id: 1, store_id: 1, price: 300 }),
+    offer({ id: 2, store_id: 2, price: 100 }),
+    offer({ id: 3, store_id: 3, price: 200 }),
+  ];
+  assertEquals(ids(sortOffers(input, now, "distancia", dist({ 1: 2, 2: 9 }))), [1, 2, 3]);
+});
+
+Deno.test("sortOffers: vigentes antes que atenuadas también por distancia", () => {
+  const input = [
+    offer({ id: 1, store_id: 1, price: 300, in_stock: false }),
+    offer({ id: 2, store_id: 2, price: 100 }),
+    offer({ id: 3, store_id: 3, price: 200 }),
+  ];
+  assertEquals(ids(sortOffers(input, now, "distancia", dist({ 1: 1, 2: 9, 3: 5 }))), [3, 2, 1]);
+});
+
+Deno.test("sortOffers: empate de distancia se resuelve por precio", () => {
+  const input = [
+    offer({ id: 1, store_id: 1, price: 300 }),
+    offer({ id: 2, store_id: 2, price: 100 }),
+  ];
+  assertEquals(ids(sortOffers(input, now, "distancia", dist({ 1: 4, 2: 4 }))), [2, 1]);
+});
+
+Deno.test("sortOffers: por precio no cambia aunque haya distancias", () => {
+  const input = [
+    offer({ id: 1, store_id: 1, price: 300 }),
+    offer({ id: 2, store_id: 2, price: 100 }),
+  ];
+  assertEquals(ids(sortOffers(input, now, "precio", dist({ 1: 1, 2: 9 }))), [2, 1]);
+});
+
 Deno.test("groupOffers descarta grupos sin ofertas", () => {
   const g2: Group = { ...group, id: 2, slug: "h" };
   const res = groupOffers([group, g2], [offer({ id: 1, group_id: 1 })]);

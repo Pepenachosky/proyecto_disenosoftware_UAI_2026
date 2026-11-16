@@ -338,12 +338,113 @@ td a {
   margin-top: 32px;
 }
 
-.offers td a {
+.sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.sort-toggle button {
+  font: inherit;
+  padding: 4px 12px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort-toggle button[aria-pressed="true"] {
+  border-color: #6d4aff;
+  color: #6d4aff;
+}
+
+.sort-toggle button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.store-note {
+  margin: 0 0 12px;
+  opacity: 0.7;
+}
+
+.store-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.store-card {
+  padding: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 8px;
+}
+
+.store-card.stale {
+  opacity: 0.55;
+}
+
+.store-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.store-top h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.store-card p {
+  margin: 4px 0 0;
+}
+
+.store-address {
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+
+.store-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.store-meta .open {
+  color: #1e8e3e;
+}
+
+.store-meta .closed {
+  color: #c0392b;
+}
+
+.store-meta a {
+  color: inherit;
   white-space: nowrap;
 }
 
-tr.stale {
-  opacity: 0.55;
+.store-card summary {
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.schedule {
+  width: auto;
+  margin-top: 6px;
+}
+
+.schedule th {
+  text-align: left;
+  font-weight: normal;
+  padding: 2px 16px 2px 0;
+}
+
+.schedule td {
+  padding: 2px 0;
 }
 
 .chart {
@@ -513,3 +614,29 @@ span.stale {
 .nav-user .google-button {
   min-height: 32px;
 }
+
+.location-bar {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.location-bar p {
+  margin: 0 0 8px;
+}
+
+.location-bar > p:only-child {
+  margin: 0;
+}
+
+.location-bar .link-button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+}
+
