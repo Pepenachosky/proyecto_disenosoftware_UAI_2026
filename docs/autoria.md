@@ -534,17 +534,25 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 > Pedí revisar con graphify cómo quedó la geolocalización y, con superpowers, reemplazar el script de Overpass (saturado) por un JSON fijo de regiones y comunas que entregué, para medir la distancia desde el centro de la comuna cuando el usuario no da permiso. Elegí obtener las coordenadas una vez con Nominatim (opción A). Mientras se consultaba, cambié el plan: si no se acepta la ubicación, simplemente no se activa el cálculo de distancias, y se elimina todo lo de comunas.
 
 **Resultado obtenido:**
-- **Commits en `feat/geolocalizacion`:**
+- **Commits en `feat/geolocalizacion`** (fusionada en `dev` sin commit de merge, rama borrada):
   - `05a1eeb` y `fca441f`: diseño y plan de comunas fijas (quedaron reemplazados).
   - `7a30848`: diseño y plan de ubicación solo con GPS (`docs/superpowers/specs/2026-11-16-ubicacion-solo-gps-design.md` y su plan).
   - `54774c2`: el frontend solo usa la ubicación del navegador. Estados `inicial`, `buscando`, `gps` y `sin-ubicacion`; sin `localStorage`; sin permiso la barra dice "Activa tu ubicación para ver la distancia a cada tienda" con el botón "Usar mi ubicación" y una nota, y el botón "Distancia" se oculta.
-  - Commit de limpieza: se eliminaron `scraper/comunas.ts`, su prueba, la tarea `deno task comunas` y `scraper/.cache/` del `.gitignore`; README y esta autoría actualizados.
+  - `c9a3add`: se eliminaron `scraper/comunas.ts`, su prueba, la tarea `deno task comunas` y `scraper/.cache/` del `.gitignore`; README y esta autoría actualizados.
+  - `172b5da`: corrección de la revisión final (prueba con comunas del Prompt 18 marcada como reemplazada).
+- **Revisión final** (revisor independiente): sin problemas críticos ni importantes. Quedaron como menores: el botón "Distancia" aparece si alguna sucursal tiene coordenadas aunque no venda ese producto; sin `navigator.geolocation` (sitio sin HTTPS) el botón "Usar mi ubicación" no sirve; una línea en blanco de más en `app.css`.
 - **Nominatim:** la consulta de comunas llegó a 293 de 294 comunas (sin la Región Metropolitana) antes de detenerla; no se usó.
+
+**Cambio de decisión sobre la geolocalización:**
+- **Antes (Prompt 18):** con permiso se usaba el GPS; sin permiso, el usuario elegía región y comuna de una lista y la distancia se medía desde el centro de la comuna. La lista se iba a generar con un script contra Overpass (OpenStreetMap), que nunca terminó por errores 502/504, y sin ese archivo el frontend no compilaba.
+- **Intento intermedio:** usar un JSON fijo de regiones y comunas entregado por mí, con las coordenadas de cada comuna consultadas una vez en Nominatim.
+- **Decisión final:** quitar las comunas. Si el usuario no da permiso de ubicación, no se calculan distancias ni se ofrece ordenar por distancia. Motivo: simplificar y no depender de una lista de comunas ni de servicios externos saturados.
 
 **Decisiones propias:**
 - Usar el JSON de comunas entregado y la opción A para las coordenadas (luego descartado).
 - Sin permiso de ubicación no hay distancias ni orden por distancia; eliminar todo lo de comunas.
 - Ejecución directa (sin subagentes por tarea).
+- Fusionar en `dev` (local, sin push) aunque la geolocalización no se haya podido confirmar en mi equipo, dejándolo como pendiente.
 
 **Supuestos del asistente por confirmar:**
 - No se guarda nada en `localStorage`: el navegador ya recuerda el permiso.
@@ -553,6 +561,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 **Pendiente de verificar:**
 - Probar en el navegador: ubicación aceptada (distancias y orden), negada (barra con "Usar mi ubicación" y nota, sin distancias ni "Distancia") y aceptada después de 10 s.
+- En mi equipo (Firefox 156, Fedora, Hyprland) Firefox pide el permiso pero no entrega la ubicación: `getCurrentPosition` termina con `ERROR 3` (tiempo agotado), con `geo.provider.use_geoclue` en `true` y en `false`. La app reacciona bien a ese error (muestra "Activa tu ubicación"), pero falta confirmar que muestra las distancias cuando sí hay ubicación: probar desde el celular, otro navegador o simulando la ubicación en Chrome (DevTools → Sensors → Location).
 
 ---
 
@@ -569,10 +578,11 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
-- [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (hecho en código, rama `feat/geolocalizacion`). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
+- [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (fusionado en `dev`). La distancia solo aparece con permiso de ubicación; no hay selección de comuna (Prompt 19). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
 - [x] Quitar las comunas: la distancia solo se calcula con permiso de ubicación y se eliminó el script de Overpass (Prompt 19).
-- [ ] Orden para fusionar `feat/geolocalizacion`: (1) migración 004 en Supabase antes de desplegar, (2) probar en el navegador, (3) recién entonces fusionar a `main`.
-- [ ] Ejecutar la migración 004 en Supabase y probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
+- [ ] Ejecutar la migración 004 en Supabase antes de hacer push de `dev` (si no, las tarjetas dicen "Sin dirección registrada").
+- [ ] Confirmar que aparecen las distancias con la ubicación activa: en Firefox con Hyprland la ubicación se agota (`ERROR 3`); probar en el celular, otro navegador o simulando la ubicación en Chrome.
+- [ ] Probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
 - [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
