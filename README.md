@@ -12,7 +12,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (hecho en código; falta probarlo con Google y Supabase reales)
 - [ ] Multilenguaje propio
-- [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (hecho en código; falta generar `frontend/src/data/comunas.ts`, ejecutar la migración 004 y probarlo en el navegador)
+- [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (hecho en código; falta ejecutar la migración 004 y probarlo en el navegador). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
 
@@ -22,9 +22,8 @@ Varios pasos son **manuales**:
 
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
 - Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
-- Generar la lista de regiones y comunas **una sola vez**: `cd scraper && deno task comunas` (escribe `frontend/src/data/comunas.ts`, que se guarda en el repositorio; solo se vuelve a generar si cambian las comunas). La consulta a Overpass (OpenStreetMap) aún no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada. Guarda cada región descargada en `scraper/.cache/comunas/` (ignorado por git), así que si falla se puede repetir y retoma donde quedó; `deno task comunas --sin-cache` descarga todo de nuevo.
-- **Orden antes de fusionar la rama:** (1) generar `comunas.ts` y revisar las comunas dudosas, (2) hacer commit de `frontend/src/data/comunas.ts` en `feat/geolocalizacion`, (3) ejecutar la migración 004 en Supabase antes de desplegar (si no, todas las tarjetas dicen "Sin dirección registrada"), (4) probar en el navegador, (5) recién entonces fusionar. Vercel compila con `tsc -b && vite build`; fusionar sin `comunas.ts` rompe todo el despliegue.
-- Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia, negarla y ver las listas, elegir una comuna y recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
+- **Orden antes de fusionar la rama:** (1) ejecutar la migración 004 en Supabase antes de desplegar (si no, todas las tarjetas dicen "Sin dirección registrada"), (2) probar en el navegador, (3) recién entonces fusionar.
+- Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia; negarla y ver que no hay distancias ni botón "Distancia" y que aparece "Usar mi ubicación" con la nota; aceptar el permiso después de los 10 s; "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves" (la 004 carga lo que dice su sitio: "Lunes a Martes").
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
@@ -49,15 +48,14 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── supabase.ts          Cliente de Supabase (clave pública)
 │       ├── auth.tsx             Sesión con Google
 │       ├── saved.tsx            Contexto de productos guardados
-│       ├── location.tsx         Ubicación del usuario (GPS o región y comuna)
+│       ├── location.tsx         Ubicación del usuario (solo con permiso del navegador)
 │       ├── data.ts              Consultas a la base de datos
-│       ├── data/comunas.ts      Regiones y comunas con coordenadas (generado, ver `deno task comunas`)
 │       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
 │       └── lib/                 Lógica pura con pruebas: search, offers, history, distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
-│                        el agrupador (group_key.ts, group.ts), comunas.ts (genera la lista
-│                        de comunas), sus pruebas (*_test.ts) y deno.json con las tareas
+│                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
+│                        y deno.json con las tareas
 ├── supabase/
 │   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas)
 │   └── tests/           Pruebas de las migraciones 002 a 004 (run_002.sh, usa podman)
@@ -140,7 +138,6 @@ Desde `scraper/` (donde está el `deno.json` con las tareas):
 ```bash
 deno task scrape              # los 9 scrapers y, al final, el agrupado
 deno task group               # solo el agrupado (junta productos iguales entre tiendas)
-deno task comunas             # genera frontend/src/data/comunas.ts (regiones y comunas, desde OpenStreetMap)
 deno task scrape:winpy        # una sola tienda
 deno run --allow-net --allow-env --env-file=.env spdigital.ts cpu   # una tienda y categoría
 ```
@@ -156,8 +153,6 @@ deno task dev     # servidor de desarrollo (http://localhost:5173); también npm
 deno task build   # compilación de producción
 deno task lint    # Oxlint
 ```
-
-`frontend/src/data/comunas.ts` se guarda en el repositorio (se genera una sola vez con `deno task comunas` en `scraper/`); sin ese archivo el frontend no compila.
 
 El orden recomendado es: migraciones (002 a 004), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
@@ -189,6 +184,6 @@ El grafo generado con graphify (`graphify-out/`, ignorado por git) muestra tres 
 
 - **Scrapers** (`winpy.ts`, `pcexpress.ts`, `spdigital.ts`): comparten la misma forma (`CATEGORIES`, `parseListing`, `parsePrice`, `scrapeCategory`, `ScrapedProduct`) y escriben a Supabase vía su API REST.
 - **Supabase**: núcleo del sistema; el esquema, el trigger de historial y las políticas RLS se conectan a scrapers y frontend.
-- **Frontend**: rutas con react-router (catálogo, `/producto/:slug`, guardados); consulta `product_groups`, `products` y las sucursales con el cliente de `supabase.ts`, calcula la distancia en línea recta a la ubicación del usuario (GPS o comuna elegida) y si cada tienda está abierta con la hora de Chile, formatea precios en CLP y solo cuenta como oferta vigente la vista en los últimos 3 días y con stock.
+- **Frontend**: rutas con react-router (catálogo, `/producto/:slug`, guardados); consulta `product_groups`, `products` y las sucursales con el cliente de `supabase.ts`, calcula la distancia en línea recta a la ubicación del usuario (solo si da permiso de ubicación) y si cada tienda está abierta con la hora de Chile, formatea precios en CLP y solo cuenta como oferta vigente la vista en los últimos 3 días y con stock.
 
 No se detectaron ciclos de importación.

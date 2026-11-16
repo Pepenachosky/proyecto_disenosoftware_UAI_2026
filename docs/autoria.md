@@ -521,10 +521,38 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - Coordenadas de las tiendas obtenidas con Nominatim a partir de la dirección oficial.
 
 **Pendiente de verificar:**
-- Generar `frontend/src/data/comunas.ts` una sola vez con `cd scraper && deno task comunas` y hacer commit del archivo (el archivo se guarda en el repositorio; solo se vuelve a generar si cambian las comunas). Sin él el frontend no compila y Vercel (`tsc -b && vite build`) falla. La consulta de Overpass no se ha probado en vivo; si el conteo no da 16 regiones y 346 comunas, el script falla sin escribir nada. Las regiones descargadas se guardan en `scraper/.cache/comunas/` (ignorado por git) para retomar una corrida fallida; `--sin-cache` descarga todo de nuevo.
+- ~~Generar `frontend/src/data/comunas.ts` con `deno task comunas`~~: reemplazado en el Prompt 19 (sin comunas; distancias solo con permiso de ubicación).
 - Ejecutar la migración 004 en Supabase (SQL Editor) antes de desplegar; si no, todas las tarjetas muestran "Sin dirección registrada".
 - Probar en el navegador: aceptar la ubicación, ordenar por distancia, negar la ubicación y ver las listas, elegir una comuna, recargar (se recuerda), "Cambiar" y "Usar mi ubicación", "Ver horario", 360 px y modo oscuro.
 - Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
+
+---
+
+## Prompt 19: Distancias solo con permiso de ubicación
+
+**Prompt (condensado):**
+> Pedí revisar con graphify cómo quedó la geolocalización y, con superpowers, reemplazar el script de Overpass (saturado) por un JSON fijo de regiones y comunas que entregué, para medir la distancia desde el centro de la comuna cuando el usuario no da permiso. Elegí obtener las coordenadas una vez con Nominatim (opción A). Mientras se consultaba, cambié el plan: si no se acepta la ubicación, simplemente no se activa el cálculo de distancias, y se elimina todo lo de comunas.
+
+**Resultado obtenido:**
+- **Commits en `feat/geolocalizacion`:**
+  - `05a1eeb` y `fca441f`: diseño y plan de comunas fijas (quedaron reemplazados).
+  - `7a30848`: diseño y plan de ubicación solo con GPS (`docs/superpowers/specs/2026-11-16-ubicacion-solo-gps-design.md` y su plan).
+  - `54774c2`: el frontend solo usa la ubicación del navegador. Estados `inicial`, `buscando`, `gps` y `sin-ubicacion`; sin `localStorage`; sin permiso la barra dice "Activa tu ubicación para ver la distancia a cada tienda" con el botón "Usar mi ubicación" y una nota, y el botón "Distancia" se oculta.
+  - Commit de limpieza: se eliminaron `scraper/comunas.ts`, su prueba, la tarea `deno task comunas` y `scraper/.cache/` del `.gitignore`; README y esta autoría actualizados.
+- **Nominatim:** la consulta de comunas llegó a 293 de 294 comunas (sin la Región Metropolitana) antes de detenerla; no se usó.
+
+**Decisiones propias:**
+- Usar el JSON de comunas entregado y la opción A para las coordenadas (luego descartado).
+- Sin permiso de ubicación no hay distancias ni orden por distancia; eliminar todo lo de comunas.
+- Ejecución directa (sin subagentes por tarea).
+
+**Supuestos del asistente por confirmar:**
+- No se guarda nada en `localStorage`: el navegador ya recuerda el permiso.
+- El botón "Distancia" se oculta (no se deshabilita) sin ubicación.
+- Con la ubicación activa no hay botón "Cambiar" (no hay otro modo).
+
+**Pendiente de verificar:**
+- Probar en el navegador: ubicación aceptada (distancias y orden), negada (barra con "Usar mi ubicación" y nota, sin distancias ni "Distancia") y aceptada después de 10 s.
 
 ---
 
@@ -542,9 +570,9 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
 - [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (hecho en código, rama `feat/geolocalizacion`). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
-- [ ] Generar `frontend/src/data/comunas.ts` una sola vez con `cd scraper && deno task comunas` y hacer commit (sin ese archivo el frontend no compila; la consulta de Overpass no se ha probado en vivo).
-- [ ] Orden para fusionar `feat/geolocalizacion`: (1) generar `comunas.ts` y revisar las dudosas, (2) commit del archivo en la rama, (3) migración 004 en Supabase antes de desplegar, (4) probar en el navegador, (5) recién entonces fusionar a `main`.
-- [ ] Ejecutar la migración 004 en Supabase y probar distancias y horarios en el navegador (ubicación aceptada y negada, comuna, "Cambiar", "Ver horario", 360 px y modo oscuro).
+- [x] Quitar las comunas: la distancia solo se calcula con permiso de ubicación y se eliminó el script de Overpass (Prompt 19).
+- [ ] Orden para fusionar `feat/geolocalizacion`: (1) migración 004 en Supabase antes de desplegar, (2) probar en el navegador, (3) recién entonces fusionar a `main`.
+- [ ] Ejecutar la migración 004 en Supabase y probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
 - [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
 - [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).

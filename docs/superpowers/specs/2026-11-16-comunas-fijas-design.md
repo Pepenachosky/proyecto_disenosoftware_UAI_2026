@@ -1,3 +1,5 @@
+> **Reemplazado** por 2026-11-16-ubicacion-solo-gps (el autor eligió no usar comunas).
+
 # Comunas fijas para la ubicación sin GPS — diseño corto
 
 ## Intención

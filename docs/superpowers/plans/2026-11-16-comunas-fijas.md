@@ -1,3 +1,5 @@
+> **Reemplazado** por 2026-11-16-ubicacion-solo-gps (el autor eligió no usar comunas).
+
 # Comunas fijas Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
