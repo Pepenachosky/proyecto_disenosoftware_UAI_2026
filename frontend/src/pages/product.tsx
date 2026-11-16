@@ -37,8 +37,7 @@ export function ProductPage() {
   const [branchesFailed, setBranchesFailed] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>("precio");
 
-  const point =
-    location.estado === "gps" || location.estado === "comuna" ? location.point : null;
+  const point = location.estado === "gps" ? location.point : null;
 
   // Sin ubicación no hay orden por distancia: se usa precio sin perder la elección.
   const effectiveSort: SortBy = point ? sortBy : "precio";
@@ -130,14 +129,15 @@ export function ProductPage() {
               <button type="button" aria-pressed={effectiveSort === "precio"} onClick={() => setSortBy("precio")}>
                 Precio
               </button>
-              <button
-                type="button"
-                aria-pressed={effectiveSort === "distancia"}
-                disabled={!point || distanceByStore.size === 0}
-                onClick={() => setSortBy("distancia")}
-              >
-                Distancia
-              </button>
+              {point && distanceByStore.size > 0 && (
+                <button
+                  type="button"
+                  aria-pressed={effectiveSort === "distancia"}
+                  onClick={() => setSortBy("distancia")}
+                >
+                  Distancia
+                </button>
+              )}
             </div>
             {branchesFailed && <p className="store-note">No se pudo cargar la ubicación de las tiendas.</p>}
             <ul className="store-list">

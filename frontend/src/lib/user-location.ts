@@ -1,55 +1,5 @@
 import type { LatLng } from "./geo.ts";
 
-// Forma estructural de las regiones (el archivo generado la cumple), para que lib no dependa de él.
-export type RegionLike = { name: string; comunas: { name: string; lat: number; lng: number }[] };
-
-// Lo único que se guarda en el navegador: el modo y, si corresponde, la comuna.
-// Las coordenadas del GPS nunca se guardan.
-export type SavedLocation = { modo: "gps" } | { modo: "comuna"; region: string; comuna: string };
-
-export const STORAGE_KEY = "ubicacion";
-
-export function findComuna(regiones: RegionLike[], region: string, comuna: string): LatLng | null {
-  const c = regiones.find((r) => r.name === region)?.comunas.find((x) => x.name === comuna);
-  return c ? { lat: c.lat, lng: c.lng } : null;
-}
-
-export function parseSaved(raw: string | null, regiones: RegionLike[]): SavedLocation | null {
-  if (!raw) return null;
-  try {
-    const v = JSON.parse(raw);
-    if (v?.modo === "gps") return { modo: "gps" };
-    if (
-      v?.modo === "comuna" && typeof v.region === "string" && typeof v.comuna === "string" &&
-      findComuna(regiones, v.region, v.comuna)
-    ) {
-      return { modo: "comuna", region: v.region, comuna: v.comuna };
-    }
-  } catch {
-    // JSON inválido: se ignora
-  }
-  return null;
-}
-
-export function readSaved(
-  storage: Pick<Storage, "getItem"> | null,
-  regiones: RegionLike[],
-): SavedLocation | null {
-  try {
-    return parseSaved(storage?.getItem(STORAGE_KEY) ?? null, regiones);
-  } catch {
-    return null;
-  }
-}
-
-export function writeSaved(storage: Pick<Storage, "setItem"> | null, s: SavedLocation): void {
-  try {
-    storage?.setItem(STORAGE_KEY, JSON.stringify(s));
-  } catch {
-    // almacenamiento no disponible: la preferencia solo dura la sesión
-  }
-}
-
 // Forma mínima de navigator.geolocation (Deno no trae los tipos del DOM).
 export type GeoLike = {
   getCurrentPosition(

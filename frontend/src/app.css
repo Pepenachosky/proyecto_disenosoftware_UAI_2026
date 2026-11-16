@@ -630,13 +630,6 @@ span.stale {
   margin: 0;
 }
 
-.location-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
 .location-bar .link-button {
   font: inherit;
   cursor: pointer;
@@ -647,8 +640,3 @@ span.stale {
   text-decoration: underline;
 }
 
-@media (max-width: 400px) {
-  .location-form {
-    flex-direction: column;
-  }
-}
