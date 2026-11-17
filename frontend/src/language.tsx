@@ -20,6 +20,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // El atributo lang de <html> sigue al idioma activo (lectores de pantalla, traductor del navegador).
   useEffect(() => {
     document.documentElement.lang = lang;
+    document.title = i18n.t("common.appTitle");
   }, [lang]);
 
   const { user } = useAuth();
@@ -74,7 +75,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           return;
         }
         const { lang: next, saveToProfile } = onLogin(profileValue, langRef.current);
-        if (next !== langRef.current) apply(next);
+        apply(next); // idempotente: también deja el idioma del perfil en localStorage
         if (saveToProfile) await saveProfileLanguage(userId, next);
       } catch (e) {
         console.warn("No se pudo sincronizar el idioma con el perfil:", e);

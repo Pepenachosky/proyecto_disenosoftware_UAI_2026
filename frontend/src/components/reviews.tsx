@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FormEvent } from "react";
 import { useAuth } from "../auth";
@@ -12,6 +12,7 @@ const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export function Reviews({ groupId }: { groupId: number }) {
   const { t } = useTranslation();
   const { locale } = useLanguage();
+  const dateFmt = useMemo(() => new Intl.DateTimeFormat(locale, { dateStyle: "long" }), [locale]);
   const { user } = useAuth();
   const [version, setVersion] = useState(0);
   const [list, setList] = useState<{ key: string; reviews: Review[] | null; error: string | null } | null>(null);
@@ -142,7 +143,7 @@ export function Reviews({ groupId }: { groupId: number }) {
                 <Stars value={r.rating} />
                 <strong className="review-author">{r.author_name === "Usuario" ? t("reviews.anonymous") : r.author_name}</strong>
                 <span className="review-date">
-                  {new Date(r.created_at).toLocaleDateString(locale)}
+                  {dateFmt.format(new Date(r.created_at))}
                 </span>
               </div>
               {r.comment && <p className="review-comment">{r.comment}</p>}

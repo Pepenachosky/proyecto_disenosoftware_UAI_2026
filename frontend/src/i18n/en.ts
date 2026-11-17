@@ -2,6 +2,7 @@ import type { Messages } from "./es.ts";
 
 export const en: Messages = {
   common: {
+    appTitle: "Hardware price comparator",
     notFound: "Page not found",
     loading: "Loading…",
     error: "Error: {{message}}",
@@ -21,7 +22,7 @@ export const en: Messages = {
     categories: {
       cpu: "Processors (CPU)",
       gpu: "Graphics cards (GPU)",
-      ram: "RAM memory",
+      ram: "Memory (RAM)",
     },
     searchPlaceholder: "Search products (e.g. ryzen 5 7600, rtx 4060, ddr5 32gb)…",
     searchLabel: "Search products",

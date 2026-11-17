@@ -11,7 +11,14 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Frontend: tienda, buscador, filtros (categoría, stock, presupuesto) y paginación
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (probado con Google y Supabase reales)
-- [x] Multilenguaje propio (español e inglés, i18next; idioma en el navegador y en el perfil). Las traducciones viven en `frontend/src/i18n/` (`es.ts` y `en.ts`, tipadas con `Messages`); agregar un idioma es crear otro archivo con el tipo `Messages` y sumarlo a `LANGS`. Requiere ejecutar la migración 005 (`docs/migracion-005.md`).
+- [x] Multilenguaje propio (español e inglés, i18next; idioma en el navegador y en el perfil). Las traducciones viven en `frontend/src/i18n/` (`es.ts` y `en.ts`, tipadas con `Messages`); para agregar un idioma:
+  1. Crear el archivo de traducciones tipado `Messages` en `frontend/src/i18n/`.
+  2. Sumarlo a `Lang` y `LANGS`, y a `parseLang`, `detectLang` e `intlLocale` en `frontend/src/lib/locale.ts`.
+  3. Registrarlo en `frontend/src/i18n/index.ts`.
+  4. Ampliar `GoogleButtonOptions.locale` en `frontend/src/google.ts`.
+  5. Escribir una migración nueva que amplíe la restricción `profiles_language_check` (si no, guardar el idioma en el perfil falla y solo queda un `console.warn`).
+
+  `tsc` detecta todo lo anterior salvo la restricción de la base de datos. Requiere ejecutar la migración 005 (`docs/migracion-005.md`).
 - [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (migración 004 ejecutada y probado en el navegador). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
@@ -67,7 +74,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
 │   ├── migracion-004.md Migración 004 (dirección, coordenadas y horario de las tiendas) y sus fuentes
 │   ├── migracion-005.md Migración 005 (idioma del perfil y permisos de profiles) y cómo ejecutarla
-│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto y geolocalización
+│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto, geolocalización y multilenguaje
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
 

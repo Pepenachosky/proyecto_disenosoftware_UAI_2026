@@ -1,5 +1,6 @@
 export const es = {
   common: {
+    appTitle: "Comparador de precios",
     notFound: "Página no encontrada",
     loading: "Cargando…",
     error: "Error: {{message}}",
