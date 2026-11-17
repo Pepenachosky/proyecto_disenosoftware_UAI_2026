@@ -328,6 +328,7 @@ td a {
   box-sizing: border-box;
   padding: var(--space-4);
   overflow-y: auto;
+  scrollbar-color: var(--text-muted) transparent;
   background: var(--glass-solid);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
