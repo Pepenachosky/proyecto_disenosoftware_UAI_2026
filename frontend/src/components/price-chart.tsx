@@ -12,15 +12,22 @@ import {
 } from "recharts";
 import { fetchHistory } from "../data";
 import { buildChartData, currentPrices, type ChartPoint } from "../lib/history.ts";
+import { useMediaQuery } from "../media.ts";
 import { useLanguage } from "../language.tsx";
 import { formatClp, STORES, type Offer } from "../lib/offers.ts";
 
-// Colores por tienda (fijos, legibles en claro y oscuro). SP Digital va
-// punteada para no depender solo del color (verde/naranja en deuteranopía).
-const STYLE: Record<string, { color: string; dash?: string }> = {
+// Colores por tienda por modo (ni naranja ni amarillo, para no chocar con el
+// acento). SP Digital va punteada para no depender solo del color.
+type StoreStyle = { color: string; dash?: string };
+const STYLE_DARK: Record<string, StoreStyle> = {
+  winpy: { color: "#60a5fa" },
+  pcexpress: { color: "#c084fc" },
+  spdigital: { color: "#34d399", dash: "6 3" },
+};
+const STYLE_LIGHT: Record<string, StoreStyle> = {
   winpy: { color: "#2563eb" },
-  pcexpress: { color: "#ea580c" },
-  spdigital: { color: "#16a34a", dash: "6 3" },
+  pcexpress: { color: "#7c3aed" },
+  spdigital: { color: "#047857", dash: "6 3" },
 };
 
 type Result = { offers: Offer[]; data: ChartPoint[] | null; error: string | null };
@@ -42,6 +49,13 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
     }),
     [locale],
   );
+  const dark = useMediaQuery("(prefers-color-scheme: dark)");
+  // Colores del tema leídos de los tokens; se recalculan al cambiar el modo.
+  const theme = useMemo(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n: string) => cs.getPropertyValue(n).trim();
+    return { style: dark ? STYLE_DARK : STYLE_LIGHT, border: v("--border"), muted: v("--text-muted"), surface: v("--surface"), text: v("--text") };
+  }, [dark]);
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
@@ -74,28 +88,29 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
       <div className="chart">
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="rgba(128, 128, 128, 0.25)" vertical={false} />
+            <CartesianGrid stroke={theme.border} vertical={false} />
             <XAxis
               dataKey="t"
               type="number"
               scale="time"
               domain={["dataMin", "dataMax"]}
               tickFormatter={(ms: number) => shortDate.format(ms)}
-              tick={{ fill: "currentColor", fontSize: 12 }}
-              stroke="rgba(128, 128, 128, 0.5)"
+              tick={{ fill: theme.muted, fontSize: 12 }}
+              stroke={theme.border}
               minTickGap={16}
             />
             <YAxis
               width={72}
               domain={["auto", "auto"]}
               tickFormatter={(v: number) => compactClp.format(v)}
-              tick={{ fill: "currentColor", fontSize: 12 }}
-              stroke="rgba(128, 128, 128, 0.5)"
+              tick={{ fill: theme.muted, fontSize: 12 }}
+              stroke={theme.border}
             />
             <Tooltip
               formatter={(v) => (typeof v === "number" ? formatClp(v, locale) : String(v))}
               labelFormatter={(ms) => longDate.format(Number(ms))}
-              contentStyle={{ background: "Canvas", color: "CanvasText", borderRadius: 6 }}
+              contentStyle={{ background: theme.surface, color: theme.text, border: `1px solid ${theme.border}`, borderRadius: 8 }}
+              labelStyle={{ color: theme.text }}
             />
             <Legend formatter={(value) => <span className="chart-legend">{value}</span>} />
             {stores.map((s) => (
@@ -104,8 +119,8 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
                 dataKey={s.slug}
                 name={s.name}
                 type="stepAfter"
-                stroke={STYLE[s.slug].color}
-                strokeDasharray={STYLE[s.slug].dash}
+                stroke={theme.style[s.slug].color}
+                strokeDasharray={theme.style[s.slug].dash}
                 strokeWidth={2}
                 dot={data.length <= 20 ? { r: 3 } : false}
                 connectNulls
