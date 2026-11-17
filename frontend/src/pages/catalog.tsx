@@ -116,10 +116,8 @@ export function Catalog() {
   const belowDesktop = useMediaQuery(BELOW_DESKTOP);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
-  // Si la ventana pasa a escritorio con el diálogo abierto, se cierra.
-  useEffect(() => {
-    if (!belowDesktop) dialogRef.current?.close();
-  }, [belowDesktop]);
+  const downOnBackdrop = useRef(false);
+  // El diálogo se desmonta al pasar a escritorio, lo que lo cierra.
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -230,13 +228,19 @@ export function Catalog() {
       {belowDesktop && (
         <dialog
           ref={dialogRef}
-          className="filters-dialog glass"
+          className="filters-dialog"
           aria-label={t("catalog.filters")}
+          onPointerDown={(e) => {
+            downOnBackdrop.current = e.target === e.currentTarget;
+          }}
           onClick={(e) => {
-            if (e.target === e.currentTarget) e.currentTarget.close();
+            // Solo cierra si el toque empezó y terminó sobre el fondo (no en el panel).
+            if (e.target === e.currentTarget && downOnBackdrop.current) e.currentTarget.close();
+            downOnBackdrop.current = false;
           }}
           onClose={() => openerRef.current?.focus()}
         >
+          <div className="dialog-panel">
           <div className="dialog-head">
             <h2>{t("catalog.filters")}</h2>
             <button type="button" className="dialog-close" onClick={() => dialogRef.current?.close()}>
@@ -245,6 +249,7 @@ export function Catalog() {
             </button>
           </div>
           {filtersPanel}
+          </div>
         </dialog>
       )}
     </main>

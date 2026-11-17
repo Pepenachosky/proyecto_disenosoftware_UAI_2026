@@ -105,10 +105,13 @@ td a {
 
 .toolbar .sort {
   flex: 0 1 auto;
+  min-width: 0;
   max-width: 100%;
 }
 
 .filters-open {
+  flex: none;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -130,7 +133,8 @@ td a {
     display: none;
   }
   .toolbar .sort {
-    margin-left: auto;
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
@@ -269,37 +273,52 @@ td a {
   outline-offset: 2px;
 }
 
-/* Diálogo de filtros (hoja inferior) */
+/* Diálogo de filtros: el elemento ocupa la pantalla (solo es el fondo); el panel es opaco */
 .filters-dialog {
   position: fixed;
-  inset: auto 0 0 0;
+  inset: 0;
   width: 100%;
+  height: 100%;
   max-width: none;
-  max-height: 85vh;
+  max-height: none;
   margin: 0;
-  box-sizing: border-box;
-  padding: var(--space-4);
-  overflow-y: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--text);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
 }
 
-.filters-dialog:not([open]) {
-  display: none;
+.filters-dialog[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .filters-dialog::backdrop {
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  background: var(--backdrop);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
+.dialog-panel {
+  width: 100%;
+  max-height: 85vh;
+  box-sizing: border-box;
+  padding: var(--space-4);
+  overflow-y: auto;
+  background: var(--glass-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-1);
+}
+
 @media (min-width: 640px) {
-  .filters-dialog {
-    inset: 0;
-    margin: auto;
+  .filters-dialog[open] {
+    align-items: center;
+  }
+  .dialog-panel {
     max-width: 420px;
-    height: fit-content;
     border-radius: var(--radius-lg);
   }
 }
