@@ -21,7 +21,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 Varios pasos son **manuales**:
 
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
-- Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
+- Ejecutar las migraciones 002 a 005 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md), [`docs/migracion-004.md`](docs/migracion-004.md) y [`docs/migracion-005.md`](docs/migracion-005.md)).
 - Para probar la geolocalización: en Firefox con Fedora y Hyprland el navegador no entrega la ubicación (se agota el tiempo, `ERROR 3`, con y sin geoclue), así que conviene probar desde el celular u otro navegador, o simular la ubicación en Chrome (DevTools → Sensors → Location).
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
@@ -130,7 +130,7 @@ VITE_GOOGLE_CLIENT_ID=
 
 ### 2. Migraciones 002 a 005
 
-En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql` `supabase/migrations/004_ubicacion_tiendas.sql` y `supabase/migrations/005_idioma_perfil.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md), [`docs/migracion-004.md`](docs/migracion-004.md) y [`docs/migracion-005.md`](docs/migracion-005.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
+En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql`, `supabase/migrations/004_ubicacion_tiendas.sql` y `supabase/migrations/005_idioma_perfil.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md), [`docs/migracion-004.md`](docs/migracion-004.md) y [`docs/migracion-005.md`](docs/migracion-005.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
 
 ### 3. Scrapers y agrupado
 
