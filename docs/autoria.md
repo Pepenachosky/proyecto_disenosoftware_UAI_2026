@@ -571,27 +571,27 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Diseñar la base de datos completa (`database.sql`).
 - [x] Ejecutar `database.sql` en Supabase y probar `winpy.ts cpu` contra ella (productos con precio y stock guardados).
 - [x] Primera página del frontend: lista de productos con nombre y precio, leída desde Supabase.
-- [ ] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
-- [ ] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas (los scrapers ya se ejecutaron con `deno task scrape`, falta confirmar que los datos lleguen bien).
+- [x] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
+- [x] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas.
 - [x] Revisar que el `robots.txt` de SP Digital permita `/page-data/` (lo permite).
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
-- [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
+- [x] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
 - [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (fusionado en `dev`). La distancia solo aparece con permiso de ubicación; no hay selección de comuna (Prompt 19). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
 - [x] Quitar las comunas: la distancia solo se calcula con permiso de ubicación y se eliminó el script de Overpass (Prompt 19).
-- [ ] Ejecutar la migración 004 en Supabase antes de hacer push de `dev` (si no, las tarjetas dicen "Sin dirección registrada").
-- [ ] Confirmar que aparecen las distancias con la ubicación activa: en Firefox con Hyprland la ubicación se agota (`ERROR 3`); probar en el celular, otro navegador o simulando la ubicación en Chrome.
-- [ ] Probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
-- [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
+- [x] Ejecutar la migración 004 en Supabase antes de hacer push de `dev` (si no, las tarjetas dicen "Sin dirección registrada").
+- [x] Confirmar que aparecen las distancias con la ubicación activa: en Firefox con Hyprland la ubicación se agota (`ERROR 3`); probar en el celular, otro navegador o simulando la ubicación en Chrome.
+- [x] Probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
+- [x] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
-- [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
-- [ ] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
+- [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (probado con Google y Supabase reales).
+- [x] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
 - [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
 - [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
-- [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
+- [x] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
 - [ ] Foto de los grupos corregidos a mano: hoy `group.ts` no lee las filas con `group_locked = true`, así que un grupo formado solo por ellas queda con el placeholder. Hacer que esas filas también aporten foto antes de corregir los grupos de GPU y RAM.
-- [ ] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
+- [x] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
 - [ ] Cargar el gráfico de forma diferida (el bundle pesa unos 870 kB por recharts).
 - [ ] Multilenguaje propio.
 - [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.

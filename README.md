@@ -10,9 +10,9 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Base de datos en Supabase con historial automático de precios
 - [x] Frontend: tienda, buscador, filtros (categoría, stock, presupuesto) y paginación
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
-- [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (hecho en código; falta probarlo con Google y Supabase reales)
+- [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (probado con Google y Supabase reales)
 - [ ] Multilenguaje propio
-- [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (fusionado en `dev`; falta ejecutar la migración 004 y confirmar en el navegador que aparecen las distancias). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
+- [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (migración 004 ejecutada y probado en el navegador). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
 
@@ -22,9 +22,7 @@ Varios pasos son **manuales**:
 
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
 - Ejecutar las migraciones 002, 003 y 004 en Supabase (ver [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md)).
-- **Antes de hacer push de `dev`** (si Vercel despliega desde ahí): ejecutar la migración 004 en Supabase; si no, todas las tarjetas dicen "Sin dirección registrada".
-- Probar la geolocalización en el navegador: aceptar la ubicación y ordenar por distancia; negarla y ver que no hay distancias ni botón "Distancia" y que aparece "Usar mi ubicación" con la nota; aceptar el permiso después de los 10 s; "Ver horario", 360 px y modo oscuro. En Firefox con Fedora y Hyprland el navegador no entrega la ubicación (se agota el tiempo, `ERROR 3`, con y sin geoclue), así que conviene probar desde el celular u otro navegador, o simular la ubicación en Chrome (DevTools → Sensors → Location).
-- Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves" (la 004 carga lo que dice su sitio: "Lunes a Martes").
+- Para probar la geolocalización: en Firefox con Fedora y Hyprland el navegador no entrega la ubicación (se agota el tiempo, `ERROR 3`, con y sin geoclue), así que conviene probar desde el celular u otro navegador, o simular la ubicación en Chrome (DevTools → Sensors → Location).
 
 El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs/autoria.md).
 
