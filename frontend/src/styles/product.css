@@ -274,6 +274,7 @@
 
 .quote-scroll {
   min-height: 0;
+  scrollbar-color: var(--text-muted) transparent;
 }
 
 @media (min-width: 900px) {
@@ -283,6 +284,5 @@
 
   .quote-scroll {
     overflow-y: auto;
-    scrollbar-color: var(--text-muted) transparent;
   }
 }
