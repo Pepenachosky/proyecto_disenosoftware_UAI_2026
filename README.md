@@ -58,10 +58,13 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── i18n/                Traducciones es.ts y en.ts (tipo Messages)
 │       ├── location.tsx         Ubicación del usuario (solo con permiso del navegador)
 │       ├── data.ts              Consultas a la base de datos
-│       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
-│       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
+│       ├── media.ts             useMediaQuery y los cortes de celular (< 640 px) y escritorio (>= 900 px)
+│       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx, not-found.tsx
+│       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones, quote-panel,
+│       │                        filters-panel, skeleton (carga) y empty-state (estados vacíos)
 │       ├── styles/              Estilos por área; tokens.css es la fuente de colores y medidas (con pruebas)
-│       └── lib/                 Lógica pura con pruebas: search, offers, history, distancia y horarios
+│       └── lib/                 Lógica pura con pruebas: search, offers, history, filters.ts
+│                                (deslizador de precio y conteo de filtros), distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
 │                        y deno.json con las tareas
