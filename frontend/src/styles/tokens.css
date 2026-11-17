@@ -41,6 +41,9 @@
   --font-ui: "Space Grotesk Variable", system-ui, sans-serif;
   --font-num: "JetBrains Mono Variable", ui-monospace, monospace;
 
+  /* Alto de la barra de navegación fija + separación */
+  --sticky-top: 88px;
+
   /* Movimiento */
   --dur-fast: 150ms;
   --dur: 250ms;

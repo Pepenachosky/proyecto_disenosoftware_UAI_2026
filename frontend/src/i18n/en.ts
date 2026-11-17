@@ -93,6 +93,13 @@ export const en: Messages = {
     sortPrice: "Price",
     sortDistance: "Distance",
     branchesFailed: "Could not load the store locations.",
+    bestToday: "Best price today",
+    atStore: "at {{store}}",
+    savings: "Save up to {{price}}",
+    compare: "Compare stores",
+    storesCount_one: "{{count}} store",
+    storesCount_other: "{{count}} stores",
+    breadcrumb: "Breadcrumb",
   },
   store: {
     fallbackName: "Store",

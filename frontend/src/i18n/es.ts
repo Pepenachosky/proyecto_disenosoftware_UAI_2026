@@ -91,6 +91,13 @@ export const es = {
     sortPrice: "Precio",
     sortDistance: "Distancia",
     branchesFailed: "No se pudo cargar la ubicación de las tiendas.",
+    bestToday: "Mejor precio hoy",
+    atStore: "en {{store}}",
+    savings: "Ahorras hasta {{price}}",
+    compare: "Comparar tiendas",
+    storesCount_one: "{{count}} tienda",
+    storesCount_other: "{{count}} tiendas",
+    breadcrumb: "Ruta de navegación",
   },
   store: {
     fallbackName: "Tienda",

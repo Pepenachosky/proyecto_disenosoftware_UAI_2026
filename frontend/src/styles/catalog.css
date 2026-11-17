@@ -56,10 +56,10 @@ td a {
 
 .filters-side {
   position: sticky;
-  top: 88px;
+  top: var(--sticky-top);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
-  max-height: calc(100vh - 104px);
+  max-height: calc(100dvh - var(--sticky-top) - var(--space-4));
   overflow-y: auto;
 }
 
