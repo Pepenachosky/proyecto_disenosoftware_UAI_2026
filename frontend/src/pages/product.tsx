@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, PackageX } from "lucide-react";
+import { ProductSkeleton } from "../components/skeleton";
+import { EmptyState } from "../components/empty-state";
 import { Link, useParams } from "react-router";
 import { fetchBranches, fetchGroup, type Branch } from "../data";
 import {
@@ -78,14 +80,13 @@ export function ProductPage() {
     };
   }, [slug]);
 
-  if (!result || result.slug !== slug) return <main className="wrap">{t("common.loading")}</main>;
+  if (!result || result.slug !== slug) return <ProductSkeleton />;
   if (result.error) return <main className="wrap error">{t("common.error", { message: result.error })}</main>;
   const group = result.group;
   if (!group) {
     return (
       <main className="wrap">
-        <h1>{t("product.notFound")}</h1>
-        <Link to="/">{t("product.backToList")}</Link>
+        <EmptyState icon={<PackageX size={40} aria-hidden="true" />}>{t("product.notFound")}</EmptyState>
       </main>
     );
   }

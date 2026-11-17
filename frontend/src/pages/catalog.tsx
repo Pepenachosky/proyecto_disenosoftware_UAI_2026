@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CatalogSkeleton } from "../components/skeleton";
+import { EmptyState } from "../components/empty-state";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X } from "lucide-react";
 import { useLanguage } from "../language.tsx";
 import { cachedCatalog, fetchCatalog } from "../data.ts";
 import {
@@ -130,7 +132,7 @@ export function Catalog() {
 
   const clear = () => update({ q: null, cat: null, store: null, stock: null, max: null, page: null });
 
-  if (loading) return <main className="wrap">{t("common.loading")}</main>;
+  if (loading) return <CatalogSkeleton />;
   if (error) return <main className="wrap error">{t("common.error", { message: error })}</main>;
 
   const filtersPanel = (
@@ -198,7 +200,7 @@ export function Catalog() {
           </div>
 
         {filtered.length === 0 ? (
-          <p className="empty">{t("catalog.empty")}</p>
+          <EmptyState icon={<SearchX size={40} aria-hidden="true" />}>{t("catalog.empty")}</EmptyState>
         ) : (
           <div className="grid">
             {visible.map(({ group }) => (

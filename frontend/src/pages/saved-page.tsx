@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+import { TableSkeleton } from "../components/skeleton";
+import { EmptyState } from "../components/empty-state";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Bookmark, X } from "lucide-react";
 import type { TFunction } from "i18next";
 import { useLanguage } from "../language.tsx";
 import { useAuth } from "../auth";
@@ -82,7 +84,7 @@ export function SavedPage() {
     [loaded, ids, locale],
   );
 
-  if (authLoading) return <main className="wrap">{t("common.loading")}</main>;
+  if (authLoading) return <TableSkeleton />;
   if (!user) {
     return (
       <main className="wrap">
@@ -93,14 +95,13 @@ export function SavedPage() {
     );
   }
   if (needFetch && loaded?.error) return <main className="wrap error">{t("common.error", { message: loaded.error })}</main>;
-  if (savedLoading || needFetch) return <main className="wrap">{t("common.loading")}</main>;
+  if (savedLoading || needFetch) return <TableSkeleton />;
 
   if (columns.length === 0) {
     return (
       <main className="wrap">
         <h1>{t("saved.title")}</h1>
-        <p className="empty">{t("saved.empty")}</p>
-        <Link to="/">{t("saved.viewProducts")}</Link>
+        <EmptyState icon={<Bookmark size={40} aria-hidden="true" />}>{t("saved.empty")}</EmptyState>
       </main>
     );
   }
