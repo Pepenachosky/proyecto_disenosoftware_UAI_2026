@@ -85,9 +85,7 @@
     justify-content: center;
     padding-inline: var(--space-2);
   }
-  .brand-name {
-    display: none;
-  }
+  .brand-name,
   .nav-label {
     position: absolute;
     width: 1px;
@@ -96,8 +94,14 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
+  .nav-bar a {
+    position: relative;
+  }
   .nav-count {
     display: inline-block;
+    position: absolute;
+    top: 2px;
+    right: 0;
   }
   .nav-name {
     display: none;

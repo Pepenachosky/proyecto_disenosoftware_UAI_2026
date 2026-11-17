@@ -25,7 +25,7 @@ export function NavBar() {
       <NavLink to="/guardados">
         <Bookmark size={18} aria-hidden="true" />
         <span className="nav-label">{t("nav.saved", { count: ids.size })}</span>
-        <span className="nav-count" aria-hidden="true">{ids.size}</span>
+        {ids.size > 0 && <span className="nav-count" aria-hidden="true">{ids.size}</span>}
       </NavLink>
       <div className="nav-user">
         <LanguageSwitch />
