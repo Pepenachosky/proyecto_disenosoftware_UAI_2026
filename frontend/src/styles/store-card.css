@@ -103,11 +103,29 @@
   white-space: nowrap;
 }
 
+/* Marcador propio (chevron que gira al abrir), igual en todos los anchos */
 .store-card summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-top: var(--space-2);
   cursor: pointer;
   font-size: 0.875rem;
   color: var(--text-muted);
+  list-style: none;
+}
+
+.store-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-chevron {
+  flex: none;
+  transition: transform var(--dur-fast);
+}
+
+.store-card details[open] > summary .summary-chevron {
+  transform: rotate(90deg);
 }
 
 .schedule {
@@ -129,12 +147,6 @@
 @media (width < 900px) {
   .store-card summary,
   .store-meta a {
-    display: flex;
-    align-items: center;
     min-height: 44px;
-  }
-
-  .store-meta a {
-    display: inline-flex;
   }
 }

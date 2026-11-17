@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Branch } from "../data";
 import { formatKm } from "../lib/geo.ts";
@@ -69,7 +69,10 @@ export function StoreCard({ offer, branch, distance, now, best }: Props) {
         ) : null}
       </p>
       <details>
-        <summary>{t("store.details")}</summary>
+        <summary>
+          <ChevronRight className="summary-chevron" size={16} aria-hidden="true" />
+          {t("store.details")}
+        </summary>
         <p className="store-address">{branch?.address ? place : t("store.noAddress")}</p>
         {hours.length > 0 && (
           <table className="schedule">
