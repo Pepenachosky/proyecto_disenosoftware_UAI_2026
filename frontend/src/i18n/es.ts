@@ -84,7 +84,6 @@ export const es = {
     },
     notFound: "Producto no encontrado",
     backToList: "Volver a la lista",
-    fromAt: "desde <price>{{price}}</price> en {{store}}",
     stores: "Tiendas",
     noOffers: "Ninguna tienda tiene este producto.",
     sortBy: "Ordenar por:",

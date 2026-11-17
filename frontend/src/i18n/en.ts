@@ -86,7 +86,6 @@ export const en: Messages = {
     },
     notFound: "Product not found",
     backToList: "Back to the list",
-    fromAt: "from <price>{{price}}</price> at {{store}}",
     stores: "Stores",
     noOffers: "No store carries this product.",
     sortBy: "Sort by:",

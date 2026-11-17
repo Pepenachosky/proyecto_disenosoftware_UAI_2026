@@ -61,6 +61,7 @@ td a {
   border-radius: var(--radius-lg);
   max-height: calc(100dvh - var(--sticky-top) - var(--space-4));
   overflow-y: auto;
+  scrollbar-color: var(--text-muted) transparent;
 }
 
 .catalog-main {

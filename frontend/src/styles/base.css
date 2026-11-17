@@ -67,14 +67,27 @@ textarea {
   backdrop-filter: var(--glass-blur);
 }
 
+/* Cromo flotante: tinte denso para que el texto se lea aunque no haya desenfoque */
+.nav-bar.glass,
+.filters-side.glass,
+.quote.glass {
+  background: var(--glass-chrome);
+}
+
 @supports not (backdrop-filter: blur(1px)) {
-  .glass {
+  .glass,
+  .nav-bar.glass,
+  .filters-side.glass,
+  .quote.glass {
     background: var(--glass-solid);
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .glass {
+  .glass,
+  .nav-bar.glass,
+  .filters-side.glass,
+  .quote.glass {
     background: var(--glass-solid);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

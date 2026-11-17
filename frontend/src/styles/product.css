@@ -15,9 +15,6 @@
   min-height: 44px;
   padding: 0 var(--space-1);
   color: inherit;
-}
-
-.crumbs a {
   text-decoration: none;
 }
 
@@ -159,7 +156,7 @@
   color: var(--text);
 }
 
-@media (max-width: 639px) {
+@media (max-width: 899px) {
   .sort-toggle button,
   .save-button,
   .quote-go {
@@ -179,7 +176,6 @@
   flex-direction: column;
   min-width: 0;
   border-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
 .quote-best {

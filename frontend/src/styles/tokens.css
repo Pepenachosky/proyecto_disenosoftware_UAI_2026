@@ -19,6 +19,7 @@
   --glass-border: rgba(255, 255, 255, 0.8);
   --glass-highlight: rgba(255, 255, 255, 0.9);
   --glass-solid: #f8f9fb;
+  --glass-chrome: rgba(248, 249, 251, 0.8);
   --glass-blur: blur(18px) saturate(170%);
   --glow-1: rgba(251, 146, 60, 0.45);
   --glow-2: rgba(250, 204, 21, 0.38);
@@ -48,7 +49,7 @@
   --dur-fast: 150ms;
   --dur: 250ms;
 
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -69,11 +70,14 @@
     --glass-border: rgba(255, 255, 255, 0.12);
     --glass-highlight: rgba(255, 255, 255, 0.22);
     --glass-solid: #15191e;
+    --glass-chrome: rgba(10, 12, 15, 0.78);
     --glow-1: rgba(251, 146, 60, 0.28);
     --glow-2: rgba(250, 204, 21, 0.18);
 
     --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.5);
     --backdrop: rgba(0, 0, 0, 0.65);
+
+    color-scheme: dark;
   }
 }
 
