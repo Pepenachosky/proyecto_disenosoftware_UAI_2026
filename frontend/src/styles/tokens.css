@@ -1,0 +1,80 @@
+/* Tokens de diseño. Único lugar donde se escriben colores, radios, sombras y fuentes. */
+:root {
+  /* Color (claro) */
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --surface-2: #f3f5f8;
+  --border: #e2e6eb;
+  --text: #0f1418;
+  --text-muted: #55606c;
+  --accent: #c2410c;
+  --on-accent: #ffffff;
+  --accent-2: #a16207;
+  --ok: #15803d;
+  --err: #b91c1c;
+  --focus: var(--accent);
+
+  /* Vidrio (claro) */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-solid: #f8f9fb;
+  --glass-blur: blur(18px) saturate(170%);
+  --glow-1: rgba(251, 146, 60, 0.45);
+  --glow-2: rgba(250, 204, 21, 0.38);
+
+  /* Forma */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --shadow-1: 0 8px 24px rgba(15, 20, 24, 0.12);
+
+  /* Tipografía */
+  --font-ui: "Space Grotesk Variable", system-ui, sans-serif;
+  --font-num: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* Movimiento */
+  --dur-fast: 150ms;
+  --dur: 250ms;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #07090b;
+    --surface: #111519;
+    --surface-2: #161b20;
+    --border: #1d2228;
+    --text: #eef1f4;
+    --text-muted: #9aa3ae;
+    --accent: #fb923c;
+    --on-accent: #0e0c0a;
+    --accent-2: #facc15;
+    --ok: #4ade80;
+    --err: #f87171;
+
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.22);
+    --glass-solid: #15191e;
+    --glow-1: rgba(251, 146, 60, 0.28);
+    --glow-2: rgba(250, 204, 21, 0.18);
+
+    --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}

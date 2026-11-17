@@ -1,0 +1,25 @@
+/* Barra de ubicación */
+.location-bar {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.location-bar p {
+  margin: 0 0 var(--space-2);
+}
+
+.location-bar > p:only-child {
+  margin: 0;
+}
+
+.location-bar .link-button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+}

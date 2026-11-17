@@ -1,0 +1,18 @@
+/* Estados: error, vacío, sin datos recientes */
+.error {
+  color: var(--err);
+}
+
+.empty {
+  padding: var(--space-6) 0;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.stale small {
+  display: block;
+}
+
+span.stale {
+  opacity: 0.55;
+}

@@ -1,0 +1,51 @@
+/* Guardados: tabla de comparación */
+.compare {
+  width: auto;
+  min-width: 100%;
+}
+
+.compare th:first-child,
+.compare td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+/* Esquina superior izquierda, sobre la primera columna y los encabezados. */
+.compare thead th:first-child {
+  z-index: 2;
+}
+
+.compare-head {
+  position: relative;
+  min-width: 140px;
+  vertical-align: top;
+  padding-right: 28px;
+}
+
+.compare-head a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-head img {
+  object-fit: contain;
+}
+
+.compare-remove {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.compare-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

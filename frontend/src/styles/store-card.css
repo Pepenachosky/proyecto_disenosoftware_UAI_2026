@@ -1,0 +1,82 @@
+/* Tiendas de un producto */
+.store-note {
+  margin: 0 0 var(--space-3);
+  opacity: 0.7;
+}
+
+.store-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.store-card {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.store-card.stale {
+  opacity: 0.55;
+}
+
+.store-top {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.store-top h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.store-card p {
+  margin: var(--space-1) 0 0;
+}
+
+.store-address {
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+
+.store-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.store-meta .open {
+  color: var(--ok);
+}
+
+.store-meta .closed {
+  color: var(--err);
+}
+
+.store-meta a {
+  color: inherit;
+  white-space: nowrap;
+}
+
+.store-card summary {
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.schedule {
+  width: auto;
+  margin-top: 6px;
+}
+
+.schedule th {
+  text-align: left;
+  font-weight: normal;
+  padding: 2px var(--space-4) 2px 0;
+}
+
+.schedule td {
+  padding: 2px 0;
+}
