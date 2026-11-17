@@ -68,6 +68,9 @@ export const es = {
     cheapestStore: "Tienda más barata",
     soldOut: "Agotado",
     noRecentData: "Sin datos recientes",
+    cheapest: "Más barato",
+    subtitle_one: "{{count}} producto para comparar",
+    subtitle_other: "{{count}} productos para comparar",
     noStock: "Sin stock",
   },
   stars: {

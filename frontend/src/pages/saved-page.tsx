@@ -35,9 +35,10 @@ function storeCell(
   if (current[0]) return <>{formatClp(current[0].price as number, locale)}</>;
   const stale = offers.sort(byPrice)[0];
   if (!stale) return <>—</>;
-  const label = offerStatus(stale, now) === "agotado" ? t("saved.soldOut") : t("saved.noRecentData");
+  const soldOut = offerStatus(stale, now) === "agotado";
+  const label = soldOut ? t("saved.soldOut") : t("saved.noRecentData");
   return (
-    <span className="stale">
+    <span className={soldOut ? "stale stale-out" : "stale"}>
       {formatClp(stale.price as number, locale)}
       <br />
       <small>{label}</small>
@@ -111,7 +112,8 @@ export function SavedPage() {
   return (
     <main className="wrap">
       <h1>{t("saved.title")}</h1>
-      <div className="table-scroll">
+      <p className="saved-subtitle">{t("saved.subtitle", { count: columns.length })}</p>
+      <div className="table-scroll compare-wrap">
         <table className="compare">
           <thead>
             <tr>
@@ -157,9 +159,12 @@ export function SavedPage() {
                   {s.bestPrice == null ? (
                     t("saved.noStock")
                   ) : s.bestPrice === minPrice ? (
-                    <strong>{formatClp(s.bestPrice, locale)}</strong>
+                    <>
+                      <span className="mono cheapest">{formatClp(s.bestPrice, locale)}</span>
+                      <span className="compare-tag">{t("saved.cheapest")}</span>
+                    </>
                   ) : (
-                    formatClp(s.bestPrice, locale)
+                    <span className="mono">{formatClp(s.bestPrice, locale)}</span>
                   )}
                 </td>
               ))}
@@ -175,8 +180,13 @@ export function SavedPage() {
             {STORES.map((st) => (
               <tr key={st.id}>
                 <th scope="row">{st.name}</th>
-                {columns.map((g) => (
-                  <td key={g.id}>{storeCell(g, st.id, now, t, locale)}</td>
+                {columns.map((g, i) => (
+                  <td
+                    key={g.id}
+                    className={summaries[i].bestStoreId === st.id ? "mono cheapest" : "mono"}
+                  >
+                    {storeCell(g, st.id, now, t, locale)}
+                  </td>
                 ))}
               </tr>
             ))}

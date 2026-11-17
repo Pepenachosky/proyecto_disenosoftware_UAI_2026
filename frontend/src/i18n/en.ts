@@ -70,6 +70,9 @@ export const en: Messages = {
     cheapestStore: "Cheapest store",
     soldOut: "Out of stock",
     noRecentData: "No recent data",
+    cheapest: "Cheapest",
+    subtitle_one: "{{count}} product to compare",
+    subtitle_other: "{{count}} products to compare",
     noStock: "Out of stock",
   },
   stars: {
