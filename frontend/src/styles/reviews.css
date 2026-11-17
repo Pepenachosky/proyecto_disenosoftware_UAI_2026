@@ -105,3 +105,11 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.reviews-summary svg {
+  vertical-align: -3px;
+  color: var(--accent-2);
+}
+.stars .star svg {
+  display: block;
+}

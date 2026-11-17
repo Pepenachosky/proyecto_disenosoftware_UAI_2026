@@ -80,3 +80,8 @@
 .schedule td {
   padding: 2px 0;
 }
+
+.store-meta a svg {
+  vertical-align: -2px;
+  margin-left: var(--space-1);
+}

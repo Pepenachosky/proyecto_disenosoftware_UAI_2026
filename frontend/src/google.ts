@@ -4,11 +4,11 @@ import { createNonce } from "./lib/nonce";
 
 // Tipos mínimos del script de Google Identity Services (solo lo que se usa).
 type GoogleButtonOptions = {
-  type: "standard";
+  type: "standard" | "icon";
   theme: "outline" | "filled_black";
   size: "medium" | "large";
   text: "signin_with";
-  shape: "rectangular";
+  shape: "rectangular" | "pill" | "circle";
   logo_alignment: "left";
   locale: "es" | "en";
 };

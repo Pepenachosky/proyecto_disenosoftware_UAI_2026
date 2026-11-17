@@ -169,3 +169,9 @@ td a {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+.pager button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}

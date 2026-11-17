@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ExternalLink } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Branch } from "../data";
 import { formatKm } from "../lib/geo.ts";
@@ -61,6 +62,7 @@ export function StoreCard({ offer, branch, distance, now }: Props) {
         {offer.url ? (
           <a href={offer.url} target="_blank" rel="noreferrer noopener">
             {t("store.goToStore")}
+            <ExternalLink size={14} aria-hidden="true" />
           </a>
         ) : null}
       </p>

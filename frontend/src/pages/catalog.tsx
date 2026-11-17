@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "../language.tsx";
 import { cachedCatalog, fetchCatalog } from "../data.ts";
 import {
@@ -212,6 +213,7 @@ export function Catalog() {
       {pages > 1 && (
         <nav className="pager" aria-label={t("catalog.pagination")}>
           <button disabled={current <= 1} onClick={() => setPage(current - 1)}>
+            <ChevronLeft size={18} aria-hidden="true" />
             {t("catalog.previous")}
           </button>
           <span>
@@ -219,6 +221,7 @@ export function Catalog() {
           </span>
           <button disabled={current >= pages} onClick={() => setPage(current + 1)}>
             {t("catalog.next")}
+            <ChevronRight size={18} aria-hidden="true" />
           </button>
         </nav>
       )}

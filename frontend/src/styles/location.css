@@ -23,3 +23,7 @@
   color: inherit;
   text-decoration: underline;
 }
+
+.location-bar svg {
+  vertical-align: -3px;
+}

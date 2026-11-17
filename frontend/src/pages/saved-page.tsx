@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import type { TFunction } from "i18next";
 import { useLanguage } from "../language.tsx";
 import { useAuth } from "../auth";
@@ -126,7 +127,7 @@ export function SavedPage() {
                     disabled={pending.has(g.id)}
                     onClick={() => void toggle(g.id)}
                   >
-                    ✕
+                    <X size={16} aria-hidden="true" />
                   </button>
                   <Link to={"/producto/" + g.slug}>
                     <ProductImage
