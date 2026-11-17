@@ -6,7 +6,7 @@ export function NotFound() {
   const { t } = useTranslation();
   return (
     <main className="wrap">
-      <EmptyState icon={<SearchX size={40} aria-hidden="true" />}>{t("common.notFound")}</EmptyState>
+      <EmptyState heading icon={<SearchX size={40} aria-hidden="true" />}>{t("common.notFound")}</EmptyState>
     </main>
   );
 }

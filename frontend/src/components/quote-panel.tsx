@@ -24,7 +24,7 @@ export function QuotePanel(
   const url = bestOffer(sortOffers(group.offers, now), now, { bestPrice, bestStoreId })?.url ?? null;
 
   return (
-    <aside className="quote glass">
+    <aside className="quote glass" aria-label={t("product.quote")}>
       <div className="quote-best">
         {bestPrice != null
           ? (

@@ -108,7 +108,8 @@ export function SavedPage() {
 
   const summaries = columns.map((g) => summarize(g, now));
   const prices = summaries.map((s) => s.bestPrice).filter((p): p is number => p != null);
-  const minPrice = prices.length ? Math.min(...prices) : null;
+  // "Más barato" solo tiene sentido al comparar dos o más productos con precio.
+  const minPrice = prices.length >= 2 ? Math.min(...prices) : null;
 
   return (
     <main className="wrap">

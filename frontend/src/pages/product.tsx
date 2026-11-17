@@ -86,7 +86,7 @@ export function ProductPage() {
   if (!group) {
     return (
       <main className="wrap">
-        <EmptyState icon={<PackageX size={40} aria-hidden="true" />}>{t("product.notFound")}</EmptyState>
+        <EmptyState heading icon={<PackageX size={40} aria-hidden="true" />}>{t("product.notFound")}</EmptyState>
       </main>
     );
   }
