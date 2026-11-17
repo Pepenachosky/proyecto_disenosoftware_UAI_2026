@@ -11,7 +11,8 @@ import {
 } from "recharts";
 import { fetchHistory } from "../data";
 import { buildChartData, currentPrices, type ChartPoint } from "../lib/history.ts";
-import { clp, STORES, type Offer } from "../lib/offers.ts";
+import { useLanguage } from "../language.tsx";
+import { formatClp, STORES, type Offer } from "../lib/offers.ts";
 
 // Colores por tienda (fijos, legibles en claro y oscuro). SP Digital va
 // punteada para no depender solo del color (verde/naranja en deuteranopía).
@@ -35,6 +36,7 @@ const longDate = new Intl.DateTimeFormat("es-CL", { dateStyle: "long", timeZone:
 type Result = { offers: Offer[]; data: ChartPoint[] | null; error: string | null };
 
 export function PriceChart({ offers }: { offers: Offer[] }) {
+  const { locale } = useLanguage();
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
               stroke="rgba(128, 128, 128, 0.5)"
             />
             <Tooltip
-              formatter={(v) => (typeof v === "number" ? clp.format(v) : String(v))}
+              formatter={(v) => (typeof v === "number" ? formatClp(v, locale) : String(v))}
               labelFormatter={(t) => longDate.format(Number(t))}
               contentStyle={{ background: "Canvas", color: "CanvasText", borderRadius: 6 }}
             />

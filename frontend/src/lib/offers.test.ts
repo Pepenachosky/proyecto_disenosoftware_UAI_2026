@@ -1,5 +1,6 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  formatClp,
   groupOffers,
   isCurrent,
   offerStatus,
@@ -136,4 +137,9 @@ Deno.test("groupOffers descarta grupos sin ofertas", () => {
   assertEquals(res.length, 1);
   assertEquals(res[0].id, 1);
   assertEquals(res[0].offers.length, 1);
+});
+
+Deno.test("formatClp según el locale", () => {
+  assertEquals(formatClp(89990, "es-CL"), "$89.990");
+  assertEquals(formatClp(89990, "en-US").replace(/\s/g, " "), "CLP 89,990");
 });

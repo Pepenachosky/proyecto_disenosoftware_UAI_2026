@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "../language.tsx";
 import { cachedCatalog, fetchCatalog } from "../data.ts";
 import {
   STORES,
@@ -12,12 +14,6 @@ import { ProductCard } from "../components/product-card.tsx";
 
 type Sort = "name" | "price-asc" | "price-desc";
 
-const CATEGORY_LABELS: Record<Category, string> = {
-  cpu: "Procesadores (CPU)",
-  gpu: "Tarjetas de video (GPU)",
-  ram: "Memorias RAM",
-};
-
 const PAGE_SIZE = 48;
 
 const isCategory = (v: string | null): v is Category => v === "cpu" || v === "gpu" || v === "ram";
@@ -25,6 +21,8 @@ const isSort = (v: string | null): v is Sort =>
   v === "name" || v === "price-asc" || v === "price-desc";
 
 export function Catalog() {
+  const { t } = useTranslation();
+  const { locale } = useLanguage();
   const [groups, setGroups] = useState<GroupWithOffers[]>(() => cachedCatalog() ?? []);
   const [loading, setLoading] = useState(() => cachedCatalog() === null);
   const [error, setError] = useState<string | null>(null);
@@ -103,9 +101,9 @@ export function Catalog() {
     return list.sort((a, b) =>
       sort === "price-asc" ? byPrice(a, b, 1)
       : sort === "price-desc" ? byPrice(a, b, -1)
-      : a.group.name.localeCompare(b.group.name, "es"),
+      : a.group.name.localeCompare(b.group.name, locale),
     );
-  }, [entries, query, category, storeId, onlyInStock, maxPrice, sort]);
+  }, [entries, query, category, storeId, onlyInStock, maxPrice, sort, locale]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: groups.length };
@@ -122,14 +120,14 @@ export function Catalog() {
 
   const clear = () => update({ q: null, cat: null, store: null, stock: null, max: null, page: null });
 
-  if (loading) return <main className="wrap">Cargando…</main>;
-  if (error) return <main className="wrap error">Error: {error}</main>;
+  if (loading) return <main className="wrap">{t("common.loading")}</main>;
+  if (error) return <main className="wrap error">{t("common.error", { message: error })}</main>;
 
   return (
     <main className="wrap">
-      <h1>Comparador de hardware</h1>
+      <h1>{t("catalog.title")}</h1>
 
-      <div className="tabs" role="tablist" aria-label="Categoría">
+      <div className="tabs" role="tablist" aria-label={t("catalog.categoryLabel")}>
         {(["all", "cpu", "gpu", "ram"] as const).map((c) => (
           <button
             key={c}
@@ -138,7 +136,7 @@ export function Catalog() {
             className={category === c ? "tab active" : "tab"}
             onClick={() => setFilter("cat", c === "all" ? null : c)}
           >
-            {c === "all" ? "Todos" : CATEGORY_LABELS[c]}
+            {c === "all" ? t("catalog.all") : t(`catalog.categories.${c}`)}
             <span className="badge">{counts[c] ?? 0}</span>
           </button>
         ))}
@@ -147,17 +145,17 @@ export function Catalog() {
       <div className="filters">
         <input
           type="search"
-          placeholder="Buscar producto (ej: ryzen 5 7600, rtx 4060, ddr5 32gb)…"
+          placeholder={t("catalog.searchPlaceholder")}
           value={query}
           onChange={(e) => setFilter("q", e.target.value, true)}
-          aria-label="Buscar producto"
+          aria-label={t("catalog.searchLabel")}
         />
         <select
           value={storeId}
           onChange={(e) => setFilter("store", e.target.value === "all" ? null : e.target.value)}
-          aria-label="Tienda"
+          aria-label={t("catalog.storeLabel")}
         >
-          <option value="all">Todas las tiendas</option>
+          <option value="all">{t("catalog.allStores")}</option>
           {STORES.map((s) => (
             <option key={s.id} value={String(s.id)}>
               {s.name}
@@ -168,19 +166,19 @@ export function Catalog() {
           type="number"
           min={0}
           step={10000}
-          placeholder="Precio máx. (CLP)"
+          placeholder={t("catalog.maxPricePlaceholder")}
           value={maxPrice}
           onChange={(e) => setFilter("max", e.target.value, true)}
-          aria-label="Precio máximo"
+          aria-label={t("catalog.maxPriceLabel")}
         />
         <select
           value={sort}
           onChange={(e) => setFilter("sort", e.target.value === "name" ? null : e.target.value)}
-          aria-label="Ordenar"
+          aria-label={t("catalog.sortLabel")}
         >
-          <option value="name">Nombre (A-Z)</option>
-          <option value="price-asc">Precio: menor a mayor</option>
-          <option value="price-desc">Precio: mayor a menor</option>
+          <option value="name">{t("catalog.sortName")}</option>
+          <option value="price-asc">{t("catalog.sortPriceAsc")}</option>
+          <option value="price-desc">{t("catalog.sortPriceDesc")}</option>
         </select>
         <label className="check">
           <input
@@ -188,21 +186,21 @@ export function Catalog() {
             checked={onlyInStock}
             onChange={(e) => setFilter("stock", e.target.checked ? "1" : null)}
           />
-          Solo con stock
+          {t("catalog.onlyInStock")}
         </label>
         {hasFilters && (
           <button className="link" onClick={clear}>
-            Limpiar filtros
+            {t("catalog.clearFilters")}
           </button>
         )}
       </div>
 
       <p className="count">
-        {filtered.length} de {groups.length} productos
+        {t("catalog.count", { shown: filtered.length, count: groups.length })}
       </p>
 
       {filtered.length === 0 ? (
-        <p className="empty">No hay productos que coincidan con los filtros.</p>
+        <p className="empty">{t("catalog.empty")}</p>
       ) : (
         <div className="grid">
           {visible.map(({ group }) => (
@@ -212,15 +210,15 @@ export function Catalog() {
       )}
 
       {pages > 1 && (
-        <nav className="pager" aria-label="Paginación">
+        <nav className="pager" aria-label={t("catalog.pagination")}>
           <button disabled={current <= 1} onClick={() => setPage(current - 1)}>
-            ← Anterior
+            {t("catalog.previous")}
           </button>
           <span>
-            Página {current} de {pages}
+            {t("catalog.pageOf", { current, pages })}
           </span>
           <button disabled={current >= pages} onClick={() => setPage(current + 1)}>
-            Siguiente →
+            {t("catalog.next")}
           </button>
         </nav>
       )}

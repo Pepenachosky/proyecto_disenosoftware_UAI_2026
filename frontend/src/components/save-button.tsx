@@ -1,21 +1,23 @@
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth";
 import { useSaved } from "../saved";
 import { LoginButton } from "./login-button";
 
 export function SaveButton({ groupId }: { groupId: number }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const { ids, toggle, loading: savedLoading, pending } = useSaved();
   if (loading) {
     return (
       <button type="button" className="save-button" disabled>
-        ☆ Guardar para comparar
+        {t("saved.save")}
       </button>
     );
   }
   if (!user) {
     return (
       <div>
-        <p>Inicia sesión para guardar</p>
+        <p>{t("common.loginToSave")}</p>
         <LoginButton />
       </div>
     );
@@ -29,7 +31,7 @@ export function SaveButton({ groupId }: { groupId: number }) {
       disabled={savedLoading || pending.has(groupId)}
       onClick={() => void toggle(groupId)}
     >
-      {saved ? "★ Guardado" : "☆ Guardar para comparar"}
+      {saved ? t("saved.savedState") : t("saved.save")}
     </button>
   );
 }

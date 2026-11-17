@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { useLanguage } from "../language.tsx";
 import { useAuth } from "../auth";
 import { useSaved } from "../saved";
 import { fetchGroupsByIds } from "../data";
 import { LoginButton } from "../components/login-button.tsx";
 import { ProductImage } from "../components/product-image.tsx";
 import {
-  clp,
+  formatClp,
   offerStatus,
   STORES,
   summarize,
@@ -18,17 +21,23 @@ const CATEGORY_NAMES = { cpu: "CPU", gpu: "GPU", ram: "RAM" } as const;
 
 type Loaded = { requested: Set<number>; groups: GroupWithOffers[]; error: string | null };
 
-function storeCell(group: GroupWithOffers, storeId: number, now: Date) {
+function storeCell(
+  group: GroupWithOffers,
+  storeId: number,
+  now: Date,
+  t: TFunction,
+  locale: string,
+) {
   const offers = group.offers.filter((o) => o.store_id === storeId && o.price != null);
   const byPrice = (a: Offer, b: Offer) => (a.price as number) - (b.price as number);
   const current = offers.filter((o) => offerStatus(o, now) === "vigente").sort(byPrice);
-  if (current[0]) return <>{clp.format(current[0].price as number)}</>;
+  if (current[0]) return <>{formatClp(current[0].price as number, locale)}</>;
   const stale = offers.sort(byPrice)[0];
   if (!stale) return <>—</>;
-  const label = offerStatus(stale, now) === "agotado" ? "Agotado" : "Sin datos recientes";
+  const label = offerStatus(stale, now) === "agotado" ? t("saved.soldOut") : t("saved.noRecentData");
   return (
     <span className="stale">
-      {clp.format(stale.price as number)}
+      {formatClp(stale.price as number, locale)}
       <br />
       <small>{label}</small>
     </span>
@@ -36,6 +45,8 @@ function storeCell(group: GroupWithOffers, storeId: number, now: Date) {
 }
 
 export function SavedPage() {
+  const { t } = useTranslation();
+  const { locale } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const { ids, toggle, loading: savedLoading, pending } = useSaved();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -65,29 +76,29 @@ export function SavedPage() {
     () =>
       (loaded?.groups ?? [])
         .filter((g) => ids.has(g.id))
-        .sort((a, b) => a.name.localeCompare(b.name, "es")),
-    [loaded, ids],
+        .sort((a, b) => a.name.localeCompare(b.name, locale)),
+    [loaded, ids, locale],
   );
 
-  if (authLoading) return <main className="wrap">Cargando…</main>;
+  if (authLoading) return <main className="wrap">{t("common.loading")}</main>;
   if (!user) {
     return (
       <main className="wrap">
-        <h1>Guardados</h1>
-        <p>Inicia sesión para guardar productos y compararlos</p>
+        <h1>{t("saved.title")}</h1>
+        <p>{t("saved.loginPrompt")}</p>
         <LoginButton />
       </main>
     );
   }
-  if (needFetch && loaded?.error) return <main className="wrap error">Error: {loaded.error}</main>;
-  if (savedLoading || needFetch) return <main className="wrap">Cargando…</main>;
+  if (needFetch && loaded?.error) return <main className="wrap error">{t("common.error", { message: loaded.error })}</main>;
+  if (savedLoading || needFetch) return <main className="wrap">{t("common.loading")}</main>;
 
   if (columns.length === 0) {
     return (
       <main className="wrap">
-        <h1>Guardados</h1>
-        <p className="empty">Aún no guardas productos</p>
-        <Link to="/">Ver productos</Link>
+        <h1>{t("saved.title")}</h1>
+        <p className="empty">{t("saved.empty")}</p>
+        <Link to="/">{t("saved.viewProducts")}</Link>
       </main>
     );
   }
@@ -98,20 +109,20 @@ export function SavedPage() {
 
   return (
     <main className="wrap">
-      <h1>Guardados</h1>
+      <h1>{t("saved.title")}</h1>
       <div className="table-scroll">
         <table className="compare">
           <thead>
             <tr>
               <th>
-                <span className="sr-only">Característica</span>
+                <span className="sr-only">{t("saved.feature")}</span>
               </th>
               {columns.map((g) => (
                 <th key={g.id} className="compare-head">
                   <button
                     type="button"
                     className="compare-remove"
-                    aria-label={`Quitar ${g.name}`}
+                    aria-label={t("saved.remove", { name: g.name })}
                     disabled={pending.has(g.id)}
                     onClick={() => void toggle(g.id)}
                   >
@@ -133,27 +144,27 @@ export function SavedPage() {
           </thead>
           <tbody>
             <tr>
-              <th scope="row">Categoría</th>
+              <th scope="row">{t("saved.category")}</th>
               {columns.map((g) => (
                 <td key={g.id}>{CATEGORY_NAMES[g.category]}</td>
               ))}
             </tr>
             <tr>
-              <th scope="row">Mejor precio</th>
+              <th scope="row">{t("saved.bestPrice")}</th>
               {summaries.map((s, i) => (
                 <td key={columns[i].id}>
                   {s.bestPrice == null ? (
-                    "Sin stock"
+                    t("saved.noStock")
                   ) : s.bestPrice === minPrice ? (
-                    <strong>{clp.format(s.bestPrice)}</strong>
+                    <strong>{formatClp(s.bestPrice, locale)}</strong>
                   ) : (
-                    clp.format(s.bestPrice)
+                    formatClp(s.bestPrice, locale)
                   )}
                 </td>
               ))}
             </tr>
             <tr>
-              <th scope="row">Tienda más barata</th>
+              <th scope="row">{t("saved.cheapestStore")}</th>
               {summaries.map((s, i) => (
                 <td key={columns[i].id}>
                   {STORES.find((st) => st.id === s.bestStoreId)?.name ?? "—"}
@@ -164,7 +175,7 @@ export function SavedPage() {
               <tr key={st.id}>
                 <th scope="row">{st.name}</th>
                 {columns.map((g) => (
-                  <td key={g.id}>{storeCell(g, st.id, now)}</td>
+                  <td key={g.id}>{storeCell(g, st.id, now, t, locale)}</td>
                 ))}
               </tr>
             ))}

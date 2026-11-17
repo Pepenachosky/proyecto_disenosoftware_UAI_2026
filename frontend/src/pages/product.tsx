@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { fetchBranches, fetchGroup, type Branch } from "../data";
 import {
-  clp,
+  formatClp,
   sortOffers,
   type SortBy,
   STORES,
@@ -10,6 +10,7 @@ import {
   type GroupWithOffers,
 } from "../lib/offers.ts";
 import { distanceKm } from "../lib/geo.ts";
+import { useLanguage } from "../language.tsx";
 import { useUserLocation } from "../location.tsx";
 import { LocationBar } from "../components/location-bar.tsx";
 import { StoreCard } from "../components/store-card.tsx";
@@ -30,6 +31,7 @@ type Result = { slug: string; group: GroupWithOffers | null; error: string | nul
 
 export function ProductPage() {
   const { slug = "" } = useParams();
+  const { locale } = useLanguage();
   const [result, setResult] = useState<Result | null>(null);
   const [now] = useState(() => new Date());
   const { location, start } = useUserLocation();
@@ -108,7 +110,7 @@ export function ProductPage() {
           <h1 className="product-name">{group.name}</h1>
           {bestPrice != null ? (
             <p className="product-price">
-              desde <strong>{clp.format(bestPrice)}</strong> en {storeName(bestStoreId)}
+              desde <strong>{formatClp(bestPrice, locale)}</strong> en {storeName(bestStoreId)}
             </p>
           ) : (
             <p className="product-price none">Sin stock</p>

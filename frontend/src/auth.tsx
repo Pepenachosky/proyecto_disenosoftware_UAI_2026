@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthValue | null>(null);
 function toAppUser(u: User | null | undefined): AppUser | null {
   if (!u) return null;
   const m = (u.user_metadata ?? {}) as { full_name?: string; name?: string };
-  return { id: u.id, name: m.full_name ?? m.name ?? u.email ?? "Usuario" };
+  return { id: u.id, name: m.full_name ?? m.name ?? u.email ?? "" };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

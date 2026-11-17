@@ -1,7 +1,8 @@
 import type { Branch } from "../data";
 import { formatKm } from "../lib/geo.ts";
 import { openStatus, statusText, weekSchedule } from "../lib/hours.ts";
-import { clp, offerStatus, STORES, type Offer } from "../lib/offers.ts";
+import { useLanguage } from "../language.tsx";
+import { formatClp, offerStatus, STORES, type Offer } from "../lib/offers.ts";
 
 function statusLabel(o: Offer, now: Date): { text: string; className: string } {
   const status = offerStatus(o, now);
@@ -14,6 +15,7 @@ function statusLabel(o: Offer, now: Date): { text: string; className: string } {
 type Props = { offer: Offer; branch: Branch | null; distance: number | null; now: Date };
 
 export function StoreCard({ offer, branch, distance, now }: Props) {
+  const { locale } = useLanguage();
   const stock = statusLabel(offer, now);
   const hours = branch?.branch_hours ?? [];
   const open = openStatus(hours, now);
@@ -24,7 +26,7 @@ export function StoreCard({ offer, branch, distance, now }: Props) {
     <article className={offerStatus(offer, now) === "vigente" ? "store-card" : "store-card stale"}>
       <div className="store-top">
         <h3>{name}</h3>
-        <strong>{offer.price != null ? clp.format(offer.price) : "—"}</strong>
+        <strong>{offer.price != null ? formatClp(offer.price, locale) : "—"}</strong>
       </div>
       <p className="store-address">
         {branch?.address ? place : "Sin dirección registrada"}
