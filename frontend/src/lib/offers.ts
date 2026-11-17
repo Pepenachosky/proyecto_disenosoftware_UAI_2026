@@ -72,6 +72,14 @@ export function summarize(
   };
 }
 
+// Disponibilidad para la tarjeta del catálogo: "si" solo si alguna oferta vigente
+// informa stock; "sin-info" si hay vigentes pero ninguna lo informa; "no" si no hay vigentes.
+export function stockState(g: GroupWithOffers, now: Date): "si" | "sin-info" | "no" {
+  const current = g.offers.filter((o) => isCurrent(o, now));
+  if (current.some((o) => o.in_stock === true)) return "si";
+  return current.length > 0 ? "sin-info" : "no";
+}
+
 // La primera oferta, en el orden dado, que es vigente y coincide con la mejor tienda y precio.
 export function bestOffer(
   sorted: Offer[],

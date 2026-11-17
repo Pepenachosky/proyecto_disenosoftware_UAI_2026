@@ -7,6 +7,7 @@ import {
   offerStatus,
   priceSpread,
   sortOffers,
+  stockState,
   summarize,
   type Group,
   type GroupWithOffers,
@@ -205,4 +206,17 @@ Deno.test("bestOffer", () => {
   const old = offer({ id: 4, store_id: 1, price: 100, last_seen_at: "2026-11-01T12:00:00Z" });
   assertEquals(bestOffer([old], now, best), null);
   assertEquals(bestOffer([old, c, b], now, best)?.id, 3);
+});
+
+Deno.test("stockState: tres estados según las ofertas vigentes", () => {
+  const g = (offers: Offer[]): GroupWithOffers => ({ ...group, offers });
+  assertEquals(stockState(g([offer({ in_stock: true }), offer({ id: 2 })]), now), "si");
+  assertEquals(stockState(g([offer({ in_stock: null })]), now), "sin-info");
+  // Stock informado pero viejo no cuenta como vigente.
+  assertEquals(
+    stockState(g([offer({ in_stock: true, last_seen_at: "2026-10-01T00:00:00Z" }), offer({ id: 2 })]), now),
+    "sin-info",
+  );
+  assertEquals(stockState(g([offer({ in_stock: false })]), now), "no");
+  assertEquals(stockState(g([]), now), "no");
 });
