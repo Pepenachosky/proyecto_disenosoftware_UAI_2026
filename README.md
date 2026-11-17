@@ -22,6 +22,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (migración 004 ejecutada y probado en el navegador). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
+- [x] Rediseño visual (tech oscuro, naranja + amarillo, vidrio en los controles)
 
 > **Quedó fuera de la geolocalización:** el stock por sucursal (`branch_stock`, y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la función `nearby_branches`, que siguen sin usarse. Cada tienda tiene una sola sucursal (su casa matriz), cargada a mano en la migración 004 desde los sitios oficiales.
 
@@ -59,6 +60,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── data.ts              Consultas a la base de datos
 │       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones
+│       ├── styles/              Estilos por área; tokens.css es la fuente de colores y medidas (con pruebas)
 │       └── lib/                 Lógica pura con pruebas: search, offers, history, distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
@@ -170,7 +172,7 @@ Desde la raíz del repositorio:
 
 ```bash
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
-(cd frontend && deno test --no-config src/lib/ src/i18n/)  # lógica pura y traducciones del frontend (sin --no-config falla)
+(cd frontend && deno test --no-config --allow-read src/lib/ src/i18n/ src/styles/)  # lógica pura, traducciones y estilos del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
 bash supabase/tests/run_002.sh                   # migraciones 002 a 005 en un Postgres local (necesita podman)
 ```

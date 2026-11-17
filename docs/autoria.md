@@ -270,7 +270,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 **Pendiente de verificar:**
 - Paginar cuando haya más de 1000 productos.
-- `app.css` se importa dos veces (en `main.tsx` y en `app.tsx`); quitar uno.
+- ~~`app.css` se importa dos veces (en `main.tsx` y en `app.tsx`); quitar uno.~~ Hecho en el rediseño (Prompt 21): ahora se importa una sola vez, en `app.tsx`.
 - Agregar tienda, buscador, filtro de stock, categorías y presupuesto.
 
 ---
@@ -600,6 +600,52 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 21: Rediseño visual
+
+**Prompt (condensado):**
+> Pedí planear un rediseño visual del frontend usando superpowers y las skills o plugins instalados, porque se ve muy básico y quiero que parezca un cotizador profesional y moderno. Acepté los bocetos en el navegador (como me conecto por SSH desde otro equipo, se resolvió con un túnel SSH, sin exponer nada). Elegí la dirección B (tech oscuro), probé distintos colores (lima + cian, tonos rojo/naranja/amarillo), pedí probar "liquid glass" (vidrio en los controles, también en rojo para comparar) y me quedé con naranja + amarillo. En la página de producto elegí "el mejor precio y la comparación de tiendas primero" (P2 con tarjetas); en el catálogo, F2 con barra lateral; los guardados me parecieron bien. Elegí CSS propio con variables (enfoque A), aprobé el diseño ("apruebo, crea la rama y escribe el plan") y pedí ejecutarlo con subagentes. En la pausa tras la etapa 1 noté que el botón de Google no cambia de idioma (lo dejamos en la lista de pendientes) y que los botones de paginación del catálogo no se distinguían bien (el texto no se veía); pedí arreglarlos y hacerlos también como liquid glass.
+
+**Resultado obtenido:**
+- **Proceso:** brainstorming (superpowers) con bocetos en el navegador (3 direcciones, 4 paletas, comparación con tonos cálidos, liquid glass en controles o en todo, distribuciones de producto y de filtros, Guardados); skill ui-ux-pro-max para estilos, paletas y tipografías, con frontend-design como guía; diseño revisado por un subagente antes de entregarlo; plan de 11 tareas, ejecutadas con un subagente por tarea y revisión independiente de cada una (más rondas de corrección); verificación visual con capturas de Firefox sin interfaz en 360 y 1440 px, claro/oscuro, es/en.
+- **Commits en `feat/rediseno-visual`** (diseño: `docs/superpowers/specs/2026-11-17-rediseno-visual-design.md`; plan: `docs/superpowers/plans/2026-11-17-rediseno-visual.md`):
+  - `c66191c`, `1345015`: diseño y plan.
+  - `66944ef`: tokens de diseño (`frontend/src/styles/tokens.css`), fuentes (Space Grotesk y JetBrains Mono con @fontsource) y estilos divididos por área; pruebas de contraste 4.5:1 y de "sin colores fuera de tokens" (`src/styles/tokens.test.ts`).
+  - `d9a1114`, `cd6fb58`: barra de navegación de vidrio e íconos lucide (reemplazan ☆ ★ ✕ ↗ ← → 📍); nombre accesible de la marca y globo de guardados en celular.
+  - `1d16966`: botones de paginación de vidrio y estilo base legible de botones (pedido en la pausa).
+  - `2cadf0f`: lógica de la barra de precio y conteo de filtros (`frontend/src/lib/filters.ts`, con pruebas).
+  - `08ad40d`, `033e535`: catálogo con barra lateral de filtros (desde 900 px) y panel "Filtros (n)" en celular y tablet (`<dialog>`), tarjetas nuevas; panel de filtros opaco y fila de filtros en celular.
+  - `c68abcb`: rango de precios y ahorro (`priceSpread` en `lib/offers.ts`).
+  - `d8bdca4`, `5fc5bb5`, `0923075`: subpágina de producto en dos columnas con panel de cotización fijo (`components/quote-panel.tsx`: mejor precio, "Ahorras hasta", "Ir a la tienda", Guardar); vidrio más denso (`--glass-chrome`) para que la barra se lea al desplazar y barras de desplazamiento del tema, incluida la del panel.
+  - `05a73fc`: tarjetas de tienda compactas con dirección y horario desplegables y etiqueta "Mejor" (`bestOffer` en `lib/offers.ts`).
+  - `d8fefcf`: gráfico (colores por tienda sin naranja, según el tema) y reseñas con el nuevo estilo.
+  - `78ec8f1`: página de guardados: "Más barato", tienda más barata resaltada por columna y columna de nombres fija.
+  - `d231171`: esqueletos de carga, estados vacíos y 404 (`components/skeleton.tsx`, `components/empty-state.tsx`, `pages/not-found.tsx`).
+
+**Decisiones propias:**
+- Rediseño visual para que parezca un cotizador profesional y moderno; dirección B (tech oscuro).
+- Naranja + amarillo, tras compararlo con lima + cian y con rojo.
+- Liquid glass solo en los controles.
+- Producto: P2 con tarjetas (panel de cotización fijo al costado, una tarjeta por tienda); catálogo: F2 con barra lateral; guardados como se propuso.
+- CSS propio con variables (enfoque A) y ejecución con subagentes.
+- Dejar el botón de Google que no cambia de idioma en la lista de pendientes, y arreglar los botones de paginación (texto ilegible), también como liquid glass.
+
+**Supuestos del asistente por confirmar:**
+- Tipografía Space Grotesk + JetBrains Mono para los precios; se sigue el tema del sistema (oscuro como diseño principal).
+- Íconos lucide-react; esqueletos de carga; animaciones cortas que se apagan con "reducir movimiento"; vidrio opaco con "reducir transparencia".
+- Barra de precio de $0 al mayor precio redondeado a $10.000, con paso de $10.000; el extremo derecho es "sin límite".
+- Colores del gráfico: azul / morado / verde punteado (PC Express dejó el naranja porque chocaba con el acento).
+- Barra en celular: íconos y botón de Google de solo ícono; sin sesión el botón oficial sigue visible.
+- Una tarjeta por oferta (como antes); "N tiendas" cuenta tiendas distintas; "Mejor" solo en la oferta más barata.
+- Tablet (640 a 899 px) usa el mismo panel de filtros que el celular; la barra lateral solo en escritorio.
+- El promedio de reseñas usa números tabulares (no JetBrains Mono) porque está dentro de una frase traducida.
+
+**Pendiente de verificar:**
+- Con sesión: tabla de Guardados real en 360 y 1440 px, guardar y quitar, y crear, editar y borrar una reseña con el nuevo estilo.
+- Producto con 3 tiendas (línea punteada de SP Digital en el gráfico) y producto sin precio vigente.
+- Desenfoque real del vidrio en Chrome y Safari (las capturas de prueba no lo aplicaban).
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -631,6 +677,10 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Multilenguaje propio (español e inglés con i18next, idioma en el perfil; Prompt 20).
 - [ ] Ejecutar la migración 005 en Supabase (`docs/migracion-005.md`) y hacer la prueba manual del multilenguaje.
 - [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.
+- [x] Quitar el import doble de `app.css` (ahora se importa una sola vez, en `app.tsx`; Prompt 21).
+- [x] Rediseño visual del frontend (tech oscuro, naranja + amarillo, vidrio en los controles; Prompt 21).
+- [ ] El botón de Google no cambia de idioma con la interfaz (el script de Google lo decide); ver más adelante.
+- [ ] Hacer las verificaciones pendientes del rediseño visual (Prompt 21).
 
 ---
 
