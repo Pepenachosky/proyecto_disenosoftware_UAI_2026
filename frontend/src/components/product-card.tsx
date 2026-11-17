@@ -10,26 +10,31 @@ export function ProductCard({ group, now }: { group: GroupWithOffers; now: Date 
   const { t } = useTranslation();
   const { locale } = useLanguage();
   const { bestPrice, storeCount } = summarize(group, now);
+  const inStock = bestPrice != null;
   return (
     <Link to={"/producto/" + group.slug} className="card">
-      <ProductImage
-        className="card-img"
-        src={group.image_url}
-        alt={group.name}
-        loading="lazy"
-      />
+      <span className="card-frame">
+        <ProductImage
+          className="card-img"
+          src={group.image_url}
+          alt={group.name}
+          loading="lazy"
+        />
+      </span>
       <span className="card-cat">{CATEGORY_NAMES[group.category]}</span>
       <span className="card-name">{group.name}</span>
-      {bestPrice != null ? (
-        <>
-          <span className="card-price">{t("card.from", { price: formatClp(bestPrice, locale) })}</span>
-          <span className="card-stores">
-            {t("card.stores", { count: storeCount })}
-          </span>
-        </>
+      {inStock ? (
+        <span className="card-price mono">{t("card.from", { price: formatClp(bestPrice, locale) })}</span>
       ) : (
-        <span className="card-price none">{t("card.outOfStock")}</span>
+        <span className="card-price none mono" aria-hidden="true">—</span>
       )}
+      <span className="card-foot">
+        <span className="card-stores">{inStock ? t("card.stores", { count: storeCount }) : ""}</span>
+        <span className={inStock ? "card-stock yes" : "card-stock no"}>
+          <span className="dot" aria-hidden="true" />
+          {inStock ? t("card.inStock") : t("card.outOfStock")}
+        </span>
+      </span>
     </Link>
   );
 }

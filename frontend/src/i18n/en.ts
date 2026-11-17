@@ -6,6 +6,7 @@ export const en: Messages = {
     notFound: "Page not found",
     loading: "Loading…",
     error: "Error: {{message}}",
+    close: "Close",
     loginToSave: "Sign in to save",
   },
   nav: {
@@ -34,6 +35,10 @@ export const en: Messages = {
     sortName: "Name (A-Z)",
     sortPriceAsc: "Price: low to high",
     sortPriceDesc: "Price: high to low",
+    filters: "Filters",
+    filtersCount: "Filters ({{count}})",
+    availability: "Availability",
+    noLimit: "No limit",
     onlyInStock: "In stock only",
     clearFilters: "Clear filters",
     count_one: "{{shown}} of {{count}} product",
@@ -48,6 +53,7 @@ export const en: Messages = {
     from: "from {{price}}",
     stores_one: "at {{count}} store",
     stores_other: "at {{count}} stores",
+    inStock: "In stock",
     outOfStock: "Out of stock",
   },
   saved: {

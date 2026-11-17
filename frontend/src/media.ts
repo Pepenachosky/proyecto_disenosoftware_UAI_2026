@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export const NARROW = "(max-width: 639px)";
+export const BELOW_DESKTOP = "(max-width: 899px)";
 
 export function useMediaQuery(query: string): boolean {
   const get = () => typeof window !== "undefined" && window.matchMedia(query).matches;

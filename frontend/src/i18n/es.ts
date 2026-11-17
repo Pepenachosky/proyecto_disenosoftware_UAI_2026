@@ -4,6 +4,7 @@ export const es = {
     notFound: "Página no encontrada",
     loading: "Cargando…",
     error: "Error: {{message}}",
+    close: "Cerrar",
     loginToSave: "Inicia sesión para guardar",
   },
   nav: {
@@ -32,6 +33,10 @@ export const es = {
     sortName: "Nombre (A-Z)",
     sortPriceAsc: "Precio: menor a mayor",
     sortPriceDesc: "Precio: mayor a menor",
+    filters: "Filtros",
+    filtersCount: "Filtros ({{count}})",
+    availability: "Disponibilidad",
+    noLimit: "Sin límite",
     onlyInStock: "Solo con stock",
     clearFilters: "Limpiar filtros",
     count_one: "{{shown}} de {{count}} producto",
@@ -46,6 +51,7 @@ export const es = {
     from: "desde {{price}}",
     stores_one: "en {{count}} tienda",
     stores_other: "en {{count}} tiendas",
+    inStock: "En stock",
     outOfStock: "Sin stock",
   },
   saved: {
