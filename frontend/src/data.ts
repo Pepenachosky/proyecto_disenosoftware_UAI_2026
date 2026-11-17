@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import type { Lang } from "./lib/locale.ts";
 import { groupOffers } from "./lib/offers.ts";
 import type { Group, GroupWithOffers, Offer } from "./lib/offers.ts";
 import type { HistoryRow } from "./lib/history.ts";
@@ -194,5 +195,21 @@ export async function addSaved(groupId: number): Promise<void> {
 
 export async function removeSaved(groupId: number): Promise<void> {
   const { error } = await supabase.from("saved_products").delete().eq("group_id", groupId);
+  if (error) throw new Error(error.message);
+}
+
+/** Idioma guardado en el perfil: valor crudo (puede ser null o inválido); sin fila → null. */
+export async function fetchProfileLanguage(userId: string): Promise<unknown> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("language")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.language ?? null;
+}
+
+export async function saveProfileLanguage(userId: string, lang: Lang): Promise<void> {
+  const { error } = await supabase.from("profiles").update({ language: lang }).eq("id", userId);
   if (error) throw new Error(error.message);
 }

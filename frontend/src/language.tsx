@@ -1,7 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import i18n from "./i18n/index.ts";
-import { intlLocale, parseLang, STORAGE_KEY, type Lang } from "./lib/locale.ts";
+import { useAuth } from "./auth.tsx";
+import { fetchProfileLanguage, saveProfileLanguage } from "./data.ts";
+import { intlLocale, onLogin, parseLang, STORAGE_KEY, type Lang } from "./lib/locale.ts";
 
 type LanguageValue = {
   lang: Lang;
@@ -20,7 +22,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = useCallback((l: Lang) => {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const userIdRef = useRef<string | null>(userId);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+  // Idioma activo, siempre al día (el estado de React llega un render tarde).
+  const langRef = useRef<Lang>(lang);
+  // Se incrementa cada vez que el usuario elige idioma: sirve para detectar la carrera con la lectura del perfil.
+  const choiceRef = useRef(0);
+
+  // Aplica el idioma (i18n, localStorage y estado) sin tocar el perfil.
+  const apply = useCallback((l: Lang) => {
+    langRef.current = l;
     void i18n.changeLanguage(l);
     try {
       localStorage.setItem(STORAGE_KEY, l);
@@ -29,6 +44,46 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
     setLangState(l);
   }, []);
+
+  const setLang = useCallback(
+    (l: Lang) => {
+      choiceRef.current += 1;
+      apply(l);
+      const id = userIdRef.current;
+      if (id) {
+        saveProfileLanguage(id, l).catch((e) =>
+          console.warn("No se pudo guardar el idioma en el perfil:", e),
+        );
+      }
+    },
+    [apply],
+  );
+
+  // Al iniciar sesión (o cambiar de cuenta) el perfil manda; si no tiene idioma, se guarda el actual.
+  useEffect(() => {
+    if (!userId) return;
+    const ticket = choiceRef.current;
+    let cancelled = false;
+    (async () => {
+      try {
+        const profileValue = await fetchProfileLanguage(userId);
+        if (cancelled) return; // cerró sesión o cambió de cuenta
+        if (choiceRef.current !== ticket) {
+          // El usuario eligió idioma mientras se leía el perfil: gana su elección.
+          await saveProfileLanguage(userId, langRef.current);
+          return;
+        }
+        const { lang: next, saveToProfile } = onLogin(profileValue, langRef.current);
+        if (next !== langRef.current) apply(next);
+        if (saveToProfile) await saveProfileLanguage(userId, next);
+      } catch (e) {
+        console.warn("No se pudo sincronizar el idioma con el perfil:", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, apply]);
 
   const value = useMemo(
     () => ({ lang, locale: intlLocale(lang), setLang }),
