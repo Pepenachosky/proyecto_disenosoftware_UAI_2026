@@ -72,6 +72,19 @@ export function summarize(
   };
 }
 
+// Rango de precios de las ofertas vigentes; null si no hay al menos dos precios distintos.
+export function priceSpread(
+  g: GroupWithOffers,
+  now: Date,
+): { min: number; max: number; savings: number } | null {
+  const prices = g.offers.filter((o) => isCurrent(o, now)).map((o) => o.price!);
+  if (prices.length < 2) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  if (max === min) return null;
+  return { min, max, savings: max - min };
+}
+
 function byPrice(a: Offer, b: Offer): number {
   if (a.price == null && b.price == null) return 0;
   if (a.price == null) return 1;

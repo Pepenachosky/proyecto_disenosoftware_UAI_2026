@@ -4,6 +4,7 @@ import {
   groupOffers,
   isCurrent,
   offerStatus,
+  priceSpread,
   sortOffers,
   summarize,
   type Group,
@@ -142,4 +143,53 @@ Deno.test("groupOffers descarta grupos sin ofertas", () => {
 Deno.test("formatClp según el locale", () => {
   assertEquals(formatClp(89990, "es-CL"), "$89.990");
   assertEquals(formatClp(89990, "en-US").replace(/\s/g, " "), "CLP 89,990");
+});
+
+Deno.test("priceSpread: una sola oferta vigente → null", () => {
+  const g: GroupWithOffers = { ...group, offers: [offer({ id: 1, store_id: 1, price: 329990 })] };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: dos vigentes → min, max y ahorro", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 359990 }),
+      offer({ id: 2, store_id: 2, price: 329990 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), { min: 329990, max: 359990, savings: 30000 });
+});
+
+Deno.test("priceSpread: mismo precio → null", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 329990 }),
+      offer({ id: 2, store_id: 2, price: 329990 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: agotada más cara no cuenta → null", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 329990 }),
+      offer({ id: 2, store_id: 2, price: 399990, in_stock: false }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: dos ofertas de la misma tienda cuentan", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 300000 }),
+      offer({ id: 2, store_id: 1, price: 320000 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), { min: 300000, max: 320000, savings: 20000 });
 });
