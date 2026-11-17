@@ -8,23 +8,28 @@ function parseVars(block: string): Record<string, string> {
   return vars;
 }
 
-/** Devuelve el contenido del bloque que abre en `open` (con llaves balanceadas). */
-function blockAt(css: string, open: number): string {
+/** Posición de la llave de cierre del bloque que abre en `open` (llaves balanceadas). */
+function blockEnd(css: string, open: number): number {
   let depth = 0;
   for (let i = css.indexOf("{", open); i < css.length; i++) {
     if (css[i] === "{") depth++;
-    if (css[i] === "}" && --depth === 0) {
-      return css.slice(css.indexOf("{", open) + 1, i);
-    }
+    if (css[i] === "}" && --depth === 0) return i;
   }
   throw new Error("bloque sin cerrar");
+}
+
+/** Devuelve el contenido del bloque que abre en `open` (con llaves balanceadas). */
+function blockAt(css: string, open: number): string {
+  return css.slice(css.indexOf("{", open) + 1, blockEnd(css, open));
 }
 
 const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
 const darkAt = css.indexOf("@media (prefers-color-scheme: dark)");
 assert(darkAt >= 0, "falta el bloque oscuro");
 const darkBlock = blockAt(css, darkAt);
-const lightCss = css.slice(0, darkAt) + css.slice(darkAt + darkBlock.length);
+// CSS claro: todo menos el @media oscuro completo, hasta su llave de cierre real.
+const lightCss = css.slice(0, darkAt) + css.slice(blockEnd(css, darkAt) + 1);
+assert(!lightCss.includes("color-scheme: dark"), "el CSS claro arrastra parte del bloque oscuro");
 const rootAt = lightCss.indexOf(":root");
 const light = parseVars(blockAt(lightCss, rootAt));
 const dark = parseVars(blockAt(darkBlock, darkBlock.indexOf(":root")));
@@ -79,10 +84,28 @@ Deno.test("ningún color fuera de tokens.css", async () => {
     }
   }
   for (const f of files) {
-    const text = await Deno.readTextFile(f);
+    const text = (await Deno.readTextFile(f)).replace(/\/\*[\s\S]*?\*\//g, "");
     assert(
-      !/#[0-9a-fA-F]{3,8}\b|rgb\(|rgba\(|hsl\(/.test(text),
+      !/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|color-mix\(/i.test(text),
       `color fijo en ${f.pathname}`,
     );
+    for (const value of declarationValues(text)) {
+      assert(!NAMED_COLOR.test(value), `color con nombre en ${f.pathname}: ${value}`);
+    }
   }
+});
+
+// Colores con nombre como palabra suelta del valor (no `white-space`, `--black`, `.canvas-x`).
+const NAMED_COLOR = /(?<![\w-])(white|black|canvas|canvastext)(?![\w-])/i;
+
+/** Valores de las declaraciones `propiedad: valor;` (los selectores terminan en `{`). */
+function declarationValues(text: string): string[] {
+  return [...text.matchAll(/:\s*([^;{}]+)(?=[;}])/g)].map((m) => m[1]);
+}
+
+Deno.test("el detector de colores con nombre no da falsos positivos", () => {
+  const values = declarationValues(
+    ".black-box:hover { white-space: nowrap; color: var(--white-ish); }\n.a { background: Canvas }",
+  );
+  assertEquals(values.filter((v) => NAMED_COLOR.test(v)), ["Canvas "]);
 });

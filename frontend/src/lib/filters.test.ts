@@ -20,11 +20,13 @@ Deno.test("sliderMax redondea el mayor precio hacia arriba al paso", () => {
 Deno.test("sliderMax usa el paso si no hay precios", () => {
   assertEquals(sliderMax([]), 10000);
   assertEquals(sliderMax([null]), 10000);
+  assertEquals(sliderMax([0]), 10000);
 });
 
 Deno.test("parseMaxPrice acepta enteros no negativos", () => {
   assertEquals(parseMaxPrice("300000"), 300000);
   assertEquals(parseMaxPrice("5000000"), 5000000);
+  assertEquals(parseMaxPrice("0"), 0);
 });
 
 Deno.test("parseMaxPrice devuelve null para valores inválidos", () => {
@@ -32,6 +34,9 @@ Deno.test("parseMaxPrice devuelve null para valores inválidos", () => {
   assertEquals(parseMaxPrice("-5"), null);
   assertEquals(parseMaxPrice(""), null);
   assertEquals(parseMaxPrice(null), null);
+  assertEquals(parseMaxPrice("1e5"), null);
+  assertEquals(parseMaxPrice("300000.5"), null);
+  assertEquals(parseMaxPrice(" 300000 "), null);
 });
 
 Deno.test("sliderValue fija el valor en el límite cuando no hay filtro o excede", () => {
