@@ -212,14 +212,14 @@ export function Catalog() {
 
       {pages > 1 && (
         <nav className="pager" aria-label={t("catalog.pagination")}>
-          <button disabled={current <= 1} onClick={() => setPage(current - 1)}>
+          <button className="glass" disabled={current <= 1} onClick={() => setPage(current - 1)}>
             <ChevronLeft size={18} aria-hidden="true" />
             {t("catalog.previous")}
           </button>
           <span>
             {t("catalog.pageOf", { current, pages })}
           </span>
-          <button disabled={current >= pages} onClick={() => setPage(current + 1)}>
+          <button className="glass" disabled={current >= pages} onClick={() => setPage(current + 1)}>
             {t("catalog.next")}
             <ChevronRight size={18} aria-hidden="true" />
           </button>

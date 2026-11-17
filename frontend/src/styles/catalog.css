@@ -37,7 +37,6 @@
 }
 
 .tab,
-.pager button,
 .link {
   font: inherit;
   cursor: pointer;
@@ -103,7 +102,7 @@ td a {
 }
 
 .pager button {
-  padding: var(--space-2) 14px;
+  padding: var(--space-2) var(--space-4);
 }
 
 /* Cuadrícula de productos */
@@ -174,4 +173,22 @@ td a {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: 44px;
+  font: inherit;
+  color: var(--text);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: border-color var(--dur-fast);
+}
+.pager button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.pager button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.pager span {
+  color: var(--text);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
 }
