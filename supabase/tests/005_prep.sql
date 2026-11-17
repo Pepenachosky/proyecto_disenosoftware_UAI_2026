@@ -4,8 +4,11 @@
 
 alter table auth.users add column if not exists email text;
 
--- language tiene default 'es'.
+-- language tiene default 'es' y es NOT NULL (confirmado al fallar la primera
+-- ejecución de la 005 en Supabase, 2026-11-17).
 alter table public.profiles alter column language set default 'es';
+update public.profiles set language = 'es' where language is null;
+alter table public.profiles alter column language set not null;
 
 -- Permisos por defecto de Supabase: todo para anon y authenticated.
 grant all on public.profiles to anon, authenticated;

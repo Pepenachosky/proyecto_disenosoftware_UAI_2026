@@ -11,17 +11,17 @@ Se puede ejecutar más de una vez sin problemas: la segunda vez no borra los idi
 
 ## Qué hace
 
-- Quita el valor por defecto `'es'` de `profiles.language` y deja en vacío (`null`) el idioma de los perfiles existentes. Nadie pudo elegir idioma hasta ahora, así que no se pierde ninguna elección. Así, un perfil nuevo no tiene idioma hasta que la página guarda el que se está usando. Esto se hace solo la primera vez.
+- Permite que `profiles.language` quede vacío (quita el `NOT NULL` que tenía la base real), quita el valor por defecto `'es'` y deja en vacío (`null`) el idioma de los perfiles existentes. Nadie pudo elegir idioma hasta ahora, así que no se pierde ninguna elección. Así, un perfil nuevo no tiene idioma hasta que la página guarda el que se está usando. Esto se hace solo la primera vez.
 - Agrega la restricción `profiles_language_check`: el idioma solo puede ser `es`, `en` o vacío.
 - Cambia los permisos de `profiles`: `anon` pierde todo acceso; `authenticated` puede leer y puede cambiar solo la columna `language`. Por eso un usuario ya no puede cambiar su `display_name`, ni insertar ni borrar perfiles (antes sí podía). El registro de usuarios nuevos sigue funcionando porque el trigger `handle_new_user` es `security definer`.
 - Reemplaza la política `perfil propio: editar` por `profiles_update_own_language`, que solo deja a cada usuario modificar su propia fila. `perfil propio: leer` se mantiene.
 
 ## Verificación
 
-Después de ejecutarla, esta consulta debe mostrar `language` sin default, la restricción, los permisos de `authenticated` (`SELECT` y `UPDATE` solo de `language`) y las políticas `perfil propio: leer` y `profiles_update_own_language`:
+Después de ejecutarla, esta consulta debe mostrar `language` sin default y con `is_nullable = YES`, la restricción, los permisos de `authenticated` (`SELECT` y `UPDATE` solo de `language`) y las políticas `perfil propio: leer` y `profiles_update_own_language`:
 
 ```sql
-select column_name, column_default
+select column_name, column_default, is_nullable
 from information_schema.columns
 where table_schema = 'public' and table_name = 'profiles';
 

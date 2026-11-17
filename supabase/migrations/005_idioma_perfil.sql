@@ -5,6 +5,10 @@
 
 begin;
 
+-- En la base real language es NOT NULL; null significa "todavía no eligió".
+-- Quitarlo es idempotente.
+alter table public.profiles alter column language drop not null;
+
 -- Quita el default 'es' y deja en null los idiomas existentes, pero solo la
 -- primera vez: si el default ya no existe, hay elecciones reales que no se
 -- deben borrar.

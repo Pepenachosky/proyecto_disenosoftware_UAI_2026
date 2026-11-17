@@ -12,6 +12,14 @@ do $$ begin
   end if;
 end $$;
 
+-- Caso: language acepta null (la base real lo tenía NOT NULL).
+do $$ begin
+  if (select is_nullable from information_schema.columns
+      where table_schema = 'public' and table_name = 'profiles' and column_name = 'language') <> 'YES' then
+    raise exception 'FALLO: profiles.language sigue siendo NOT NULL';
+  end if;
+end $$;
+
 -- Caso: los perfiles existentes quedaron con language null.
 do $$ begin
   if exists (select 1 from public.profiles

@@ -61,7 +61,7 @@ Dónde se guarda el idioma:
 
 ### Estado real de `profiles` (consultado por el autor en Supabase, 2026-11-16)
 
-- Columnas `id`, `display_name`, `language`; `language` tiene **default `'es'`**.
+- Columnas `id`, `display_name`, `language`; `language` tiene **default `'es'`** y es **`NOT NULL`** (no aparecía en la consulta; se descubrió al fallar la primera ejecución de la 005 el 2026-11-17, y la 005 ahora lo quita).
 - Valores actuales: una fila, `es` (puesto por el default; la interfaz nunca escribió el idioma).
 - Permisos de tabla: `anon` y `authenticated` tienen todos (`INSERT`, `SELECT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER`), los que Supabase da por defecto.
 - Políticas: `perfil propio: leer` (`SELECT`) y `perfil propio: editar` (`UPDATE`), ambas para el rol `public`.
