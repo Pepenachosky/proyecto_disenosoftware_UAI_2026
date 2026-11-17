@@ -3,11 +3,6 @@
   overflow-x: auto;
 }
 
-.num {
-  text-align: right;
-  white-space: nowrap;
-}
-
 td a {
   color: inherit;
 }
@@ -129,9 +124,15 @@ td a {
   border-color: var(--accent);
 }
 
+/* Celular y tablet: el conteo pasa a su propia línea bajo filtros y orden */
 @media (width < 900px) {
+  .toolbar {
+    flex-wrap: wrap;
+  }
   .toolbar .count {
-    display: none;
+    order: 1;
+    flex: 1 0 100%;
+    font-size: 0.875rem;
   }
   .toolbar .sort {
     flex: 1 1 0;
@@ -302,9 +303,28 @@ td a {
   backdrop-filter: blur(4px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .filters-dialog::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Entrada breve del panel; con movimiento reducido --dur es 0 y no se anima */
+.filters-dialog[open] .dialog-panel {
+  animation: dialog-in var(--dur) ease-out;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-5));
+  }
+}
+
 .dialog-panel {
   width: 100%;
-  max-height: 85vh;
+  max-height: 85dvh;
   box-sizing: border-box;
   padding: var(--space-4);
   overflow-y: auto;
@@ -394,12 +414,6 @@ td a {
   }
 }
 
-@media (width >= 900px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (width >= 1400px) {
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -422,7 +436,7 @@ td a {
 
 .card:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 24px var(--glow-1);
+  box-shadow: var(--shadow-glow);
 }
 
 .card-frame {

@@ -36,6 +36,7 @@
   --space-5: 24px;
   --space-6: 32px;
   --shadow-1: 0 8px 24px rgba(15, 20, 24, 0.12);
+  --shadow-glow: 0 0 0 1px var(--accent), 0 0 24px var(--glow-1);
   --backdrop: rgba(15, 20, 24, 0.45);
 
   /* Tipografía */
@@ -75,6 +76,7 @@
     --glow-2: rgba(250, 204, 21, 0.18);
 
     --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 0 1px var(--accent), 0 0 24px var(--glow-1);
     --backdrop: rgba(0, 0, 0, 0.65);
 
     color-scheme: dark;

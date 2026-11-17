@@ -13,10 +13,6 @@
   display: block;
 }
 
-span.stale {
-  opacity: 0.55;
-}
-
 /* Estado vacío centrado */
 .empty-state {
   display: flex;
