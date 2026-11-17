@@ -140,7 +140,7 @@
   display: block;
 }
 
-@media (max-width: 899px) {
+@media (width < 900px) {
   .review-actions button {
     min-height: 44px;
   }

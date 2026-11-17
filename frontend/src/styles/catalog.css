@@ -47,7 +47,7 @@ td a {
   gap: var(--space-4);
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .catalog-layout {
     grid-template-columns: 260px minmax(0, 1fr);
     align-items: start;
@@ -129,7 +129,7 @@ td a {
   border-color: var(--accent);
 }
 
-@media (max-width: 899px) {
+@media (width < 900px) {
   .toolbar .count {
     display: none;
   }
@@ -314,7 +314,7 @@ td a {
   box-shadow: var(--shadow-1);
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .filters-dialog[open] {
     align-items: center;
   }
@@ -388,19 +388,19 @@ td a {
   gap: var(--space-3);
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1400px) {
+@media (width >= 1400px) {
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

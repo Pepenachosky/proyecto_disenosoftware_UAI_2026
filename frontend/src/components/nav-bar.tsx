@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Bookmark, LayoutGrid, LogOut } from "lucide-react";
 import { useAuth } from "../auth";
 import { useSaved } from "../saved";
-import { NARROW, useMediaQuery } from "../media";
+import { BELOW_DESKTOP, useMediaQuery } from "../media";
 import { LoginButton } from "./login-button";
 import { LanguageSwitch } from "./language-switch";
 
@@ -11,7 +11,7 @@ export function NavBar() {
   const { user, loading, signOut } = useAuth();
   const { ids } = useSaved();
   const { t } = useTranslation();
-  const narrow = useMediaQuery(NARROW);
+  const compact = useMediaQuery(BELOW_DESKTOP);
   return (
     <nav className="nav-bar glass">
       <Link to="/" className="brand">
@@ -32,7 +32,7 @@ export function NavBar() {
         {loading ? null : user ? (
           <>
             <span className="nav-name">{user.name || t("nav.user")}</span>
-            {narrow ? (
+            {compact ? (
               <button
                 type="button"
                 className="nav-icon-button"
@@ -46,7 +46,7 @@ export function NavBar() {
             )}
           </>
         ) : (
-          <LoginButton size="medium" type={narrow ? "icon" : "standard"} />
+          <LoginButton size="medium" type={compact ? "icon" : "standard"} />
         )}
       </div>
     </nav>

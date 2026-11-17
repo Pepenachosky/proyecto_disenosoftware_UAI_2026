@@ -126,7 +126,7 @@
   padding: 2px 0;
 }
 
-@media (max-width: 899px) {
+@media (width < 900px) {
   .store-card summary,
   .store-meta a {
     display: flex;

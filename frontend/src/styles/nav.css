@@ -74,19 +74,20 @@
   border-radius: var(--radius-pill);
 }
 
-@media (max-width: 639px) {
+/* Barra compacta en celular y tablet: solo la marca del logo, botón de Google como ícono */
+@media (width < 900px) {
   .nav-bar {
     margin-inline: var(--space-2);
     padding-inline: var(--space-2);
-    gap: 0;
+    gap: 0 var(--space-1);
   }
   .nav-bar a {
+    position: relative;
     min-width: 44px;
     justify-content: center;
     padding-inline: var(--space-2);
   }
-  .brand-name,
-  .nav-label {
+  .brand-name {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -94,8 +95,30 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-  .nav-bar a {
-    position: relative;
+  .nav-name {
+    max-width: 16vw;
+  }
+  .nav-user {
+    gap: var(--space-1);
+  }
+  .lang-switch button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Celular: también se ocultan los textos de los enlaces y el nombre */
+@media (width < 640px) {
+  .nav-bar {
+    gap: 0;
+  }
+  .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .nav-count {
     display: inline-block;
@@ -105,9 +128,6 @@
   }
   .nav-name {
     display: none;
-  }
-  .nav-user {
-    gap: var(--space-1);
   }
 }
 

@@ -95,7 +95,7 @@ span.stale {
   border-radius: var(--radius-lg);
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .sk-side {
     display: block;
   }
@@ -159,7 +159,7 @@ span.stale {
   border-radius: var(--radius-lg);
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .sk-panel {
     grid-area: quote;
   }

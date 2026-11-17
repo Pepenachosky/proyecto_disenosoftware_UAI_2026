@@ -43,7 +43,7 @@
   min-width: 0;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .product-layout {
     grid-template-columns: minmax(0, 1fr) 400px;
     grid-template-areas:
@@ -161,7 +161,7 @@
   color: var(--text);
 }
 
-@media (max-width: 899px) {
+@media (width < 900px) {
   .sort-toggle button,
   .save-button,
   .quote-go {
@@ -282,7 +282,7 @@
   scrollbar-color: var(--text-muted) transparent;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .quote-compare {
     flex: 1 1 auto;
   }

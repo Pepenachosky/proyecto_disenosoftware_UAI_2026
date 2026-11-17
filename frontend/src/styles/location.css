@@ -42,7 +42,7 @@ p.location-bar {
   text-decoration: underline;
 }
 
-@media (max-width: 899px) {
+@media (width < 900px) {
   .location-bar .link-button {
     min-height: 44px;
   }
