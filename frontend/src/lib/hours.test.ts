@@ -2,7 +2,6 @@ import { assertEquals } from "jsr:@std/assert@1";
 import {
   type HoursRow,
   openStatus,
-  statusText,
   weekSchedule,
 } from "./hours.ts";
 
@@ -22,19 +21,19 @@ Deno.test("openStatus usa hora de Chile en invierno", () => {
 
 Deno.test("justo a la hora de cierre está cerrada", () => {
   assertEquals(openStatus(H, new Date("2026-11-12T22:00:00Z")), {
-    open: false, opens: "10:00", when: "mañana",
+    open: false, opens: "10:00", inDays: 1, weekday: 5,
   });
 });
 
 Deno.test("antes de abrir dice hoy", () => {
   assertEquals(openStatus(H, new Date("2026-11-12T11:00:00Z")), {
-    open: false, opens: "10:00", when: "hoy",
+    open: false, opens: "10:00", inDays: 0, weekday: 4,
   });
 });
 
 Deno.test("cerrada el sábado tarde abre el lunes", () => {
   assertEquals(openStatus(H, new Date("2026-11-14T18:00:00Z")), {
-    open: false, opens: "10:00", when: "el lunes",
+    open: false, opens: "10:00", inDays: 2, weekday: 1,
   });
 });
 
@@ -45,35 +44,27 @@ Deno.test("pausa de almuerzo", () => {
   ];
   // jueves 14:00 Chile = 17:00Z; 12:00 Chile = 15:00Z
   assertEquals(openStatus(L, new Date("2026-11-12T17:00:00Z")), {
-    open: false, opens: "15:00", when: "hoy",
+    open: false, opens: "15:00", inDays: 0, weekday: 4,
   });
   assertEquals(openStatus(L, new Date("2026-11-12T15:00:00Z")), { open: true, closes: "13:30" });
 });
 
 Deno.test("sin horario", () => {
   assertEquals(openStatus([], new Date("2026-11-12T15:00:00Z")), null);
-  assertEquals(statusText(null), "Horario no disponible");
-});
-
-Deno.test("statusText en los cuatro casos", () => {
-  assertEquals(statusText({ open: true, closes: "19:00" }), "Abierta · cierra 19:00");
-  assertEquals(statusText({ open: false, opens: "10:00", when: "hoy" }), "Cerrada · abre hoy 10:00");
-  assertEquals(statusText({ open: false, opens: "10:00", when: "mañana" }), "Cerrada · abre mañana 10:00");
-  assertEquals(statusText({ open: false, opens: "10:00", when: "el lunes" }), "Cerrada · abre el lunes 10:00");
 });
 
 Deno.test("weekSchedule", () => {
   const w = weekSchedule(H);
   assertEquals(w.length, 7);
-  assertEquals(w[0], { day: "Lunes", text: "10:00 – 19:00" });
-  assertEquals(w[5], { day: "Sábado", text: "10:00 – 14:00" });
-  assertEquals(w[6], { day: "Domingo", text: "Cerrado" });
-  assertEquals(weekSchedule([{ weekday: 1, opens: "10:00:00", closes: "19:00:00" }])[0].text, "10:00 – 19:00");
+  assertEquals(w[0], { weekday: 1, ranges: ["10:00 – 19:00"] });
+  assertEquals(w[5], { weekday: 6, ranges: ["10:00 – 14:00"] });
+  assertEquals(w[6], { weekday: 0, ranges: [] });
+  assertEquals(weekSchedule([{ weekday: 1, opens: "10:00:00", closes: "19:00:00" }])[0].ranges, ["10:00 – 19:00"]);
   assertEquals(
     weekSchedule([
       { weekday: 1, opens: "15:00", closes: "19:00" },
       { weekday: 1, opens: "10:00", closes: "13:30" },
-    ])[0].text,
-    "10:00 – 13:30, 15:00 – 19:00",
+    ])[0].ranges,
+    ["10:00 – 13:30", "15:00 – 19:00"],
   );
 });

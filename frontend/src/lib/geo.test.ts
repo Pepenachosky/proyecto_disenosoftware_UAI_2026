@@ -14,9 +14,11 @@ Deno.test("distanceKm de un punto a sí mismo es 0", () => {
   assertEquals(distanceKm(p, p), 0);
 });
 
-Deno.test("formatKm usa coma decimal y sin decimales desde 100 km", () => {
-  assertEquals(formatKm(0.42), "0,4 km");
-  assertEquals(formatKm(3.14), "3,1 km");
-  assertEquals(formatKm(12), "12,0 km");
-  assertEquals(formatKm(456.7), "457 km");
+Deno.test("formatKm usa el separador del idioma y sin decimales desde 100 km", () => {
+  assertEquals(formatKm(0.42, "es-CL"), "0,4 km");
+  assertEquals(formatKm(3.14, "es-CL"), "3,1 km");
+  assertEquals(formatKm(12, "es-CL"), "12,0 km");
+  assertEquals(formatKm(456.7, "es-CL"), "457 km");
+  assertEquals(formatKm(3.14, "en-US"), "3.1 km");
+  assertEquals(formatKm(456.7, "en-US"), "457 km");
 });
