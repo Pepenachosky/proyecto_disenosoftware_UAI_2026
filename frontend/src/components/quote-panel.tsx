@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { useLanguage } from "../language.tsx";
 import {
+  bestOffer,
   formatClp,
-  isCurrent,
   priceSpread,
   sortOffers,
   STORES,
@@ -21,12 +21,7 @@ export function QuotePanel(
   const { bestPrice, bestStoreId, storeCount } = summarize(group, now);
   const spread = priceSpread(group, now);
   const storeName = STORES.find((s) => s.id === bestStoreId)?.name ?? t("store.fallbackName");
-  const bestOffer = bestPrice == null
-    ? undefined
-    : sortOffers(group.offers, now).find((o) =>
-      isCurrent(o, now) && o.store_id === bestStoreId && o.price === bestPrice
-    );
-  const url = bestOffer?.url ?? null;
+  const url = bestOffer(sortOffers(group.offers, now), now, { bestPrice, bestStoreId })?.url ?? null;
 
   return (
     <aside className="quote glass">

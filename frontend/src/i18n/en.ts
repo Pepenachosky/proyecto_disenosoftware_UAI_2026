@@ -106,7 +106,8 @@ export const en: Messages = {
     stockUnknown: "Stock not reported",
     noAddress: "No address on file",
     goToStore: "Go to store",
-    viewHours: "View hours",
+    best: "Best",
+    details: "Address and hours",
   },
   hours: {
     open: "Open · closes at {{time}}",

@@ -72,6 +72,18 @@ export function summarize(
   };
 }
 
+// La primera oferta, en el orden dado, que es vigente y coincide con la mejor tienda y precio.
+export function bestOffer(
+  sorted: Offer[],
+  now: Date,
+  best: { bestPrice: number | null; bestStoreId: number | null },
+): Offer | null {
+  if (best.bestPrice == null) return null;
+  return sorted.find((o) =>
+    isCurrent(o, now) && o.store_id === best.bestStoreId && o.price === best.bestPrice
+  ) ?? null;
+}
+
 // Rango de precios de las ofertas vigentes; null si no hay al menos dos precios distintos.
 export function priceSpread(
   g: GroupWithOffers,

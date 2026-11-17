@@ -1,5 +1,6 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  bestOffer,
   formatClp,
   groupOffers,
   isCurrent,
@@ -192,4 +193,16 @@ Deno.test("priceSpread: dos ofertas de la misma tienda cuentan", () => {
     ],
   };
   assertEquals(priceSpread(g, now), { min: 300000, max: 320000, savings: 20000 });
+});
+
+Deno.test("bestOffer", () => {
+  const best = { bestPrice: 100, bestStoreId: 1 };
+  const a = offer({ id: 1, store_id: 2, price: 100 });
+  const b = offer({ id: 2, store_id: 1, price: 100 });
+  const c = offer({ id: 3, store_id: 1, price: 100 });
+  assertEquals(bestOffer([a, b, c], now, best)?.id, 2);
+  assertEquals(bestOffer([a, b], now, { bestPrice: null, bestStoreId: null }), null);
+  const old = offer({ id: 4, store_id: 1, price: 100, last_seen_at: "2026-11-01T12:00:00Z" });
+  assertEquals(bestOffer([old], now, best), null);
+  assertEquals(bestOffer([old, c, b], now, best)?.id, 3);
 });

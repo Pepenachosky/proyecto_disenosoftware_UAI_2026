@@ -104,7 +104,8 @@ export const es = {
     stockUnknown: "Stock no informado",
     noAddress: "Sin dirección registrada",
     goToStore: "Ir a la tienda",
-    viewHours: "Ver horario",
+    best: "Mejor",
+    details: "Dirección y horario",
   },
   hours: {
     open: "Abierta · cierra {{time}}",

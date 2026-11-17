@@ -4,7 +4,9 @@ import { ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { fetchBranches, fetchGroup, type Branch } from "../data";
 import {
+  bestOffer,
   sortOffers,
+  summarize,
   type SortBy,
   type GroupWithOffers,
 } from "../lib/offers.ts";
@@ -89,6 +91,7 @@ export function ProductPage() {
   }
 
   const offers = sortOffers(group.offers, now, effectiveSort, distanceByStore);
+  const bestId = bestOffer(offers, now, summarize(group, now))?.id;
 
   return (
     <main className="wrap product">
@@ -137,6 +140,7 @@ export function ProductPage() {
                       branch={branchByStore.get(o.store_id) ?? null}
                       distance={distanceByStore.get(o.store_id) ?? null}
                       now={now}
+                      best={o.id === bestId}
                     />
                   </li>
                 ))}
