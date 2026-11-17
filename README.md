@@ -11,7 +11,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Frontend: tienda, buscador, filtros (categoría, stock, presupuesto) y paginación
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (probado con Google y Supabase reales)
-- [ ] Multilenguaje propio
+- [x] Multilenguaje propio (español e inglés, i18next; idioma en el navegador y en el perfil). Las traducciones viven en `frontend/src/i18n/` (`es.ts` y `en.ts`, tipadas con `Messages`); agregar un idioma es crear otro archivo con el tipo `Messages` y sumarlo a `LANGS`. Requiere ejecutar la migración 005 (`docs/migracion-005.md`).
 - [x] Geolocalización de tiendas: cada tienda se muestra en una tarjeta con dirección, distancia al usuario, estado abierta/cerrada (hora de Chile) y horario semanal, y las ofertas se ordenan por precio o distancia (migración 004 ejecutada y probado en el navegador). La distancia solo se calcula si el usuario da permiso de ubicación; si no, no se muestran distancias ni el orden por distancia. No hay selección de comuna.
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, `.github/workflows/scrape.yml`)
@@ -46,6 +46,8 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── supabase.ts          Cliente de Supabase (clave pública)
 │       ├── auth.tsx             Sesión con Google
 │       ├── saved.tsx            Contexto de productos guardados
+│       ├── language.tsx         Idioma activo (es/en), guardado en el navegador y en el perfil
+│       ├── i18n/                Traducciones es.ts y en.ts (tipo Messages)
 │       ├── location.tsx         Ubicación del usuario (solo con permiso del navegador)
 │       ├── data.ts              Consultas a la base de datos
 │       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx
@@ -55,8 +57,8 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
 │                        y deno.json con las tareas
 ├── supabase/
-│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas)
-│   └── tests/           Pruebas de las migraciones 002 a 004 (run_002.sh, usa podman)
+│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
+│   └── tests/           Pruebas de las migraciones 002 a 005 (run_002.sh, usa podman)
 ├── api/                 Reservado (vacío por ahora)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
@@ -64,6 +66,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │   ├── migracion-002.md Qué hace la migración 002 y cómo ejecutarla
 │   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
 │   ├── migracion-004.md Migración 004 (dirección, coordenadas y horario de las tiendas) y sus fuentes
+│   ├── migracion-005.md Migración 005 (idioma del perfil y permisos de profiles) y cómo ejecutarla
 │   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto y geolocalización
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
@@ -125,9 +128,9 @@ VITE_GOOGLE_CLIENT_ID=
 
 > Nunca expongas `SUPABASE_SERVICE_ROLE_KEY` en el frontend. Los archivos `.env` están en `.gitignore`.
 
-### 2. Migraciones 002, 003 y 004
+### 2. Migraciones 002 a 005
 
-En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql` y `supabase/migrations/004_ubicacion_tiendas.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md) y [`docs/migracion-004.md`](docs/migracion-004.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
+En Supabase → **SQL Editor**, pega el contenido de `supabase/migrations/002_grupos_resenas_guardados.sql` y presiona **Run**; luego haz lo mismo con `supabase/migrations/003_imagen_producto.sql` `supabase/migrations/004_ubicacion_tiendas.sql` y `supabase/migrations/005_idioma_perfil.sql`. Más detalles en [`docs/migracion-002.md`](docs/migracion-002.md), [`docs/migracion-003.md`](docs/migracion-003.md), [`docs/migracion-004.md`](docs/migracion-004.md) y [`docs/migracion-005.md`](docs/migracion-005.md). La 003 debe estar ejecutada antes de que corran los scrapers con este código (incluido el cron diario), porque guardan `image_url`.
 
 ### 3. Scrapers y agrupado
 
@@ -152,7 +155,7 @@ deno task build   # compilación de producción
 deno task lint    # Oxlint
 ```
 
-El orden recomendado es: migraciones (002 a 004), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
+El orden recomendado es: migraciones (002 a 005), scrapers/agrupado y recién después el frontend, porque sin grupos la página no tiene productos que mostrar.
 
 ### 5. Pruebas
 
@@ -160,9 +163,9 @@ Desde la raíz del repositorio:
 
 ```bash
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
-(cd frontend && deno test --no-config src/lib/)  # lógica pura del frontend (sin --no-config falla)
+(cd frontend && deno test --no-config src/lib/ src/i18n/)  # lógica pura y traducciones del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
-bash supabase/tests/run_002.sh                   # migraciones 002 a 004 en un Postgres local (necesita podman)
+bash supabase/tests/run_002.sh                   # migraciones 002 a 005 en un Postgres local (necesita podman)
 ```
 
 ## Configurar inicio de sesión con Google

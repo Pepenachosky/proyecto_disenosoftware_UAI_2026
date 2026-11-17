@@ -565,6 +565,41 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 20: Multilenguaje propio
+
+**Prompt (condensado):**
+> Pedí empezar el multilenguaje sin API externa (como Google Translate), usando una herramienta tipo i18n; elegí guardar el idioma también en el perfil (opción B) y usar i18next (opción A); pasé el resultado de una consulta sobre `profiles` en Supabase; aprobé el diseño y pedí implementarlo con subagentes.
+
+**Resultado obtenido:**
+- **Commits en `feat/multilenguaje`** (diseño: `docs/superpowers/specs/2026-11-16-multilenguaje-design.md`; plan: `docs/superpowers/plans/2026-11-16-multilenguaje.md`):
+  - `1687165`: migración 005 (`supabase/migrations/005_idioma_perfil.sql`): quita el default `'es'` de `profiles.language` (solo la primera vez, deja `null` en las filas existentes), restringe a `es`/`en`/`null`, quita a `anon` y `authenticated` todos los permisos sobre `profiles` y deja `select` + `update (language)` a `authenticated`, y reemplaza la política `perfil propio: editar` por `profiles_update_own_language`. Pruebas `005_prep.sql`, `005_test.sql` y `005_rerun_test.sql` en `run_002.sh`; guía `docs/migracion-005.md`.
+  - `270c89a`: base de i18n con i18next 27.1.3 y react-i18next 18.0.2; traducciones escritas a mano en `frontend/src/i18n/es.ts` y `en.ts` (tipo `Messages`: una clave faltante es error de compilación); `messages.test.ts` (mismas claves, sin textos vacíos, mismas variables); `frontend/src/lib/locale.ts`.
+  - `42d9fd6`: `LanguageProvider`/`useLanguage` (`frontend/src/language.tsx`), botón "ES / EN" en la barra, textos de catálogo y guardados, `formatClp(valor, locale)`.
+  - `41a9ebf`: subpágina de producto, horarios, gráfico y reseñas traducidos; `hours.ts` devuelve datos (no texto), `formatKm(km, locale)`, gráfico y fechas según el idioma, botón de Google con el idioma activo.
+  - `bfcc8b5`: el idioma se guarda en el perfil y lo sigue al iniciar sesión.
+
+**Decisiones propias:**
+- Multilenguaje propio sin APIs externas (requisito del enunciado); español e inglés.
+- Idioma guardado en el navegador y en `profiles.language` (opción B).
+- i18next + react-i18next (opción A).
+- Consulté en Supabase el estado real de `profiles` para ajustar la migración 005.
+- Pedí ejecutar con subagentes.
+
+**Supuestos del asistente por confirmar:**
+- Formatos `es-CL` y `en-US`; los precios siempre en CLP (`$89.990` / `CLP 89,990`).
+- Selector ES/EN en la barra; detección inicial por `navigator.language`.
+- Al iniciar sesión manda el perfil; si está vacío, se guarda el idioma actual.
+- La 005 quita el default `'es'` y deja `null` en el perfil existente, y restringe permisos: ya no se puede editar `display_name`, insertar ni borrar perfiles.
+- El autor "Usuario" de las reseñas se traduce en el frontend; los nombres de sucursal no se traducen porque no se muestran.
+
+**Pendiente de verificar:**
+- Ejecutar la migración 005 en Supabase (`docs/migracion-005.md`).
+- Probar en el navegador ES/EN en catálogo, producto, guardados, horarios, gráfico, reseñas y botón de Google, recarga, 360 px y modo oscuro.
+- Con sesión: (a) en EN sin sesión, iniciar sesión con perfil `null` sigue en EN y la fila queda `en`; (b) cambiar a ES con sesión deja la fila `es`; (c) borrar localStorage, navegador en inglés e iniciar sesión cambia a ES; (d) sin red, cambiar idioma cambia igual y aparece un `console.warn`.
+- Revisar la redacción en inglés.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -593,7 +628,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Foto de los grupos corregidos a mano: hoy `group.ts` no lee las filas con `group_locked = true`, así que un grupo formado solo por ellas queda con el placeholder. Hacer que esas filas también aporten foto antes de corregir los grupos de GPU y RAM.
 - [x] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
 - [ ] Cargar el gráfico de forma diferida (el bundle pesa unos 870 kB por recharts).
-- [ ] Multilenguaje propio.
+- [x] Multilenguaje propio (español e inglés con i18next, idioma en el perfil; Prompt 20).
+- [ ] Ejecutar la migración 005 en Supabase (`docs/migracion-005.md`) y hacer la prueba manual del multilenguaje.
 - [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.
 
 ---
