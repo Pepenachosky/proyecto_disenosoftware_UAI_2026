@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { fetchBranches, fetchGroup, type Branch } from "../data";
 import {
-  clp,
+  formatClp,
   sortOffers,
   type SortBy,
   STORES,
@@ -10,6 +11,7 @@ import {
   type GroupWithOffers,
 } from "../lib/offers.ts";
 import { distanceKm } from "../lib/geo.ts";
+import { useLanguage } from "../language.tsx";
 import { useUserLocation } from "../location.tsx";
 import { LocationBar } from "../components/location-bar.tsx";
 import { StoreCard } from "../components/store-card.tsx";
@@ -18,18 +20,12 @@ import { ProductImage } from "../components/product-image.tsx";
 import { Reviews } from "../components/reviews.tsx";
 import { SaveButton } from "../components/save-button.tsx";
 
-const CATEGORY_NAMES = {
-  cpu: "Procesador (CPU)",
-  gpu: "Tarjeta de video (GPU)",
-  ram: "Memoria RAM",
-} as const;
-
-const storeName = (id: number | null) => STORES.find((s) => s.id === id)?.name ?? "Tienda";
-
 type Result = { slug: string; group: GroupWithOffers | null; error: string | null };
 
 export function ProductPage() {
   const { slug = "" } = useParams();
+  const { t } = useTranslation();
+  const { locale } = useLanguage();
   const [result, setResult] = useState<Result | null>(null);
   const [now] = useState(() => new Date());
   const { location, start } = useUserLocation();
@@ -84,19 +80,20 @@ export function ProductPage() {
     };
   }, [slug]);
 
-  if (!result || result.slug !== slug) return <main className="wrap">Cargando…</main>;
-  if (result.error) return <main className="wrap error">Error: {result.error}</main>;
+  if (!result || result.slug !== slug) return <main className="wrap">{t("common.loading")}</main>;
+  if (result.error) return <main className="wrap error">{t("common.error", { message: result.error })}</main>;
   const group = result.group;
   if (!group) {
     return (
       <main className="wrap">
-        <h1>Producto no encontrado</h1>
-        <Link to="/">Volver a la lista</Link>
+        <h1>{t("product.notFound")}</h1>
+        <Link to="/">{t("product.backToList")}</Link>
       </main>
     );
   }
 
   const { bestPrice, bestStoreId } = summarize(group, now);
+  const storeName = STORES.find((s) => s.id === bestStoreId)?.name ?? t("store.fallbackName");
   const offers = sortOffers(group.offers, now, effectiveSort, distanceByStore);
 
   return (
@@ -104,30 +101,34 @@ export function ProductPage() {
       <header className="product-head">
         <ProductImage className="product-img" src={group.image_url} alt={group.name} />
         <div className="product-info">
-          <span className="product-cat">{CATEGORY_NAMES[group.category]}</span>
+          <span className="product-cat">{t(`product.categories.${group.category}`)}</span>
           <h1 className="product-name">{group.name}</h1>
           {bestPrice != null ? (
             <p className="product-price">
-              desde <strong>{clp.format(bestPrice)}</strong> en {storeName(bestStoreId)}
+              <Trans
+                i18nKey="product.fromAt"
+                values={{ price: formatClp(bestPrice, locale), store: storeName }}
+                components={{ price: <strong /> }}
+              />
             </p>
           ) : (
-            <p className="product-price none">Sin stock</p>
+            <p className="product-price none">{t("card.outOfStock")}</p>
           )}
           <SaveButton groupId={group.id} />
         </div>
       </header>
 
       <section className="product-section">
-        <h2>Tiendas</h2>
+        <h2>{t("product.stores")}</h2>
         {offers.length === 0 ? (
-          <p className="empty">Ninguna tienda tiene este producto.</p>
+          <p className="empty">{t("product.noOffers")}</p>
         ) : (
           <>
             <LocationBar />
             <div className="sort-toggle">
-              <span>Ordenar por:</span>
+              <span>{t("product.sortBy")}</span>
               <button type="button" aria-pressed={effectiveSort === "precio"} onClick={() => setSortBy("precio")}>
-                Precio
+                {t("product.sortPrice")}
               </button>
               {point && distanceByStore.size > 0 && (
                 <button
@@ -135,11 +136,11 @@ export function ProductPage() {
                   aria-pressed={effectiveSort === "distancia"}
                   onClick={() => setSortBy("distancia")}
                 >
-                  Distancia
+                  {t("product.sortDistance")}
                 </button>
               )}
             </div>
-            {branchesFailed && <p className="store-note">No se pudo cargar la ubicación de las tiendas.</p>}
+            {branchesFailed && <p className="store-note">{t("product.branchesFailed")}</p>}
             <ul className="store-list">
               {offers.map((o) => (
                 <li key={o.id}>

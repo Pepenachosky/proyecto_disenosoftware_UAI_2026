@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Legend,
@@ -11,7 +12,8 @@ import {
 } from "recharts";
 import { fetchHistory } from "../data";
 import { buildChartData, currentPrices, type ChartPoint } from "../lib/history.ts";
-import { clp, STORES, type Offer } from "../lib/offers.ts";
+import { useLanguage } from "../language.tsx";
+import { formatClp, STORES, type Offer } from "../lib/offers.ts";
 
 // Colores por tienda (fijos, legibles en claro y oscuro). SP Digital va
 // punteada para no depender solo del color (verde/naranja en deuteranopía).
@@ -21,20 +23,25 @@ const STYLE: Record<string, { color: string; dash?: string }> = {
   spdigital: { color: "#16a34a", dash: "6 3" },
 };
 
-const compactClp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  notation: "compact",
-  maximumSignificantDigits: 3,
-});
-
-// Los días son fechas UTC (YYYY-MM-DD); t es su medianoche UTC en ms.
-const shortDate = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "UTC" });
-const longDate = new Intl.DateTimeFormat("es-CL", { dateStyle: "long", timeZone: "UTC" });
-
 type Result = { offers: Offer[]; data: ChartPoint[] | null; error: string | null };
 
 export function PriceChart({ offers }: { offers: Offer[] }) {
+  const { t } = useTranslation();
+  const { locale } = useLanguage();
+  // Los días son fechas UTC (YYYY-MM-DD); t es su medianoche UTC en ms.
+  const { compactClp, shortDate, longDate } = useMemo(
+    () => ({
+      compactClp: new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "CLP",
+        notation: "compact",
+        maximumSignificantDigits: 3,
+      }),
+      shortDate: new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }),
+      longDate: new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "UTC" }),
+    }),
+    [locale],
+  );
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
@@ -57,9 +64,9 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
   }, [offers]);
 
   let body;
-  if (!result || result.offers !== offers) body = <p className="muted">Cargando historial…</p>;
-  else if (result.error) body = <p className="error">Error: {result.error}</p>;
-  else if (!result.data || result.data.length === 0) body = <p className="empty">Aún no hay historial</p>;
+  if (!result || result.offers !== offers) body = <p className="muted">{t("chart.loading")}</p>;
+  else if (result.error) body = <p className="error">{t("common.error", { message: result.error })}</p>;
+  else if (!result.data || result.data.length === 0) body = <p className="empty">{t("chart.empty")}</p>;
   else {
     const data = result.data;
     const stores = STORES.filter((s) => data.some((p) => p[s.slug as keyof ChartPoint] != null));
@@ -73,7 +80,7 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
               type="number"
               scale="time"
               domain={["dataMin", "dataMax"]}
-              tickFormatter={(t: number) => shortDate.format(t)}
+              tickFormatter={(ms: number) => shortDate.format(ms)}
               tick={{ fill: "currentColor", fontSize: 12 }}
               stroke="rgba(128, 128, 128, 0.5)"
               minTickGap={16}
@@ -86,8 +93,8 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
               stroke="rgba(128, 128, 128, 0.5)"
             />
             <Tooltip
-              formatter={(v) => (typeof v === "number" ? clp.format(v) : String(v))}
-              labelFormatter={(t) => longDate.format(Number(t))}
+              formatter={(v) => (typeof v === "number" ? formatClp(v, locale) : String(v))}
+              labelFormatter={(ms) => longDate.format(Number(ms))}
               contentStyle={{ background: "Canvas", color: "CanvasText", borderRadius: 6 }}
             />
             <Legend formatter={(value) => <span className="chart-legend">{value}</span>} />
@@ -113,7 +120,7 @@ export function PriceChart({ offers }: { offers: Offer[] }) {
 
   return (
     <section className="product-section">
-      <h2>Historial de precios</h2>
+      <h2>{t("chart.title")}</h2>
       {body}
     </section>
   );

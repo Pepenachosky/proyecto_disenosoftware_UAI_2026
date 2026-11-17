@@ -4,12 +4,11 @@ export type HoursRow = { weekday: number; opens: string; closes: string };
 
 export type OpenStatus =
   | { open: true; closes: string }
-  | { open: false; opens: string; when: "hoy" | "mañana" | string }
+  | { open: false; opens: string; inDays: number; weekday: number }
   | null;
 
 const ZONA = "America/Santiago";
 const DIAS_CORTO = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DIAS_ES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
 const formato = new Intl.DateTimeFormat("en-US", {
   timeZone: ZONA,
@@ -61,30 +60,17 @@ export function openStatus(hours: HoursRow[], now: Date): OpenStatus {
       (r) => delta > 0 || aMinutos(r.opens) > minutes,
     );
     if (siguiente) {
-      const when = delta === 0 ? "hoy" : delta === 1 ? "mañana" : `el ${DIAS_ES[dia]}`;
-      return { open: false, opens: hhmm(siguiente.opens), when };
+      return { open: false, opens: hhmm(siguiente.opens), inDays: delta, weekday: dia };
     }
   }
   return null;
 }
 
-export function statusText(s: OpenStatus): string {
-  if (s === null) return "Horario no disponible";
-  if (s.open) return `Abierta · cierra ${s.closes}`;
-  return `Cerrada · abre ${s.when} ${s.opens}`;
-}
-
-const SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-// 7 filas de lunes a domingo; varios tramos se unen con ", ".
-export function weekSchedule(hours: HoursRow[]): { day: string; text: string }[] {
-  return SEMANA.map((day, i) => {
-    const tramos = tramosDelDia(hours, (i + 1) % 7);
-    return {
-      day,
-      text: tramos.length
-        ? tramos.map((r) => `${hhmm(r.opens)} – ${hhmm(r.closes)}`).join(", ")
-        : "Cerrado",
-    };
-  });
+// 7 filas de lunes (1) a domingo (0); sin texto en ningún idioma.
+// Los tramos van ordenados; una lista vacía significa cerrado.
+export function weekSchedule(hours: HoursRow[]): { weekday: number; ranges: string[] }[] {
+  return [1, 2, 3, 4, 5, 6, 0].map((weekday) => ({
+    weekday,
+    ranges: tramosDelDia(hours, weekday).map((r) => `${hhmm(r.opens)} – ${hhmm(r.closes)}`),
+  }));
 }

@@ -565,35 +565,71 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 20: Multilenguaje propio
+
+**Prompt (condensado):**
+> Pedí empezar el multilenguaje sin API externa (como Google Translate), usando una herramienta tipo i18n; elegí guardar el idioma también en el perfil (opción B) y usar i18next (opción A); pasé el resultado de una consulta sobre `profiles` en Supabase; aprobé el diseño y pedí implementarlo con subagentes.
+
+**Resultado obtenido:**
+- **Commits en `feat/multilenguaje`** (diseño: `docs/superpowers/specs/2026-11-16-multilenguaje-design.md`; plan: `docs/superpowers/plans/2026-11-16-multilenguaje.md`):
+  - `1687165`: migración 005 (`supabase/migrations/005_idioma_perfil.sql`): quita el default `'es'` de `profiles.language` (solo la primera vez, deja `null` en las filas existentes), restringe a `es`/`en`/`null`, quita a `anon` y `authenticated` todos los permisos sobre `profiles` y deja `select` + `update (language)` a `authenticated`, y reemplaza la política `perfil propio: editar` por `profiles_update_own_language`. Pruebas `005_prep.sql`, `005_test.sql` y `005_rerun_test.sql` en `run_002.sh`; guía `docs/migracion-005.md`.
+  - `270c89a`: base de i18n con i18next 27.1.3 y react-i18next 18.0.2; traducciones escritas a mano en `frontend/src/i18n/es.ts` y `en.ts` (tipo `Messages`: una clave faltante es error de compilación); `messages.test.ts` (mismas claves, sin textos vacíos, mismas variables); `frontend/src/lib/locale.ts`.
+  - `42d9fd6`: `LanguageProvider`/`useLanguage` (`frontend/src/language.tsx`), botón "ES / EN" en la barra, textos de catálogo y guardados, `formatClp(valor, locale)`.
+  - `41a9ebf`: subpágina de producto, horarios, gráfico y reseñas traducidos; `hours.ts` devuelve datos (no texto), `formatKm(km, locale)`, gráfico y fechas según el idioma, botón de Google con el idioma activo.
+  - `bfcc8b5`: el idioma se guarda en el perfil y lo sigue al iniciar sesión.
+
+**Decisiones propias:**
+- Multilenguaje propio sin APIs externas (requisito del enunciado); español e inglés.
+- Idioma guardado en el navegador y en `profiles.language` (opción B).
+- i18next + react-i18next (opción A).
+- Consulté en Supabase el estado real de `profiles` para ajustar la migración 005.
+- Pedí ejecutar con subagentes.
+
+**Supuestos del asistente por confirmar:**
+- Formatos `es-CL` y `en-US`; los precios siempre en CLP (`$89.990` / `CLP 89,990`).
+- Selector ES/EN en la barra; detección inicial por `navigator.language`.
+- Al iniciar sesión manda el perfil; si está vacío, se guarda el idioma actual.
+- La 005 quita el default `'es'` y deja `null` en el perfil existente, y restringe permisos: ya no se puede editar `display_name`, insertar ni borrar perfiles.
+- El autor "Usuario" de las reseñas se traduce en el frontend; los nombres de sucursal no se traducen porque no se muestran.
+
+**Pendiente de verificar:**
+- Ejecutar la migración 005 en Supabase (`docs/migracion-005.md`).
+- Probar en el navegador ES/EN en catálogo, producto, guardados, horarios, gráfico, reseñas y botón de Google, recarga, 360 px y modo oscuro.
+- Con sesión: (a) en EN sin sesión, iniciar sesión con perfil `null` sigue en EN y la fila queda `en`; (b) cambiar a ES con sesión deja la fila `es`; (c) borrar localStorage, navegador en inglés e iniciar sesión cambia a ES; (d) sin red, cambiar idioma cambia igual y aparece un `console.warn`.
+- Revisar la redacción en inglés.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
 - [x] Diseñar la base de datos completa (`database.sql`).
 - [x] Ejecutar `database.sql` en Supabase y probar `winpy.ts cpu` contra ella (productos con precio y stock guardados).
 - [x] Primera página del frontend: lista de productos con nombre y precio, leída desde Supabase.
-- [ ] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
-- [ ] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas (los scrapers ya se ejecutaron con `deno task scrape`, falta confirmar que los datos lleguen bien).
+- [x] Revisar `price_history` y repetir la corrida para ver que no duplica filas.
+- [x] Revisar en Supabase los datos de PC Express, y de RAM y GPU de las 3 tiendas.
 - [x] Revisar que el `robots.txt` de SP Digital permita `/page-data/` (lo permite).
 - [x] Probar `deno task scrape` (ejecuta los 9 scrapers): funcionó bien.
 - [x] Programar `deno task scrape` una vez al día (GitHub Actions, `.github/workflows/scrape.yml`).
-- [ ] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
+- [x] Probar el workflow diario: merge a `main`, crear los secrets y lanzarlo a mano.
 - [x] Imagen del producto: SP Digital y Winpy la guardan y el agrupado elige una por grupo; PC Express usa el placeholder (su servidor bloquea imágenes pedidas desde otro sitio).
 - [x] Geolocalización de tiendas: tarjetas con dirección, distancia, abierta/cerrada y horario, y orden por precio o distancia (fusionado en `dev`). La distancia solo aparece con permiso de ubicación; no hay selección de comuna (Prompt 19). Quedó fuera el stock por sucursal (`branch_stock`, y `quantityInStore`/`quantityOnline` de SP Digital) y `nearby_branches`.
 - [x] Quitar las comunas: la distancia solo se calcula con permiso de ubicación y se eliminó el script de Overpass (Prompt 19).
-- [ ] Ejecutar la migración 004 en Supabase antes de hacer push de `dev` (si no, las tarjetas dicen "Sin dirección registrada").
-- [ ] Confirmar que aparecen las distancias con la ubicación activa: en Firefox con Hyprland la ubicación se agota (`ERROR 3`); probar en el celular, otro navegador o simulando la ubicación en Chrome.
-- [ ] Probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
-- [ ] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
+- [x] Ejecutar la migración 004 en Supabase antes de hacer push de `dev` (si no, las tarjetas dicen "Sin dirección registrada").
+- [x] Confirmar que aparecen las distancias con la ubicación activa: en Firefox con Hyprland la ubicación se agota (`ERROR 3`); probar en el celular, otro navegador o simulando la ubicación en Chrome.
+- [x] Probar distancias y horarios en el navegador (ubicación aceptada, negada y aceptada después de 10 s, "Usar mi ubicación", "Ver horario", 360 px y modo oscuro).
+- [x] Confirmar con Winpy si su horario es "Lunes a Martes" o "Lunes a Jueves".
 - [x] Frontend: mostrar tienda, buscador, filtros (categoría, stock, presupuesto) y paginación.
-- [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (hecho en código).
-- [ ] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
+- [x] SSO con Google, subpágina de producto con gráfico, reseñas, guardados y comparación (probado con Google y Supabase reales).
+- [x] Configurar el botón oficial de Google (ver `docs/configurar-google.md`): orígenes en Google Cloud, el ID de cliente en la lista Client IDs de Supabase y `VITE_GOOGLE_CLIENT_ID` en `frontend/.env`. Probar iniciar sesión, cerrar sesión y volver a iniciar sin recargar, reseñas, guardados y el cambio de modo claro/oscuro.
 - [x] Ejecutar la migración 002 en Supabase y correr `deno task group` contra la base real.
 - [x] Ejecutar la migración 003 en Supabase y revisar las fotos en el navegador (imagen nítida y placeholder cuando no hay foto).
-- [ ] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
+- [x] Probar en el navegador: sesión, guardados, reseñas, gráfico, `/producto/no-existe`, 360 px y modo oscuro.
 - [ ] Foto de los grupos corregidos a mano: hoy `group.ts` no lee las filas con `group_locked = true`, así que un grupo formado solo por ellas queda con el placeholder. Hacer que esas filas también aporten foto antes de corregir los grupos de GPU y RAM.
-- [ ] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
+- [x] Revisar los grupos mal agrupados (GPU y RAM) y corregirlos con `group_locked`.
 - [ ] Cargar el gráfico de forma diferida (el bundle pesa unos 870 kB por recharts).
-- [ ] Multilenguaje propio.
+- [x] Multilenguaje propio (español e inglés con i18next, idioma en el perfil; Prompt 20).
+- [ ] Ejecutar la migración 005 en Supabase (`docs/migracion-005.md`) y hacer la prueba manual del multilenguaje.
 - [x] Cambiar la clave `anon` por la clave `publishable` en `frontend/.env`.
 
 ---

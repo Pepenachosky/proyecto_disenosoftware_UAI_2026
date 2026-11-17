@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import i18n from "./i18n/index.ts";
 import { createNonce } from "./lib/nonce";
 
 // Tipos mínimos del script de Google Identity Services (solo lo que se usa).
@@ -9,7 +10,7 @@ type GoogleButtonOptions = {
   text: "signin_with";
   shape: "rectangular";
   logo_alignment: "left";
-  locale: "es";
+  locale: "es" | "en";
 };
 export type GoogleId = {
   initialize(config: {
@@ -65,10 +66,10 @@ async function init(): Promise<GoogleId | null> {
         supabase.auth
           .signInWithIdToken({ provider: "google", token: response.credential, nonce: raw })
           .then(({ error }) => {
-            if (error) alert("No se pudo iniciar sesión: " + error.message);
+            if (error) alert(i18n.t("reviews.loginFailed", { message: error.message }));
           })
           .catch((e: unknown) => {
-            alert("No se pudo iniciar sesión: " + (e instanceof Error ? e.message : String(e)));
+            alert(i18n.t("reviews.loginFailed", { message: e instanceof Error ? e.message : String(e) }));
           });
       },
     });

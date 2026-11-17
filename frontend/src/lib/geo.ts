@@ -14,13 +14,12 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   return 2 * RADIO_TIERRA_KM * Math.asin(Math.sqrt(h));
 }
 
-const conDecimal = new Intl.NumberFormat("es-CL", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
-const sinDecimal = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
-
-// "3,1 km"; desde 100 km sin decimales: "457 km".
-export function formatKm(km: number): string {
-  return `${(km >= 100 ? sinDecimal : conDecimal).format(km)} km`;
+// "3,1 km" (es-CL) o "3.1 km" (en-US); desde 100 km sin decimales: "457 km".
+export function formatKm(km: number, locale: string): string {
+  const digitos = km >= 100 ? 0 : 1;
+  const texto = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: digitos,
+    maximumFractionDigits: digitos,
+  }).format(km);
+  return `${texto} km`;
 }

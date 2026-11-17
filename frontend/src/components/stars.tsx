@@ -1,8 +1,11 @@
+import { useTranslation } from "react-i18next";
+
 export function Stars({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
+  const { t } = useTranslation();
   const steps = [1, 2, 3, 4, 5];
   if (!onChange) {
     return (
-      <span className="stars" role="img" aria-label={`${value} de 5 estrellas`}>
+      <span className="stars" role="img" aria-label={t("stars.rating", { value })}>
         {steps.map((n) => (
           <span key={n} aria-hidden="true" className={n <= value ? "star on" : "star"}>
             {n <= value ? "★" : "☆"}
@@ -12,13 +15,13 @@ export function Stars({ value, onChange }: { value: number; onChange?: (v: numbe
     );
   }
   return (
-    <span className="stars" role="group" aria-label="Calificación">
+    <span className="stars" role="group" aria-label={t("stars.group")}>
       {steps.map((n) => (
         <button
           key={n}
           type="button"
           className={n <= value ? "star on" : "star"}
-          aria-label={`${n} estrellas`}
+          aria-label={t("stars.star", { count: n })}
           aria-pressed={n === value}
           onClick={() => onChange(n)}
         >

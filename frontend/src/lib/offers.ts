@@ -27,11 +27,14 @@ export const STORES: { id: number; slug: string; name: string }[] = [
 
 export const CURRENT_DAYS = 3;
 
-export const clp = new Intl.NumberFormat("es-CL", {
-  style: "currency",
-  currency: "CLP",
-  maximumFractionDigits: 0,
-});
+// Precio en pesos chilenos, sin decimales, con el formato del idioma activo.
+export function formatClp(value: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 function isFresh(o: Offer, now: Date): boolean {
   const limit = now.getTime() - CURRENT_DAYS * 24 * 60 * 60 * 1000;

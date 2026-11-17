@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { googleIdentity } from "../google";
+import { useLanguage } from "../language.tsx";
 
 export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
+  const { lang } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,7 +21,7 @@ export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
           text: "signin_with",
           shape: "rectangular",
           logo_alignment: "left",
-          locale: "es",
+          locale: lang,
         });
       }).catch((e) => console.warn("No se pudo dibujar el botón de Google:", e));
     };
@@ -29,7 +31,7 @@ export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
       cancelled = true;
       media.removeEventListener("change", draw);
     };
-  }, [size]);
+  }, [size, lang]);
 
   return <div className="google-button" ref={ref} />;
 }

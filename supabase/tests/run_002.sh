@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Prueba las migraciones 002, 003 y 004 en un Postgres 17 desechable (podman):
+# Prueba las migraciones 002 a 005 en un Postgres 17 desechable (podman):
 # stub de Supabase -> 002 (dos veces) -> pruebas 002 -> 003 (dos veces) -> pruebas 003 ->
-# tiendas -> 004 (dos veces) -> pruebas 004.
+# tiendas -> 004 (dos veces) -> pruebas 004 ->
+# perfiles -> 005 (dos veces) -> pruebas 005 -> 005 -> pruebas de reejecución.
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
@@ -34,3 +35,9 @@ run_sql supabase/tests/004_prep.sql ""
 run_sql supabase/migrations/004_ubicacion_tiendas.sql "-c client_min_messages=warning"
 run_sql supabase/migrations/004_ubicacion_tiendas.sql "-c client_min_messages=warning"
 run_sql supabase/tests/004_test.sql ""
+run_sql supabase/tests/005_prep.sql ""
+run_sql supabase/migrations/005_idioma_perfil.sql "-c client_min_messages=warning"
+run_sql supabase/migrations/005_idioma_perfil.sql "-c client_min_messages=warning"
+run_sql supabase/tests/005_test.sql ""
+run_sql supabase/migrations/005_idioma_perfil.sql "-c client_min_messages=warning"
+run_sql supabase/tests/005_rerun_test.sql ""

@@ -640,3 +640,30 @@ span.stale {
   text-decoration: underline;
 }
 
+
+/* Selector de idioma (ES / EN) */
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.lang-switch button {
+  padding: 0.2rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+.lang-switch button[aria-pressed="true"] {
+  font-weight: 700;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+}
+.lang-switch button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
