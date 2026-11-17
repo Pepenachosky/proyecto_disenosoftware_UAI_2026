@@ -60,9 +60,6 @@
 
   .quote {
     grid-area: quote;
-    position: sticky;
-    top: var(--sticky-top);
-    max-height: calc(100dvh - var(--sticky-top) - var(--space-4));
   }
 
   .product-rest {
@@ -282,7 +279,15 @@
   scrollbar-color: var(--text-muted) transparent;
 }
 
-@media (width >= 900px) {
+/* Panel fijo con lista desplazable solo si la pantalla es alta; en pantallas bajas
+   el panel acompaña la página y crece con todas las tiendas. */
+@media (width >= 900px) and (height >= 640px) {
+  .quote {
+    position: sticky;
+    top: var(--sticky-top);
+    max-height: calc(100dvh - var(--sticky-top) - var(--space-4));
+  }
+
   .quote-compare {
     flex: 1 1 auto;
   }

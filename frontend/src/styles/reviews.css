@@ -34,7 +34,7 @@
 }
 
 .stars .star {
-  color: var(--border);
+  color: var(--text-muted);
 }
 
 .stars .star.on {
