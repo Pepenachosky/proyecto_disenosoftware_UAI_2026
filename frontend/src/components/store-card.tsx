@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import type { TFunction } from "i18next";
 import type { Branch } from "../data";
 import { formatKm } from "../lib/geo.ts";
@@ -34,9 +35,9 @@ function statusText(s: OpenStatus, locale: string, t: TFunction): string {
   return t("hours.opensOn", { day: dayName(locale, s.weekday), time: s.opens });
 }
 
-type Props = { offer: Offer; branch: Branch | null; distance: number | null; now: Date };
+type Props = { offer: Offer; branch: Branch | null; distance: number | null; now: Date; best: boolean };
 
-export function StoreCard({ offer, branch, distance, now }: Props) {
+export function StoreCard({ offer, branch, distance, now, best }: Props) {
   const { t } = useTranslation();
   const { locale } = useLanguage();
   const stock = statusLabel(offer, now, t);
@@ -48,25 +49,32 @@ export function StoreCard({ offer, branch, distance, now }: Props) {
   return (
     <article className={offerStatus(offer, now) === "vigente" ? "store-card" : "store-card stale"}>
       <div className="store-top">
-        <h3>{name}</h3>
-        <strong>{offer.price != null ? formatClp(offer.price, locale) : "—"}</strong>
+        <h3>
+          {name}
+          {best && <span className="store-best">{t("store.best")}</span>}
+        </h3>
+        <strong className={best ? "store-price mono best" : "store-price mono"}>
+          {offer.price != null ? formatClp(offer.price, locale) : "—"}
+        </strong>
       </div>
-      <p className="store-address">
-        {branch?.address ? place : t("store.noAddress")}
-        {distance != null && ` · ${formatKm(distance, locale)}`}
-      </p>
       <p className="store-meta">
-        <span className={open == null ? "unknown" : open.open ? "open" : "closed"}>{statusText(open, locale, t)}</span>
         <span className={stock.className}>{stock.text}</span>
+        {distance != null && <span className="store-dist">{formatKm(distance, locale)}</span>}
+        <span className={open == null ? "unknown" : open.open ? "open" : "closed"}>{statusText(open, locale, t)}</span>
         {offer.url ? (
           <a href={offer.url} target="_blank" rel="noreferrer noopener">
             {t("store.goToStore")}
+            <ExternalLink size={14} aria-hidden="true" />
           </a>
         ) : null}
       </p>
-      {hours.length > 0 && (
-        <details>
-          <summary>{t("store.viewHours")}</summary>
+      <details>
+        <summary>
+          <ChevronRight className="summary-chevron" size={16} aria-hidden="true" />
+          {t("store.details")}
+        </summary>
+        <p className="store-address">{branch?.address ? place : t("store.noAddress")}</p>
+        {hours.length > 0 && (
           <table className="schedule">
             <tbody>
               {weekSchedule(hours).map((d) => (
@@ -77,8 +85,8 @@ export function StoreCard({ offer, branch, distance, now }: Props) {
               ))}
             </tbody>
           </table>
-        </details>
-      )}
+        )}
+      </details>
     </article>
   );
 }

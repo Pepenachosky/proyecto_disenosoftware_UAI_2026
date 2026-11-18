@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Star } from "lucide-react";
 import type { FormEvent } from "react";
 import { useAuth } from "../auth";
 import { deleteReview, fetchReviews, upsertReview, type Review } from "../data";
@@ -79,6 +80,7 @@ export function Reviews({ groupId }: { groupId: number }) {
     const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
     summary = (
       <p className="reviews-summary">
+        <Star size={18} aria-hidden="true" fill="currentColor" />{" "}
         {t("reviews.summary", {
           count: reviews.length,
           avg: new Intl.NumberFormat(locale, {

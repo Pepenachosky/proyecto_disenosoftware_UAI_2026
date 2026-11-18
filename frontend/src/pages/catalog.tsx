@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CatalogSkeleton } from "../components/skeleton";
+import { EmptyState } from "../components/empty-state";
 import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X } from "lucide-react";
 import { useLanguage } from "../language.tsx";
 import { cachedCatalog, fetchCatalog } from "../data.ts";
 import {
-  STORES,
   summarize,
   type Category,
   type GroupWithOffers,
 } from "../lib/offers.ts";
 import { matchesQuery } from "../lib/search.ts";
+import { activeFilterCount, parseMaxPrice, sliderMax } from "../lib/filters.ts";
+import { BELOW_DESKTOP, useMediaQuery } from "../media.ts";
+import { FiltersPanel } from "../components/filters-panel.tsx";
 import { ProductCard } from "../components/product-card.tsx";
 
 type Sort = "name" | "price-asc" | "price-desc";
@@ -36,7 +41,7 @@ export function Catalog() {
   const catParam = params.get("cat");
   const category: Category | "all" = isCategory(catParam) ? catParam : "all";
   const storeId = params.get("store") ?? "all";
-  const maxPrice = params.get("max") ?? "";
+  const maxPrice = parseMaxPrice(params.get("max"));
   const onlyInStock = params.get("stock") === "1";
   const sortParam = params.get("sort");
   const sort: Sort = isSort(sortParam) ? sortParam : "name";
@@ -81,13 +86,12 @@ export function Catalog() {
   );
 
   const filtered = useMemo(() => {
-    const max = maxPrice ? Number(maxPrice) : null;
     const list = entries.filter(({ group, summary, text }) => {
       if (category !== "all" && group.category !== category) return false;
       if (storeId !== "all" && !group.offers.some((o) => String(o.store_id) === storeId))
         return false;
       if (onlyInStock && summary.storeCount === 0) return false;
-      if (max != null && (summary.bestPrice == null || summary.bestPrice > max)) return false;
+      if (maxPrice != null && (summary.bestPrice == null || summary.bestPrice > maxPrice)) return false;
       return matchesQuery(text, query);
     });
     const byPrice = (a: (typeof list)[number], b: (typeof list)[number], dir: 1 | -1) => {
@@ -111,116 +115,144 @@ export function Catalog() {
     return c;
   }, [groups]);
 
+  const belowDesktop = useMediaQuery(BELOW_DESKTOP);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const openerRef = useRef<HTMLButtonElement>(null);
+  const downOnBackdrop = useRef(false);
+  // El diálogo se desmonta al pasar a escritorio, lo que lo cierra.
+
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   const hasFilters =
-    query || category !== "all" || storeId !== "all" || onlyInStock || maxPrice;
+    query !== "" || category !== "all" || storeId !== "all" || onlyInStock || maxPrice != null;
+  const filterCount = activeFilterCount({ category, storeId, maxPrice, onlyInStock });
+  const priceLimit = useMemo(() => sliderMax(entries.map((e) => e.summary.bestPrice)), [entries]);
 
   const clear = () => update({ q: null, cat: null, store: null, stock: null, max: null, page: null });
 
-  if (loading) return <main className="wrap">{t("common.loading")}</main>;
+  if (loading) return <CatalogSkeleton />;
   if (error) return <main className="wrap error">{t("common.error", { message: error })}</main>;
 
+  const filtersPanel = (
+    <FiltersPanel
+      category={category}
+      counts={counts}
+      storeId={storeId}
+      maxPrice={maxPrice}
+      priceLimit={priceLimit}
+      onlyInStock={onlyInStock}
+      hasFilters={hasFilters}
+      onChange={setFilter}
+      onClear={clear}
+    />
+  );
+
   return (
-    <main className="wrap">
+    <main className="wrap catalog">
       <h1>{t("catalog.title")}</h1>
 
-      <div className="tabs" role="tablist" aria-label={t("catalog.categoryLabel")}>
-        {(["all", "cpu", "gpu", "ram"] as const).map((c) => (
-          <button
-            key={c}
-            role="tab"
-            aria-selected={category === c}
-            className={category === c ? "tab active" : "tab"}
-            onClick={() => setFilter("cat", c === "all" ? null : c)}
-          >
-            {c === "all" ? t("catalog.all") : t(`catalog.categories.${c}`)}
-            <span className="badge">{counts[c] ?? 0}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="filters">
-        <input
-          type="search"
-          placeholder={t("catalog.searchPlaceholder")}
-          value={query}
-          onChange={(e) => setFilter("q", e.target.value, true)}
-          aria-label={t("catalog.searchLabel")}
-        />
-        <select
-          value={storeId}
-          onChange={(e) => setFilter("store", e.target.value === "all" ? null : e.target.value)}
-          aria-label={t("catalog.storeLabel")}
-        >
-          <option value="all">{t("catalog.allStores")}</option>
-          {STORES.map((s) => (
-            <option key={s.id} value={String(s.id)}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          min={0}
-          step={10000}
-          placeholder={t("catalog.maxPricePlaceholder")}
-          value={maxPrice}
-          onChange={(e) => setFilter("max", e.target.value, true)}
-          aria-label={t("catalog.maxPriceLabel")}
-        />
-        <select
-          value={sort}
-          onChange={(e) => setFilter("sort", e.target.value === "name" ? null : e.target.value)}
-          aria-label={t("catalog.sortLabel")}
-        >
-          <option value="name">{t("catalog.sortName")}</option>
-          <option value="price-asc">{t("catalog.sortPriceAsc")}</option>
-          <option value="price-desc">{t("catalog.sortPriceDesc")}</option>
-        </select>
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={onlyInStock}
-            onChange={(e) => setFilter("stock", e.target.checked ? "1" : null)}
-          />
-          {t("catalog.onlyInStock")}
-        </label>
-        {hasFilters && (
-          <button className="link" onClick={clear}>
-            {t("catalog.clearFilters")}
-          </button>
+      <div className="catalog-layout">
+        {!belowDesktop && (
+          <aside className="filters-side glass" aria-label={t("catalog.filters")}>
+            {filtersPanel}
+          </aside>
         )}
+
+        <div className="catalog-main">
+          <input
+            type="search"
+            className="search glass"
+            placeholder={t("catalog.searchPlaceholder")}
+            value={query}
+            onChange={(e) => setFilter("q", e.target.value, true)}
+            aria-label={t("catalog.searchLabel")}
+          />
+
+          <div className="toolbar">
+            {belowDesktop && (
+              <button
+                type="button"
+                ref={openerRef}
+                className="filters-open glass"
+                onClick={() => dialogRef.current?.showModal()}
+              >
+                <SlidersHorizontal size={18} aria-hidden="true" />
+                {filterCount > 0
+                  ? t("catalog.filtersCount", { count: filterCount })
+                  : t("catalog.filters")}
+              </button>
+            )}
+            <p className="count">
+              {t("catalog.count", { shown: filtered.length, count: groups.length })}
+            </p>
+            <select
+              className="field sort"
+              value={sort}
+              onChange={(e) => setFilter("sort", e.target.value === "name" ? null : e.target.value)}
+              aria-label={t("catalog.sortLabel")}
+            >
+              <option value="name">{t("catalog.sortName")}</option>
+              <option value="price-asc">{t("catalog.sortPriceAsc")}</option>
+              <option value="price-desc">{t("catalog.sortPriceDesc")}</option>
+            </select>
+          </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState icon={<SearchX size={40} aria-hidden="true" />}>{t("catalog.empty")}</EmptyState>
+        ) : (
+          <div className="grid">
+            {visible.map(({ group }) => (
+              <ProductCard key={group.id} group={group} now={now} />
+            ))}
+          </div>
+        )}
+
+        {pages > 1 && (
+          <nav className="pager" aria-label={t("catalog.pagination")}>
+            <button className="glass" disabled={current <= 1} onClick={() => setPage(current - 1)}>
+              <ChevronLeft size={18} aria-hidden="true" />
+              {t("catalog.previous")}
+            </button>
+            <span>
+              {t("catalog.pageOf", { current, pages })}
+            </span>
+            <button className="glass" disabled={current >= pages} onClick={() => setPage(current + 1)}>
+              {t("catalog.next")}
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </nav>
+        )}
+        </div>
       </div>
 
-      <p className="count">
-        {t("catalog.count", { shown: filtered.length, count: groups.length })}
-      </p>
-
-      {filtered.length === 0 ? (
-        <p className="empty">{t("catalog.empty")}</p>
-      ) : (
-        <div className="grid">
-          {visible.map(({ group }) => (
-            <ProductCard key={group.id} group={group} now={now} />
-          ))}
-        </div>
-      )}
-
-      {pages > 1 && (
-        <nav className="pager" aria-label={t("catalog.pagination")}>
-          <button disabled={current <= 1} onClick={() => setPage(current - 1)}>
-            {t("catalog.previous")}
-          </button>
-          <span>
-            {t("catalog.pageOf", { current, pages })}
-          </span>
-          <button disabled={current >= pages} onClick={() => setPage(current + 1)}>
-            {t("catalog.next")}
-          </button>
-        </nav>
+      {belowDesktop && (
+        <dialog
+          ref={dialogRef}
+          className="filters-dialog"
+          aria-label={t("catalog.filters")}
+          onPointerDown={(e) => {
+            downOnBackdrop.current = e.target === e.currentTarget;
+          }}
+          onClick={(e) => {
+            // Solo cierra si el toque empezó y terminó sobre el fondo (no en el panel).
+            if (e.target === e.currentTarget && downOnBackdrop.current) e.currentTarget.close();
+            downOnBackdrop.current = false;
+          }}
+          onClose={() => openerRef.current?.focus()}
+        >
+          <div className="dialog-panel">
+          <div className="dialog-head">
+            <h2>{t("catalog.filters")}</h2>
+            <button type="button" className="dialog-close" onClick={() => dialogRef.current?.close()}>
+              <X size={18} aria-hidden="true" />
+              {t("common.close")}
+            </button>
+          </div>
+          {filtersPanel}
+          </div>
+        </dialog>
       )}
     </main>
   );

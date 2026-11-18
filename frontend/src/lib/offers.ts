@@ -72,6 +72,39 @@ export function summarize(
   };
 }
 
+// Disponibilidad para la tarjeta del catálogo: "si" solo si alguna oferta vigente
+// informa stock; "sin-info" si hay vigentes pero ninguna lo informa; "no" si no hay vigentes.
+export function stockState(g: GroupWithOffers, now: Date): "si" | "sin-info" | "no" {
+  const current = g.offers.filter((o) => isCurrent(o, now));
+  if (current.some((o) => o.in_stock === true)) return "si";
+  return current.length > 0 ? "sin-info" : "no";
+}
+
+// La primera oferta, en el orden dado, que es vigente y coincide con la mejor tienda y precio.
+export function bestOffer(
+  sorted: Offer[],
+  now: Date,
+  best: { bestPrice: number | null; bestStoreId: number | null },
+): Offer | null {
+  if (best.bestPrice == null) return null;
+  return sorted.find((o) =>
+    isCurrent(o, now) && o.store_id === best.bestStoreId && o.price === best.bestPrice
+  ) ?? null;
+}
+
+// Rango de precios de las ofertas vigentes; null si no hay al menos dos precios distintos.
+export function priceSpread(
+  g: GroupWithOffers,
+  now: Date,
+): { min: number; max: number; savings: number } | null {
+  const prices = g.offers.filter((o) => isCurrent(o, now)).map((o) => o.price!);
+  if (prices.length < 2) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  if (max === min) return null;
+  return { min, max, savings: max - min };
+}
+
 function byPrice(a: Offer, b: Offer): number {
   if (a.price == null && b.price == null) return 0;
   if (a.price == null) return 1;

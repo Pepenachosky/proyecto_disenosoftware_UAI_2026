@@ -1,0 +1,126 @@
+/* Guardados: tabla de comparación */
+.saved-subtitle {
+  margin: 0 0 var(--space-4);
+  color: var(--text-muted);
+}
+
+/* Contenedor sólido: es el único que se desliza de lado. */
+.compare-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  scrollbar-color: var(--text-muted) transparent;
+}
+
+.compare {
+  width: auto;
+  min-width: 100%;
+}
+
+.compare th,
+.compare td {
+  vertical-align: middle;
+}
+
+.compare tbody tr:last-child th,
+.compare tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.compare tbody th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.compare td.cheapest,
+.compare .cheapest {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.compare-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.compare span.stale {
+  color: var(--text-muted);
+}
+
+.compare span.stale-out {
+  color: var(--err);
+}
+
+.compare th:first-child,
+.compare td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+
+/* Esquina superior izquierda, sobre la primera columna y los encabezados. */
+.compare thead th:first-child {
+  z-index: 2;
+}
+
+.compare-head {
+  position: relative;
+  min-width: 140px;
+  vertical-align: top;
+  padding-right: 28px;
+}
+
+.compare-head a {
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-head img {
+  object-fit: contain;
+}
+
+.compare-remove {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.compare-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.compare-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: inherit;
+}
+
+.compare-head a:hover span {
+  color: var(--accent);
+}

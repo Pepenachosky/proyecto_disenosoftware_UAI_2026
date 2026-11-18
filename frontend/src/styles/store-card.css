@@ -1,0 +1,152 @@
+/* Tiendas de un producto */
+.store-note {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+
+.store-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.store-card {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* Oferta no vigente: se atenúa con colores, sin bajar el contraste del texto. */
+.store-card.stale {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.store-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.store-top h3 {
+  margin: 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.store-best {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.store-price {
+  white-space: nowrap;
+}
+
+.store-price.best {
+  color: var(--accent);
+}
+
+.store-card p {
+  margin: var(--space-1) 0 0;
+}
+
+.store-address {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.store-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+}
+
+.store-meta .stock {
+  color: var(--text-muted);
+}
+
+.store-meta .stock.yes,
+.store-meta .open {
+  color: var(--ok);
+}
+
+.store-meta .stock.no {
+  color: var(--err);
+}
+
+.store-meta .closed,
+.store-meta .unknown,
+.store-dist {
+  color: var(--text-muted);
+}
+
+.store-meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Marcador propio (chevron que gira al abrir), igual en todos los anchos */
+.store-card summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.store-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-chevron {
+  flex: none;
+  transition: transform var(--dur-fast);
+}
+
+.store-card details[open] > summary .summary-chevron {
+  transform: rotate(90deg);
+}
+
+.schedule {
+  width: auto;
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.schedule th {
+  text-align: left;
+  font-weight: normal;
+  padding: 2px var(--space-4) 2px 0;
+}
+
+.schedule td {
+  padding: 2px 0;
+}
+
+@media (width < 900px) {
+  .store-card summary,
+  .store-meta a {
+    min-height: 44px;
+  }
+}

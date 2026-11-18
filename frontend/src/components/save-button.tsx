@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useAuth } from "../auth";
 import { useSaved } from "../saved";
 import { LoginButton } from "./login-button";
@@ -10,6 +11,7 @@ export function SaveButton({ groupId }: { groupId: number }) {
   if (loading) {
     return (
       <button type="button" className="save-button" disabled>
+        <Bookmark size={18} aria-hidden="true" />
         {t("saved.save")}
       </button>
     );
@@ -31,6 +33,7 @@ export function SaveButton({ groupId }: { groupId: number }) {
       disabled={savedLoading || pending.has(groupId)}
       onClick={() => void toggle(groupId)}
     >
+      {saved ? <BookmarkCheck size={18} aria-hidden="true" /> : <Bookmark size={18} aria-hidden="true" />}
       {saved ? t("saved.savedState") : t("saved.save")}
     </button>
   );

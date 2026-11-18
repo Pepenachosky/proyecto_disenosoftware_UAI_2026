@@ -1,0 +1,298 @@
+/* Subpágina de producto */
+.crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  color: var(--text);
+}
+
+.product-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.product-head {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.product-rest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+@media (width >= 900px) {
+  .product-layout {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    grid-template-areas:
+      "head quote"
+      "rest quote";
+    grid-template-rows: auto 1fr;
+  }
+
+  .product-head {
+    grid-area: head;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .quote {
+    grid-area: quote;
+  }
+
+  .product-rest {
+    grid-area: rest;
+  }
+}
+
+.product-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.product-cat {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.product-name {
+  margin: 0;
+  font-size: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.save-button {
+  font: inherit;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.save-button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.save-button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.sort-toggle button {
+  font: inherit;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort-toggle button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sort-toggle button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.chart {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.chart-legend {
+  color: var(--text);
+}
+
+@media (width < 900px) {
+  .sort-toggle button,
+  .save-button,
+  .quote-go {
+    min-height: 44px;
+  }
+}
+
+.save-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Panel de cotización */
+.quote {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+}
+
+.quote-best {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quote-price {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+.quote-store {
+  color: var(--text-muted);
+}
+
+.quote-savings {
+  font-weight: 600;
+  color: var(--ok);
+}
+
+.quote-none {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.quote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.quote-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.quote-actions > div {
+  flex-basis: 100%;
+}
+
+.quote-actions > div p {
+  margin: 0 0 var(--space-2);
+}
+
+.quote-go:hover {
+  filter: brightness(1.08);
+}
+
+.quote-compare {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-4);
+}
+
+.quote-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: 1.1rem;
+}
+
+.quote-count {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.quote-scroll {
+  min-height: 0;
+  scrollbar-color: var(--text-muted) transparent;
+}
+
+/* Panel fijo con lista desplazable solo si la pantalla es alta; en pantallas bajas
+   el panel acompaña la página y crece con todas las tiendas. */
+@media (width >= 900px) and (height >= 640px) {
+  .quote {
+    position: sticky;
+    top: var(--sticky-top);
+    max-height: calc(100dvh - var(--sticky-top) - var(--space-4));
+  }
+
+  .quote-compare {
+    flex: 1 1 auto;
+  }
+
+  .quote-scroll {
+    overflow-y: auto;
+  }
+}

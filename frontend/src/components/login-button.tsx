@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { googleIdentity } from "../google";
 import { useLanguage } from "../language.tsx";
 
-export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
+export function LoginButton(
+  { size = "large", type = "standard" }: { size?: "medium" | "large"; type?: "standard" | "icon" },
+) {
   const { lang } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -15,11 +17,11 @@ export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
         if (cancelled || !id || !el) return;
         el.replaceChildren();
         id.renderButton(el, {
-          type: "standard",
+          type,
           theme: media.matches ? "filled_black" : "outline",
           size,
           text: "signin_with",
-          shape: "rectangular",
+          shape: type === "icon" ? "circle" : "pill",
           logo_alignment: "left",
           locale: lang,
         });
@@ -31,7 +33,7 @@ export function LoginButton({ size = "large" }: { size?: "medium" | "large" }) {
       cancelled = true;
       media.removeEventListener("change", draw);
     };
-  }, [size, lang]);
+  }, [size, type, lang]);
 
   return <div className="google-button" ref={ref} />;
 }

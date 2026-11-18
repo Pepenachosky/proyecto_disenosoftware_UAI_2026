@@ -1,0 +1,167 @@
+/* Barra de navegación: píldora de vidrio */
+.nav-bar {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: var(--space-2) var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+}
+.nav-bar a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.nav-bar a.active {
+  font-weight: 600;
+  background: var(--glass-solid);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+.nav-bar .brand {
+  gap: var(--space-2);
+  padding-left: var(--space-1);
+  font-weight: 700;
+}
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+.nav-count {
+  display: none;
+  min-width: 20px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+.nav-user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.nav-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 20vw;
+}
+.nav-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+}
+
+/* Barra compacta en celular y tablet: solo la marca del logo, botón de Google como ícono */
+@media (width < 900px) {
+  .nav-bar {
+    margin-inline: var(--space-2);
+    padding-inline: var(--space-2);
+    gap: 0 var(--space-1);
+  }
+  .nav-bar a {
+    position: relative;
+    min-width: 44px;
+    justify-content: center;
+    padding-inline: var(--space-2);
+  }
+  .brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .nav-name {
+    max-width: 16vw;
+  }
+  .nav-user {
+    gap: var(--space-1);
+  }
+  .lang-switch button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Celular: también se ocultan los textos de los enlaces y el nombre */
+@media (width < 640px) {
+  .nav-bar {
+    gap: 0;
+  }
+  .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .nav-count {
+    display: inline-block;
+    position: absolute;
+    top: 2px;
+    right: 0;
+  }
+  .nav-name {
+    display: none;
+  }
+}
+
+.google-button {
+  min-height: 40px;
+}
+
+.nav-user .google-button {
+  min-height: 32px;
+}
+
+/* Selector de idioma (ES / EN) */
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.lang-switch button {
+  padding: 0.2rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+.lang-switch button[aria-pressed="true"] {
+  font-weight: 700;
+  background: var(--surface-2);
+}
+.lang-switch button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}

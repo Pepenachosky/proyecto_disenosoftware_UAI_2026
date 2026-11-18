@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+import { TableSkeleton } from "../components/skeleton";
+import { EmptyState } from "../components/empty-state";
 import { useTranslation } from "react-i18next";
+import { Bookmark, X } from "lucide-react";
 import type { TFunction } from "i18next";
 import { useLanguage } from "../language.tsx";
 import { useAuth } from "../auth";
@@ -34,9 +37,10 @@ function storeCell(
   if (current[0]) return <>{formatClp(current[0].price as number, locale)}</>;
   const stale = offers.sort(byPrice)[0];
   if (!stale) return <>—</>;
-  const label = offerStatus(stale, now) === "agotado" ? t("saved.soldOut") : t("saved.noRecentData");
+  const soldOut = offerStatus(stale, now) === "agotado";
+  const label = soldOut ? t("saved.soldOut") : t("saved.noRecentData");
   return (
-    <span className="stale">
+    <span className={soldOut ? "stale stale-out" : "stale"}>
       {formatClp(stale.price as number, locale)}
       <br />
       <small>{label}</small>
@@ -80,7 +84,7 @@ export function SavedPage() {
     [loaded, ids, locale],
   );
 
-  if (authLoading) return <main className="wrap">{t("common.loading")}</main>;
+  if (authLoading) return <TableSkeleton />;
   if (!user) {
     return (
       <main className="wrap">
@@ -91,26 +95,27 @@ export function SavedPage() {
     );
   }
   if (needFetch && loaded?.error) return <main className="wrap error">{t("common.error", { message: loaded.error })}</main>;
-  if (savedLoading || needFetch) return <main className="wrap">{t("common.loading")}</main>;
+  if (savedLoading || needFetch) return <TableSkeleton />;
 
   if (columns.length === 0) {
     return (
       <main className="wrap">
         <h1>{t("saved.title")}</h1>
-        <p className="empty">{t("saved.empty")}</p>
-        <Link to="/">{t("saved.viewProducts")}</Link>
+        <EmptyState icon={<Bookmark size={40} aria-hidden="true" />}>{t("saved.empty")}</EmptyState>
       </main>
     );
   }
 
   const summaries = columns.map((g) => summarize(g, now));
   const prices = summaries.map((s) => s.bestPrice).filter((p): p is number => p != null);
-  const minPrice = prices.length ? Math.min(...prices) : null;
+  // "Más barato" solo tiene sentido al comparar dos o más productos con precio.
+  const minPrice = prices.length >= 2 ? Math.min(...prices) : null;
 
   return (
     <main className="wrap">
       <h1>{t("saved.title")}</h1>
-      <div className="table-scroll">
+      <p className="saved-subtitle">{t("saved.subtitle", { count: columns.length })}</p>
+      <div className="table-scroll compare-wrap">
         <table className="compare">
           <thead>
             <tr>
@@ -126,7 +131,7 @@ export function SavedPage() {
                     disabled={pending.has(g.id)}
                     onClick={() => void toggle(g.id)}
                   >
-                    ✕
+                    <X size={16} aria-hidden="true" />
                   </button>
                   <Link to={"/producto/" + g.slug}>
                     <ProductImage
@@ -156,9 +161,12 @@ export function SavedPage() {
                   {s.bestPrice == null ? (
                     t("saved.noStock")
                   ) : s.bestPrice === minPrice ? (
-                    <strong>{formatClp(s.bestPrice, locale)}</strong>
+                    <>
+                      <span className="mono cheapest">{formatClp(s.bestPrice, locale)}</span>
+                      <span className="compare-tag">{t("saved.cheapest")}</span>
+                    </>
                   ) : (
-                    formatClp(s.bestPrice, locale)
+                    <span className="mono">{formatClp(s.bestPrice, locale)}</span>
                   )}
                 </td>
               ))}
@@ -174,8 +182,13 @@ export function SavedPage() {
             {STORES.map((st) => (
               <tr key={st.id}>
                 <th scope="row">{st.name}</th>
-                {columns.map((g) => (
-                  <td key={g.id}>{storeCell(g, st.id, now, t, locale)}</td>
+                {columns.map((g, i) => (
+                  <td
+                    key={g.id}
+                    className={summaries[i].bestStoreId === st.id ? "mono cheapest" : "mono"}
+                  >
+                    {storeCell(g, st.id, now, t, locale)}
+                  </td>
                 ))}
               </tr>
             ))}

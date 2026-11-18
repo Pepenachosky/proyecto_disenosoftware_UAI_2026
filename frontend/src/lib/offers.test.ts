@@ -1,10 +1,13 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  bestOffer,
   formatClp,
   groupOffers,
   isCurrent,
   offerStatus,
+  priceSpread,
   sortOffers,
+  stockState,
   summarize,
   type Group,
   type GroupWithOffers,
@@ -142,4 +145,78 @@ Deno.test("groupOffers descarta grupos sin ofertas", () => {
 Deno.test("formatClp según el locale", () => {
   assertEquals(formatClp(89990, "es-CL"), "$89.990");
   assertEquals(formatClp(89990, "en-US").replace(/\s/g, " "), "CLP 89,990");
+});
+
+Deno.test("priceSpread: una sola oferta vigente → null", () => {
+  const g: GroupWithOffers = { ...group, offers: [offer({ id: 1, store_id: 1, price: 329990 })] };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: dos vigentes → min, max y ahorro", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 359990 }),
+      offer({ id: 2, store_id: 2, price: 329990 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), { min: 329990, max: 359990, savings: 30000 });
+});
+
+Deno.test("priceSpread: mismo precio → null", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 329990 }),
+      offer({ id: 2, store_id: 2, price: 329990 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: agotada más cara no cuenta → null", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 329990 }),
+      offer({ id: 2, store_id: 2, price: 399990, in_stock: false }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), null);
+});
+
+Deno.test("priceSpread: dos ofertas de la misma tienda cuentan", () => {
+  const g: GroupWithOffers = {
+    ...group,
+    offers: [
+      offer({ id: 1, store_id: 1, price: 300000 }),
+      offer({ id: 2, store_id: 1, price: 320000 }),
+    ],
+  };
+  assertEquals(priceSpread(g, now), { min: 300000, max: 320000, savings: 20000 });
+});
+
+Deno.test("bestOffer", () => {
+  const best = { bestPrice: 100, bestStoreId: 1 };
+  const a = offer({ id: 1, store_id: 2, price: 100 });
+  const b = offer({ id: 2, store_id: 1, price: 100 });
+  const c = offer({ id: 3, store_id: 1, price: 100 });
+  assertEquals(bestOffer([a, b, c], now, best)?.id, 2);
+  assertEquals(bestOffer([a, b], now, { bestPrice: null, bestStoreId: null }), null);
+  const old = offer({ id: 4, store_id: 1, price: 100, last_seen_at: "2026-11-01T12:00:00Z" });
+  assertEquals(bestOffer([old], now, best), null);
+  assertEquals(bestOffer([old, c, b], now, best)?.id, 3);
+});
+
+Deno.test("stockState: tres estados según las ofertas vigentes", () => {
+  const g = (offers: Offer[]): GroupWithOffers => ({ ...group, offers });
+  assertEquals(stockState(g([offer({ in_stock: true }), offer({ id: 2 })]), now), "si");
+  assertEquals(stockState(g([offer({ in_stock: null })]), now), "sin-info");
+  // Stock informado pero viejo no cuenta como vigente.
+  assertEquals(
+    stockState(g([offer({ in_stock: true, last_seen_at: "2026-10-01T00:00:00Z" }), offer({ id: 2 })]), now),
+    "sin-info",
+  );
+  assertEquals(stockState(g([offer({ in_stock: false })]), now), "no");
+  assertEquals(stockState(g([]), now), "no");
 });
