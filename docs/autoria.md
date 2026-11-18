@@ -646,6 +646,27 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 22: Un workflow de scraping por tienda
+
+**Prompt (condensado):**
+> SP Digital está en mantenimiento y responde 503 a todo, así que el scraper se cae y no corre para las demás tiendas. Pedí separarlo en 3 GitHub Actions, uno por tienda, y que al final de cada uno se ejecute el agrupado y lo demás que ya se hacía.
+
+**Resultado obtenido:**
+- Se reemplazó `.github/workflows/scrape.yml` por tres workflows: `scrape-spdigital.yml` (07:00 UTC), `scrape-pcexpress.yml` (07:20 UTC) y `scrape-winpy.yml` (07:40 UTC), cada uno con *Run workflow* para lanzarlo a mano.
+- Los tres llaman a un workflow reutilizable, `scrape-tienda.yml`, con dos jobs: `scrapear` (pruebas y `deno task scrape:<tienda>`) y `agrupar` (`deno task group`), que solo corre si el scraping de esa tienda terminó bien.
+- Si SP Digital falla, su workflow queda en rojo y no agrupa, pero PC Express y Winpy corren y agrupan igual.
+- Los agrupados no corren dos a la vez (comparten el grupo de concurrencia `agrupar`). Si uno está corriendo y llegan otros dos, GitHub cancela el que esperaba y deja el último, que igual agrupa los productos de todas las tiendas.
+
+**Decisiones propias:**
+- Un workflow por tienda, con el agrupado al final de cada uno.
+
+**Supuestos del asistente por confirmar:**
+- Horarios escalonados cada 20 minutos para que los agrupados choquen poco.
+- Workflow reutilizable para no repetir los pasos tres veces.
+- `deno task scrape` (local) no cambió: si una tienda falla, sigue sin agrupar.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -681,6 +702,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Rediseño visual del frontend (tech oscuro, naranja + amarillo, vidrio en los controles; Prompt 21).
 - [ ] El botón de Google no cambia de idioma con la interfaz (el script de Google lo decide); ver más adelante.
 - [ ] Hacer las verificaciones pendientes del rediseño visual (Prompt 21).
+- [ ] Probar los tres workflows de scraping (Prompt 22) lanzándolos a mano desde *Actions* después del merge a `main`.
 
 ---
 

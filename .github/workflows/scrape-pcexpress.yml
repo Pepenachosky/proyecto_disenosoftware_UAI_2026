@@ -1,0 +1,20 @@
+name: Scrape diario - PC Express
+
+on:
+  schedule:
+    # 07:20 UTC = 03:20/04:20 en Chile según horario de verano
+    - cron: "20 7 * * *"
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+concurrency:
+  group: scrape-pcexpress
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    uses: ./.github/workflows/scrape-tienda.yml
+    with:
+      tienda: pcexpress
+    secrets:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

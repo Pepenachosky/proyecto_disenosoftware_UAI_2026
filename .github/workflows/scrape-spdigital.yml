@@ -1,0 +1,20 @@
+name: Scrape diario - SP Digital
+
+on:
+  schedule:
+    # 07:00 UTC = 03:00/04:00 en Chile según horario de verano
+    - cron: "0 7 * * *"
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+concurrency:
+  group: scrape-spdigital
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    uses: ./.github/workflows/scrape-tienda.yml
+    with:
+      tienda: spdigital
+    secrets:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
