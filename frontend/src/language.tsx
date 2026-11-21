@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import i18n from "./i18n/index.ts";
 import { useAuth } from "./auth.tsx";
+import { useConsent } from "./consent.tsx";
+import { storageAllowed } from "./consent-storage.ts";
 import { fetchProfileLanguage, saveProfileLanguage } from "./data.ts";
 import { intlLocale, onLogin, parseLang, STORAGE_KEY, type Lang } from "./lib/locale.ts";
 
@@ -12,6 +14,14 @@ type LanguageValue = {
 };
 
 const LanguageContext = createContext<LanguageValue | null>(null);
+
+function writeStoredLang(l: Lang): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, l);
+  } catch {
+    // localStorage puede fallar (modo privado): el idioma sigue activo en memoria.
+  }
+}
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   // i18n ya se inicializó con el idioma guardado o el del navegador.
@@ -38,13 +48,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const apply = useCallback((l: Lang) => {
     langRef.current = l;
     void i18n.changeLanguage(l);
-    try {
-      localStorage.setItem(STORAGE_KEY, l);
-    } catch {
-      // localStorage puede fallar (modo privado): el idioma sigue activo en memoria.
-    }
+    if (storageAllowed()) writeStoredLang(l);
     setLangState(l);
   }, []);
+
+  // Aceptar guarda el idioma activo; rechazar vuelve a español (sin guardarlo).
+  // Al cargar no hace falta: i18n ya arrancó con el idioma que toca (startLang).
+  const { onDecision } = useConsent();
+  useEffect(
+    () =>
+      onDecision((d) => {
+        if (d === "aceptado") writeStoredLang(langRef.current);
+        else apply("es");
+      }),
+    [onDecision, apply],
+  );
 
   const setLang = useCallback(
     (l: Lang) => {

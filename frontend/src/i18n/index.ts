@@ -1,6 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { initialLang, STORAGE_KEY } from "../lib/locale.ts";
+import { STORAGE_KEY } from "../lib/locale.ts";
+import { startLang } from "../lib/consent.ts";
+import { readDecision } from "../consent-storage.ts";
 import { es } from "./es.ts";
 import { en } from "./en.ts";
 
@@ -16,7 +18,7 @@ function leerStorage(): string | null {
 // Inicialización síncrona: el primer render ya tiene los textos.
 void i18n.use(initReactI18next).init({
   resources: { es: { translation: es }, en: { translation: en } },
-  lng: initialLang(leerStorage(), navigator.language),
+  lng: startLang(readDecision(), leerStorage(), navigator.language),
   fallbackLng: "es",
   interpolation: { escapeValue: false },
   initAsync: false,

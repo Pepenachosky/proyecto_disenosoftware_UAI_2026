@@ -26,6 +26,7 @@ Rigly es una plataforma web que compara precios de **procesadores (CPU), tarjeta
 - [x] Imagen del producto: SP Digital y Winpy la guardan (`products.image_url`) y el agrupado elige una foto por grupo (`product_groups.image_url`, SP Digital > Winpy). PC Express no: su servidor responde 403 a las imágenes pedidas desde otro sitio, así que se respeta el bloqueo y se muestra el placeholder (`/placeholder.png`).
 - [x] Scraping y agrupado diarios automáticos (GitHub Actions, un workflow por tienda: `.github/workflows/scrape-spdigital.yml`, `scrape-pcexpress.yml` y `scrape-winpy.yml`, que usan `scrape-tienda.yml`; si una tienda falla, las otras siguen)
 - [x] Rediseño visual (tech oscuro, naranja + amarillo, vidrio en los controles)
+- [x] Política de privacidad y cookies (`/privacidad`) con aviso de consentimiento Aceptar/Rechazar (ver [Privacidad y cookies](#privacidad-y-cookies))
 
 Varios pasos son **manuales**:
 
@@ -54,17 +55,21 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── app.tsx, main.tsx    Rutas de la aplicación
 │       ├── supabase.ts          Cliente de Supabase (clave pública)
 │       ├── auth.tsx             Sesión con Google
+│       ├── consent.tsx          Consentimiento (Aceptar/Rechazar) para guardar datos en el navegador
+│       ├── consent-storage.ts   Decisión guardada y almacenamiento de Supabase condicionado al consentimiento
 │       ├── saved.tsx            Contexto de productos guardados
 │       ├── language.tsx         Idioma activo (es/en), guardado en el navegador y en el perfil
 │       ├── i18n/                Traducciones es.ts y en.ts (tipo Messages)
 │       ├── location.tsx         Ubicación del usuario (solo con permiso del navegador)
 │       ├── data.ts              Consultas a la base de datos
 │       ├── media.ts             useMediaQuery y los cortes de celular (< 640 px) y escritorio (>= 900 px)
-│       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx, not-found.tsx
+│       ├── pages/               catalog.tsx, product.tsx, saved-page.tsx, privacy.tsx (política), not-found.tsx
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones, quote-panel,
-│       │                        filters-panel, skeleton (carga) y empty-state (estados vacíos)
+│       │                        filters-panel, skeleton (carga), empty-state (estados vacíos),
+│       │                        consent-banner (aviso de consentimiento) y site-footer (pie)
 │       ├── styles/              Estilos por área; tokens.css es la fuente de colores y medidas (con pruebas)
-│       └── lib/                 Lógica pura con pruebas: search, offers, history, ratings (orden por valoración), filters.ts
+│       └── lib/                 Lógica pura con pruebas: search, offers, history, ratings (orden por valoración), filters.ts,
+│                                consent.ts (consentimiento)
 │                                (deslizador de precio y conteo de filtros), distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
@@ -79,7 +84,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │   ├── migracion-003.md Qué hace la migración 003 (imagen del producto) y cómo ejecutarla
 │   ├── migracion-004.md Migración 004 (dirección, coordenadas y horario de las tiendas) y sus fuentes
 │   ├── migracion-005.md Migración 005 (idioma del perfil y permisos de profiles) y cómo ejecutarla
-│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto, geolocalización y multilenguaje
+│   └── superpowers/     Diseño (specs/) y plan (plans/) de SSO, reseñas y guardados, imagen de producto, geolocalización, multilenguaje y privacidad y cookies
 └── .env.example         Variables de entorno de los scrapers (se copia a scraper/.env)
 ```
 
@@ -139,6 +144,16 @@ Reglas del orden:
 La tarjeta muestra la **media real** y la cantidad ("★ 4,8 (40)"), no la puntuación interna.
 
 **Cómo está implementado:** la fórmula vive en `frontend/src/lib/ratings.ts` (`weightedScore`, `compareByRating`; `C` es la constante `PRIOR_WEIGHT`, que se puede ajustar) y tiene pruebas en `ratings.test.ts`. Se calcula en el navegador, sin migración. `fetchRatings()` en `frontend/src/data.ts` descarga solo `group_id, rating` de `product_reviews` (lectura pública por RLS) y las guarda en caché. Al escribir o borrar una reseña, la caché se marca como desactualizada para que el orden se actualice al volver al catálogo. Si un día hay muchas reseñas, el siguiente paso sería una vista agregada en la base (cantidad y suma por grupo); solo cambiaría `data.ts`.
+
+## Privacidad y cookies
+
+La política está en `/privacidad` (enlace en el pie de todas las páginas). Al entrar por primera vez, un aviso pregunta si se acepta guardar datos en el navegador; Rechazar y Aceptar tienen el mismo peso.
+
+- **Aceptar:** se guardan el idioma (`idioma`) y la sesión de Supabase (`sb-…-auth-token`) en `localStorage`, y se carga el inicio de sesión de Google (que pone cookies en su dominio).
+- **Rechazar:** solo se guarda la decisión (`consentimiento`); la web arranca en español, no se carga Google y no se puede iniciar sesión. Rechazar después de aceptar cierra la sesión, borra lo guardado y recarga la página.
+- **Sin decidir:** se usa el idioma del navegador sin guardar nada y no se carga Google.
+
+La decisión lleva una versión (`CONSENT_VERSION` en `frontend/src/lib/consent.ts`): subirla vuelve a preguntar a todos. Diseño completo: [`docs/superpowers/specs/2026-11-21-privacidad-cookies-design.md`](docs/superpowers/specs/2026-11-21-privacidad-cookies-design.md).
 
 ## Puesta en marcha
 

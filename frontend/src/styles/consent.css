@@ -1,0 +1,143 @@
+/* Aviso de consentimiento, pie de página y política de privacidad */
+.consent-banner {
+  position: fixed;
+  z-index: 20;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+}
+/* Fondo opaco: es texto para leer y no debe mezclarse con la página de detrás */
+.consent-banner.glass {
+  background: var(--glass-solid);
+}
+.consent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.consent-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.consent-banner p {
+  margin: var(--space-2) 0 var(--space-3);
+  line-height: 1.5;
+}
+.consent-banner a,
+.site-footer a,
+.privacy a {
+  color: var(--accent);
+}
+.consent-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+}
+.consent-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+/* Mismo tamaño y peso para Rechazar y Aceptar */
+.consent-choice {
+  min-width: 120px;
+  min-height: 44px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+}
+.consent-choice[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.login-consent p {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+}
+
+.site-footer {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-5) var(--space-4);
+}
+/* Con el aviso abierto, hueco abajo para que no tape el enlace del pie */
+body:has(.consent-banner) .site-footer {
+  padding-bottom: 240px;
+}
+
+@media (max-width: 480px) {
+  .consent-banner {
+    left: var(--space-2);
+    right: var(--space-2);
+    bottom: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+  .consent-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .consent-choice {
+    min-width: 0;
+  }
+}
+
+/* Página de la política: ancho de lectura cómodo */
+.privacy {
+  max-width: 70ch;
+  line-height: 1.6;
+}
+.privacy h2 {
+  margin-top: var(--space-6);
+}
+.privacy li + li {
+  margin-top: var(--space-2);
+}
+.privacy-actions {
+  justify-content: flex-start;
+}
+/* La tabla nunca desborda la página */
+.table-scroll {
+  overflow-x: auto;
+}
+.table-scroll td {
+  vertical-align: top;
+}
+/* En pantallas estrechas, cada fila es un bloque con la etiqueta de cada dato */
+@media (max-width: 600px) {
+  .storage-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .storage-table tr,
+  .storage-table td {
+    display: block;
+  }
+  .storage-table tr {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .storage-table td {
+    padding: var(--space-1) 0;
+    border-bottom: 0;
+  }
+  .storage-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+}
