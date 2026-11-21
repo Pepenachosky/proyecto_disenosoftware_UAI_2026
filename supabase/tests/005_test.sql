@@ -30,6 +30,7 @@ do $$ begin
 end $$;
 
 -- Caso: un usuario nuevo obtiene perfil con language null.
+-- Se inserta como postgres; el perfil lo crea el trigger handle_new_user.
 begin;
 insert into auth.users (id, raw_user_meta_data, email)
   values ('00000000-0000-0000-0000-0000000000c3', '{}', 'c@example.com');
@@ -56,6 +57,7 @@ end $$;
 rollback;
 
 -- Caso: A no puede cambiar el idioma de B (0 filas).
+-- RLS filtra la fila de B sin lanzar error.
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';
@@ -73,6 +75,7 @@ end $$;
 rollback;
 
 -- Caso: A no puede cambiar display_name.
+-- Falla por el grant por columna (solo language), antes de llegar a RLS.
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';

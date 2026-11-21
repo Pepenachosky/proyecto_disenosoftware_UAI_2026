@@ -3,7 +3,7 @@ import {
   type HoursRow,
   openStatus,
   weekSchedule,
-} from "./hours.ts";
+} from "../../src/lib/hours.ts";
 
 // Lunes a viernes 10:00–19:00, sábado 10:00–14:00, domingo cerrado.
 const H: HoursRow[] = [

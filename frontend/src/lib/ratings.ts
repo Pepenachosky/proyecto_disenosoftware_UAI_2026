@@ -8,12 +8,17 @@
 // cerca de m; con muchas se acerca a la media real del producto. Así una sola
 // reseña de 5★ no adelanta a un producto con muchas reseñas muy buenas.
 
+/** Fila mínima de product_reviews (rating de 1 a 5). */
 export type RatingRow = { group_id: number; rating: number };
+/** Cantidad y suma de notas de un grupo (la suma, no la media, para poder acumular y combinar grupos). */
 export type RatingStats = { count: number; sum: number };
+/** Lo que necesita compareByRating; sin stats = producto sin reseñas. */
 export type Rated = { name: string; stats?: RatingStats };
 
+/** C de la fórmula: con 5 reseñas imaginarias, un producto necesita varias reseñas reales para alejarse de la media. */
 export const PRIOR_WEIGHT = 5;
 
+/** Agrupa las reseñas por group_id; los grupos sin reseñas no aparecen en el mapa. */
 export function aggregateRatings(rows: RatingRow[]): Map<number, RatingStats> {
   const out = new Map<number, RatingStats>();
   for (const { group_id, rating } of rows) {
@@ -39,10 +44,12 @@ export function globalMean(stats: Iterable<RatingStats>): number {
   return count === 0 ? 0 : sum / count;
 }
 
+/** Media simple del producto (la que se muestra); no llamar con count 0. */
 export function averageRating(s: RatingStats): number {
   return s.sum / s.count;
 }
 
+/** Puntuación bayesiana de la cabecera del archivo; solo sirve para ordenar, no se muestra. */
 export function weightedScore(s: RatingStats, mean: number, c = PRIOR_WEIGHT): number {
   return (c * mean + s.sum) / (c + s.count);
 }

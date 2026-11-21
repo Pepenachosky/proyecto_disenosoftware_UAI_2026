@@ -1,6 +1,7 @@
 // Utilidades puras de idioma (sin dependencias, para poder probarlas con deno).
 export type Lang = "es" | "en";
 export const LANGS: readonly Lang[] = ["es", "en"];
+/** Clave de localStorage del idioma; solo se escribe con consentimiento aceptado. */
 export const STORAGE_KEY = "idioma";
 
 /** Solo acepta "es" o "en" exactos. */
@@ -18,6 +19,7 @@ export function initialLang(stored: string | null, navLang: string | undefined):
   return parseLang(stored) ?? detectLang(navLang);
 }
 
+/** Locale para Intl (precios, fechas, números): español de Chile o inglés de EE. UU. */
 export function intlLocale(lang: Lang): "es-CL" | "en-US" {
   return lang === "en" ? "en-US" : "es-CL";
 }

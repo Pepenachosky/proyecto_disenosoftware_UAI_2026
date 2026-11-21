@@ -779,6 +779,49 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 27: Comentarios en el código
+
+**Prompt (condensado):**
+> Pedí, usando graphify y superpowers, agregar comentarios a los códigos del proyecto.
+
+**Resultado obtenido:**
+- **Proceso:** el grafo ya estaba al día y se usó para dar a cada subagente el contexto de su área; 6 subagentes en paralelo (superpowers, *dispatching parallel agents*), cada uno con archivos propios: scraper y workflows, migraciones y pruebas SQL, lógica del frontend, contextos y páginas, componentes y CSS. Quedaron fuera las pruebas y las tablas de traducción `es.ts`/`en.ts`.
+- **Verificación:** el código sin comentarios es idéntico al de antes (en TS/TSX comparando el árbol sintáctico, así ningún comentario quedó como texto visible en el JSX); pruebas del scraper (18), del frontend (122) y de las migraciones en podman, `tsc -b`, oxlint (los mismos 5 avisos) y `vite build`. Un comentario `{/* */}` dentro de un ternario rompía `vite build` y se corrigió antes del commit.
+- **Commit en `dev`:** `948301a` (82 archivos, 706 líneas de comentario).
+- **Posibles errores encontrados por los subagentes** (no corregidos; ver *Por hacer*).
+
+**Decisiones propias:**
+- Usar graphify y superpowers.
+- Revisar el resultado y hacer push a `origin/dev`.
+
+**Supuestos del asistente por confirmar:**
+- Comentarios en español, explicando el porqué y no lo que el código ya dice.
+- `supabase/migrations/001_init.sql` ya no está vacío: tiene una cabecera de 4 líneas (sigue sin SQL).
+- En `supabase/tests/002_stub.sql` se movió un comentario que estaba sobre el grant equivocado.
+
+---
+
+## Prompt 28: Pruebas en carpetas `tests/`
+
+**Prompt (condensado):**
+> Pedí agrupar las pruebas en una subcarpeta dedicada, para que el proyecto quede más ordenado.
+
+**Resultado obtenido:**
+- Las pruebas del scraper pasan a `scraper/tests/` y las del frontend a `frontend/tests/`, con la misma estructura que `src/` (`lib/`, `i18n/`, `styles/`); se movieron con `git mv` para conservar su historial. `supabase/tests/` ya existía.
+- `tokens.test.ts` lee las hojas desde `src/styles/` y ahora falla si no encuentra ninguna (sin eso, la prueba de colores podía pasar sin revisar nada; se comprobó metiendo un color suelto a propósito).
+- El README tiene el árbol y el comando nuevos: `(cd frontend && deno test --no-config --allow-read tests/)`. `deno task test` del scraper no cambia. Se quitó el `exclude` de pruebas de `tsconfig.app.json`.
+- Mismos resultados que antes: 18 y 122 pruebas, `tsc -b`, oxlint y `vite build`.
+- **Commit en `dev`:** `153794e`. Este registro y el grafo se actualizaron después, en otro commit.
+
+**Decisiones propias:**
+- Carpeta de pruebas separada del código, como en `supabase/tests/`.
+
+**Supuestos del asistente por confirmar:**
+- `frontend/tests/` replica la estructura de `src/` en vez de ser una carpeta plana.
+- Las menciones a las rutas viejas en este registro y en `docs/superpowers/` no se cambiaron: describen cómo estaba el proyecto en ese momento.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -822,6 +865,15 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Marca Rigly: nombre, logos, favicon y placeholder (imágenes creadas con Gemini; Prompt 25).
 - [x] Política de privacidad y cookies con aviso de consentimiento (Prompt 26).
 - [ ] Probar Rechazar con una sesión de Google real (en la verificación se simuló la sesión) y revisar el texto de la política con alguien de la asignatura (Prompt 26).
+- [x] Comentarios en el código (Prompt 27) y pruebas en carpetas `tests/` (Prompt 28).
+- [ ] Revisar los posibles errores que encontraron los subagentes al comentar (Prompt 27):
+  - `scraper/deno.json`: las tareas `scrape:<tienda>` unen las categorías con `;`, así que si falla cpu o ram el job de CI pasa igual (solo cuenta el código de salida de gpu).
+  - `group_key.ts`: "RX 7900 XTX" pierde el "XTX" en el título; un nombre que empieza con "NVIDIA" se agrupa como "nvidia" y no con el fabricante de la tarjeta; "DDR5-6000" sin "MHz" no se agrupa.
+  - `frontend/src/supabase.ts`: el mensaje de error nombra `VITE_SUPABASE_PUBLISHABLE_KEY`, pero el código lee `VITE_SUPABASE_ANON_KEY`.
+  - `data.ts` `fetchHistory` no pagina: con más de 1000 filas se perderían los datos más recientes sin aviso.
+  - `pages/product.tsx`: la distancia se mide a una sucursal cualquiera de cada tienda, no a la más cercana.
+  - `quote-panel.tsx` dice «Agotado» cuando en realidad no hay datos recientes.
+  - Las reseñas dejan leer el `user_id` del autor a visitantes anónimos (RLS permite leer todas las columnas).
 
 ---
 

@@ -10,6 +10,7 @@ import { DOMParser } from "npm:linkedom@0.18.5";
 const BASE = "https://tienda.pc-express.cl";
 const DELAY_MS = 5_000; // robots.txt no declara crawl-delay: 5 s por cortesía
 const MAX_PAGES = 10; // tope de páginas por subcategoría
+// Se identifica como bot del proyecto (no se hace pasar por un navegador).
 const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 
 type Category = "cpu" | "ram" | "gpu";
@@ -34,6 +35,7 @@ const CATEGORIES: Record<Category, { path: string; pick: RegExp; accept: RegExp 
   },
 };
 
+/** URL de una página de categoría; `path` son ids de categoría unidos por "_" (padre_hijo). */
 const generalUrl = (path: string) => `${BASE}/index.php?route=product/category&path=${path}`;
 
 export interface Subcategory {
@@ -45,6 +47,8 @@ export interface Subcategory {
 export function parseSubcategories(html: string, path: string, pick: RegExp): Subcategory[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const found = new Map<string, Subcategory>();
+  // Solo botones que llevan a una hija de esta categoría (path=<path>_<hijo>); el Map
+  // por href evita repetir una subcategoría enlazada dos veces.
   for (const a of doc.querySelectorAll(`a.btn[href*="path=${path}_"]`)) {
     const name = a.textContent.replace(/\s+/g, " ").trim();
     const href = a.getAttribute("href");
@@ -69,7 +73,10 @@ function parsePrice(text: string | undefined): number | null {
   return digits ? Number(digits) : null;
 }
 
-/** Extrae productos y número total de páginas de una subcategoría. */
+/**
+ * Extrae productos y número total de páginas de una subcategoría. Si el pie no trae
+ * el número de páginas, asume 1. inStock nunca sale false: solo true o null.
+ */
 export function parseListing(
   html: string,
 ): { products: ScrapedProduct[]; totalPages: number } {
@@ -100,6 +107,7 @@ export function parseListing(
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Descarga una página; cualquier respuesta no 2xx corta la corrida con un error. */
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
@@ -111,7 +119,9 @@ async function scrapeSubcategory(sub: Subcategory): Promise<ScrapedProduct[]> {
   const all: ScrapedProduct[] = [];
   let page = 1;
   let totalPages = 1;
+  // El total de páginas se conoce recién al leer la primera, por eso do...while.
   do {
+    // `page` no está entre los parámetros que prohíbe robots.txt (ver CATEGORIES).
     const url = sub.url + (page > 1 ? `&page=${page}` : "");
     console.log(`Leyendo ${sub.name} (página ${page})`);
     const res = parseListing(await fetchHtml(url));
@@ -124,7 +134,11 @@ async function scrapeSubcategory(sub: Subcategory): Promise<ScrapedProduct[]> {
   return all;
 }
 
-/** Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza. */
+/**
+ * Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza.
+ * Siempre renueva last_seen_at: el frontend da por vigente una oferta vista en los
+ * últimos 3 días. No se manda image_url (ver cabecera), así que no se toca esa columna.
+ */
 async function save(items: ScrapedProduct[], category: Category) {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -165,6 +179,7 @@ async function save(items: ScrapedProduct[], category: Category) {
   console.log(`Guardados ${rows.length} productos (${category}).`);
 }
 
+// Una categoría por ejecución (sin argumento, cpu); `deno task scrape:pcexpress` corre las tres.
 if (import.meta.main) {
   const cat = (Deno.args[0] ?? "cpu") as Category;
   const cfg = CATEGORIES[cat];
@@ -183,6 +198,7 @@ if (import.meta.main) {
 
   const found = new Map<string, ScrapedProduct>(); // sin duplicados por URL
   for (let i = 0; i < subs.length; i++) {
+    // La pausa va antes de cada subcategoría: la primera viene justo después de la página general.
     await sleep(DELAY_MS);
     for (const p of await scrapeSubcategory(subs[i])) found.set(p.url, p);
   }

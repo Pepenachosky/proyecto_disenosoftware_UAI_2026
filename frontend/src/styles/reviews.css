@@ -1,4 +1,5 @@
 /* Reseñas */
+/* --- Botones de acción de la reseña --- */
 .review-actions button {
   font: inherit;
   min-height: 36px;
@@ -10,12 +11,14 @@
   cursor: pointer;
 }
 
+/* Enviar: botón principal con el acento */
 .review-actions button[type="submit"] {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
 }
 
+/* Acción destructiva (eliminar) en el color de error */
 .review-actions button.danger {
   color: var(--err);
   border-color: var(--err);
@@ -28,6 +31,7 @@
   cursor: not-allowed;
 }
 
+/* --- Estrellas: apagadas en gris, encendidas en el acento secundario --- */
 .stars {
   display: inline-flex;
   gap: 2px;
@@ -41,6 +45,7 @@
   color: var(--accent-2);
 }
 
+/* Estrellas clicables del formulario */
 .stars button.star {
   font: inherit;
   font-size: 1.6rem;
@@ -51,6 +56,7 @@
   cursor: pointer;
 }
 
+/* --- Resumen, formulario y lista --- */
 .reviews-summary {
   font-size: 1.1rem;
   font-weight: 600;
@@ -123,12 +129,14 @@
   color: var(--text-muted);
 }
 
+/* pre-wrap respeta los saltos de línea que escribió el usuario */
 .review-comment {
   margin: 6px 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
+/* Baja el ícono para alinearlo con la línea base del texto */
 .reviews-summary svg {
   vertical-align: -3px;
   color: var(--accent-2);
@@ -137,6 +145,7 @@
   display: block;
 }
 
+/* Objetivos táctiles de 44 px en pantallas táctiles */
 @media (width < 900px) {
   .review-actions button {
     min-height: 44px;

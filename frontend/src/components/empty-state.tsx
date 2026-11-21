@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 
+// Estado vacío con icono y enlace de vuelta al catálogo: catálogo sin resultados,
+// guardados vacíos, 404 y producto no encontrado.
 // `heading`: el texto es el h1 de la página (404, producto no encontrado);
 // si no, es un párrafo bajo el título que ya tiene la página.
 export function EmptyState(

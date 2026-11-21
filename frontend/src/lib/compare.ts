@@ -1,8 +1,10 @@
+// Agrupación y cálculo del "más barato" para las tablas de comparación de Guardados.
 import type { Category } from "./offers.ts";
 
 // Orden de las tablas de comparación en Guardados.
 export const CATEGORY_ORDER: readonly Category[] = ["cpu", "ram", "gpu"];
 
+/** Una tabla de comparación: la categoría y sus productos ya ordenados. */
 export type CategorySection<T> = { category: Category; items: T[] };
 
 // Separa los productos por categoría (en CATEGORY_ORDER, sin las vacías) y los
@@ -20,6 +22,7 @@ export function groupByCategory<T extends { category: Category; name: string }>(
 }
 
 // "Más barato" solo tiene sentido al comparar dos o más productos con precio.
+// Ignora los null (sin oferta vigente); con menos de dos precios devuelve null.
 export function cheapestOf(prices: (number | null)[]): number | null {
   const known = prices.filter((p): p is number => p != null);
   return known.length >= 2 ? Math.min(...known) : null;

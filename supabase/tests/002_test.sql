@@ -2,6 +2,8 @@
 -- falla; con ON_ERROR_STOP=1, psql termina con error en ese caso.
 -- Cada caso va en su propia transacción (begin; ... rollback;) para no
 -- dejar estado entre casos.
+-- Una petición del frontend se simula con set local role (anon o authenticated)
+-- y set local request.jwt.claim.sub (el usuario que devuelve auth.uid()).
 --
 -- Usuario A: 00000000-0000-0000-0000-00000000000a
 -- Usuario B: 00000000-0000-0000-0000-00000000000b
@@ -187,6 +189,7 @@ end $$;
 rollback;
 
 -- Caso: B no puede editar ni borrar la reseña de A.
+-- Bajo RLS, update y delete no fallan: filtran filas. Por eso se cuenta row_count.
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
@@ -244,6 +247,7 @@ end $$;
 rollback;
 
 -- Caso: B no puede guardar a nombre de A.
+-- El error debe venir del with check de saved_insert_own, no de un grant.
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';

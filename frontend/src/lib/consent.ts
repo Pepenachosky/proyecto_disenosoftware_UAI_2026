@@ -1,10 +1,12 @@
 // Utilidades puras del consentimiento para guardar datos en el navegador (sin dependencias del navegador).
 import { detectLang, initialLang, STORAGE_KEY, type Lang } from "./locale.ts";
 
+/** Clave de localStorage donde se guarda la decisión (JSON con versión, decisión y fecha). */
 export const CONSENT_KEY = "consentimiento";
 /** Subirla vuelve a preguntar a todos (por ejemplo, si la política cambia de forma importante). */
 export const CONSENT_VERSION = 1;
 
+/** Lo que eligió el usuario en el aviso; null en el resto del código significa "aún no decide". */
 export type Decision = "aceptado" | "rechazado";
 
 /** Valor guardado → decisión; ilegible o de otra versión cuenta como sin decidir (null). */
@@ -21,6 +23,7 @@ export function parseConsent(raw: string | null): Decision | null {
   }
 }
 
+/** Decisión → valor para guardar; incluye la versión actual y la fecha como registro de cuándo se decidió. */
 export function serializeConsent(decision: Decision, fecha: Date): string {
   return JSON.stringify({ version: CONSENT_VERSION, decision, fecha: fecha.toISOString() });
 }
@@ -49,6 +52,7 @@ export function resolveDecision(stored: Decision | null, memory: Decision | null
 /** Espera la promesa como mucho `ms`; nunca lanza: devuelve "timeout" o "error" si no termina bien. */
 export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | "timeout" | "error"> {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  // El finally limpia el temporizador para que no quede vivo si la promesa gana la carrera.
   const limit = new Promise<"timeout">((r) => {
     timer = setTimeout(() => r("timeout"), ms);
   });

@@ -7,6 +7,7 @@ import { openStatus, weekSchedule, type OpenStatus } from "../lib/hours.ts";
 import { useLanguage } from "../language.tsx";
 import { formatClp, offerStatus, STORES, type Offer } from "../lib/offers.ts";
 
+// Etiqueta de stock: agotado y sin datos recientes tienen prioridad sobre in_stock.
 function statusLabel(
   o: Offer,
   now: Date,
@@ -27,6 +28,7 @@ const dayName = (locale: string, weekday: number) =>
 
 const capitalize = (s: string, locale: string) => s.charAt(0).toLocaleUpperCase(locale) + s.slice(1);
 
+// Estado de apertura de la sucursal: abierta hasta, abre hoy/mañana o el día indicado.
 function statusText(s: OpenStatus, locale: string, t: TFunction): string {
   if (s === null) return t("hours.unknown");
   if (s.open) return t("hours.open", { time: s.closes });
@@ -37,6 +39,8 @@ function statusText(s: OpenStatus, locale: string, t: TFunction): string {
 
 type Props = { offer: Offer; branch: Branch | null; distance: number | null; now: Date; best: boolean };
 
+// Tarjeta de una tienda en la ficha de producto. `best` resalta la oferta del mejor
+// precio; `branch` falta si no hay sucursal conocida y `distance` si no hay ubicación.
 export function StoreCard({ offer, branch, distance, now, best }: Props) {
   const { t } = useTranslation();
   const { locale } = useLanguage();
@@ -47,6 +51,7 @@ export function StoreCard({ offer, branch, distance, now, best }: Props) {
   const name = STORES.find((s) => s.id === offer.store_id)?.name ?? t("store.fallbackName");
 
   return (
+    // Las ofertas no vigentes (agotadas o sin datos recientes) se atenúan con .stale.
     <article className={offerStatus(offer, now) === "vigente" ? "store-card" : "store-card stale"}>
       <div className="store-top">
         <h3>
@@ -74,6 +79,7 @@ export function StoreCard({ offer, branch, distance, now, best }: Props) {
           {t("store.details")}
         </summary>
         <p className="store-address">{branch?.address ? place : t("store.noAddress")}</p>
+        {/* Sin horarios cargados solo se muestra la dirección. */}
         {hours.length > 0 && (
           <table className="schedule">
             <tbody>

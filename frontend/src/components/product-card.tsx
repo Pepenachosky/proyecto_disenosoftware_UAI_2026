@@ -8,6 +8,8 @@ import { ProductImage } from "./product-image.tsx";
 
 const CATEGORY_NAMES = { cpu: "CPU", gpu: "GPU", ram: "RAM" } as const;
 
+// Tarjeta del catálogo que enlaza a la ficha. `now` llega del catálogo para que todas
+// las tarjetas evalúen la vigencia con el mismo instante; `rating` falta si no hay reseñas.
 export function ProductCard(
   { group, now, rating }: { group: GroupWithOffers; now: Date; rating?: RatingStats },
 ) {
@@ -38,8 +40,10 @@ export function ProductCard(
       {hasPrice ? (
         <span className="card-price mono">{t("card.from", { price: formatClp(bestPrice, locale) })}</span>
       ) : (
+        // Sin precio vigente: guion decorativo; el estado de stock de abajo lo explica.
         <span className="card-price none mono" aria-hidden="true">—</span>
       )}
+      {/* role="img" con aria-label: se lee como una frase y no como números sueltos. */}
       {average != null && rating && (
         <span
           className="card-rating"

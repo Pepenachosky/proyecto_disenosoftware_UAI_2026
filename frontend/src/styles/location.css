@@ -1,4 +1,5 @@
 /* Barra de ubicación */
+/* Va en el panel de cotización, sobre las tarjetas de tienda (subpágina de producto) */
 .location-bar {
   margin: var(--space-2) 0;
   padding: var(--space-2) var(--space-3);
@@ -14,10 +15,12 @@
   gap: var(--space-2);
 }
 
+/* Sin margen si es el único párrafo */
 .location-bar > p:only-child {
   margin: 0;
 }
 
+/* Variante de una línea: la barra misma es el párrafo (buscando / usando ubicación) */
 p.location-bar {
   display: flex;
   align-items: center;
@@ -28,10 +31,12 @@ p.location-bar {
   color: var(--text-muted);
 }
 
+/* El ícono no se encoge cuando el texto salta de línea */
 .location-bar svg {
   flex: none;
 }
 
+/* Botón con aspecto de enlace dentro del texto */
 .location-bar .link-button {
   font: inherit;
   cursor: pointer;
@@ -42,6 +47,7 @@ p.location-bar {
   text-decoration: underline;
 }
 
+/* Objetivo táctil de 44 px en pantallas táctiles */
 @media (width < 900px) {
   .location-bar .link-button {
     min-height: 44px;

@@ -23,6 +23,7 @@ export function readDecision(): Decision | null {
   return resolveDecision(stored, current);
 }
 
+/** Guarda la decisión en memoria y, si se puede, en localStorage. No borra datos: eso es clearStoredData. */
 export function writeDecision(d: Decision): void {
   current = d;
   try {
@@ -32,6 +33,7 @@ export function writeDecision(d: Decision): void {
   }
 }
 
+/** Solo con consentimiento aceptado se escribe en localStorage (idioma y sesión). */
 export function storageAllowed(): boolean {
   return readDecision() === "aceptado";
 }
@@ -53,6 +55,7 @@ export function clearStoredData(): void {
 // Almacenamiento para Supabase: localStorage solo con consentimiento; si no, memoria.
 const memory = new Map<string, string>();
 
+// La decisión se consulta en cada llamada: aceptar o rechazar surte efecto sin recargar.
 export const gatedStorage = {
   getItem(k: string): string | null {
     if (!storageAllowed()) return memory.get(k) ?? null;
@@ -74,6 +77,7 @@ export const gatedStorage = {
     memory.set(k, v);
   },
   removeItem(k: string): void {
+    // Se borra de ambos lados: la clave pudo guardarse en memoria antes de aceptar.
     memory.delete(k);
     if (!storageAllowed()) return;
     try {

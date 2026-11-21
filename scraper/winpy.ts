@@ -7,6 +7,7 @@ import { DOMParser } from "npm:linkedom@0.18.5";
 const BASE = "https://www.winpy.cl";
 const DELAY_MS = 10_000; // crawl-delay de Winpy (robots.txt)
 const MAX_PAGES = 50; // tope de seguridad por categoría
+// Se identifica como bot del proyecto (no se hace pasar por un navegador).
 const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 
 type Category = "cpu" | "gpu" | "ram";
@@ -61,7 +62,10 @@ export function fullImageUrl(src: string | null | undefined): string | null {
   return url.href;
 }
 
-/** Extrae productos y enlaces de paginación de una página de listado. */
+/**
+ * Extrae productos y enlaces de paginación de una página de listado. Función pura
+ * (sin red), probada en tests/winpy_test.ts. inStock nunca sale false: solo true o null.
+ */
 export function parseListing(
   html: string,
 ): { products: ScrapedProduct[]; pages: string[] } {
@@ -72,6 +76,7 @@ export function parseListing(
     const link = article.querySelector("p.model a");
     const name = link?.textContent.replace(/\s+/g, " ").trim();
     const href = link?.getAttribute("href");
+    // Sin URL no hay clave única (store_id + url) para guardarlo.
     if (!name || !href) continue;
 
     // Precio vigente: <p class="valor">$ 94.240</p> (el "-9%" de .descuento es solo informativo).
@@ -86,6 +91,7 @@ export function parseListing(
     products.push({ name, url: new URL(href, BASE).href, price, inStock: hasButton ? true : null, imageUrl });
   }
 
+  // Se devuelven todos los enlaces del paginador; scrapeCategory descarta los ya vistos.
   const pages = [...doc.querySelectorAll(".paginador a")]
     .map((a) => a.getAttribute("href"))
     .filter((h): h is string => !!h)
@@ -96,13 +102,17 @@ export function parseListing(
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Descarga una página; cualquier respuesta no 2xx corta la corrida con un error. */
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) throw new Error(`${url} respondió ${res.status}`);
   return await res.text();
 }
 
-/** Recorre todas las páginas de una categoría respetando el crawl-delay. */
+/**
+ * Recorre todas las páginas de una categoría respetando el crawl-delay. Es un recorrido
+ * en anchura: cada página aporta los enlaces del paginador que aún no se visitaron.
+ */
 async function scrapeCategory(path: string): Promise<ScrapedProduct[]> {
   const queue = [new URL(path, BASE).href];
   const visited = new Set<string>();
@@ -125,7 +135,11 @@ async function scrapeCategory(path: string): Promise<ScrapedProduct[]> {
   return [...found.values()];
 }
 
-/** Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza. */
+/**
+ * Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza.
+ * Siempre renueva last_seen_at: el frontend da por vigente una oferta vista en los
+ * últimos 3 días, así que los productos que dejan de aparecer caducan solos.
+ */
 async function save(items: ScrapedProduct[], category: Category) {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -156,6 +170,7 @@ async function save(items: ScrapedProduct[], category: Category) {
     last_seen_at: now,
   }));
 
+  // Upsert en lotes de 100 para no mandar cuerpos enormes en una sola petición.
   for (let i = 0; i < rows.length; i += 100) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/products?on_conflict=store_id,url`, {
       method: "POST",
@@ -167,6 +182,7 @@ async function save(items: ScrapedProduct[], category: Category) {
   console.log(`Guardados ${rows.length} productos (${category}).`);
 }
 
+// Sin argumento recorre las tres categorías; `deno task scrape:winpy` las lanza de a una.
 if (import.meta.main) {
   const arg = Deno.args[0] as Category | undefined;
   const cats = (arg ? [arg] : Object.keys(CATEGORIES)) as Category[];
@@ -179,8 +195,10 @@ if (import.meta.main) {
     const found = new Map<string, ScrapedProduct>(); // sin duplicados por URL
     for (const path of paths) {
       for (const p of await scrapeCategory(path)) found.set(p.url, p);
+      // Pausa también entre subpáginas de RAM y antes de la siguiente categoría.
       await sleep(DELAY_MS);
     }
+    // El filtro "accept" se aplica al final, ya sin duplicados.
     const items = [...found.values()].filter((p) => !accept || accept.test(p.name));
     const descartados = found.size - items.length;
     if (descartados) console.log(`(${descartados} descartados por no coincidir con la categoría)`);

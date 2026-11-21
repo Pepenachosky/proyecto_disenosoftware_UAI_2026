@@ -51,6 +51,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 .
 ├── frontend/
 │   ├── public/          placeholder.png (imagen de producto sin foto)
+│   ├── tests/           Pruebas (Deno) de lib/, i18n/ y styles/; replican la estructura de src/
 │   └── src/
 │       ├── app.tsx, main.tsx    Rutas de la aplicación
 │       ├── supabase.ts          Cliente de Supabase (clave pública)
@@ -72,10 +73,10 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │                                consent.ts (consentimiento)
 │                                (deslizador de precio y conteo de filtros), distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
-│                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
+│                        el agrupador (group_key.ts, group.ts), sus pruebas (tests/*_test.ts)
 │                        y deno.json con las tareas
 ├── supabase/
-│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
+│   ├── migrations/      Migraciones SQL (001 sin SQL, solo una cabecera; 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
 │   └── tests/           Pruebas de las migraciones 002 a 005 (run_002.sh, usa podman)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
@@ -219,7 +220,7 @@ Desde la raíz del repositorio:
 
 ```bash
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
-(cd frontend && deno test --no-config --allow-read src/lib/ src/i18n/ src/styles/)  # lógica pura, traducciones, estilos y marca (brand.test.ts) del frontend (sin --no-config falla)
+(cd frontend && deno test --no-config --allow-read tests/)  # lógica pura, traducciones, estilos y marca (brand.test.ts) del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
 bash supabase/tests/run_002.sh                   # migraciones 002 a 005 en un Postgres local (necesita podman)
 ```

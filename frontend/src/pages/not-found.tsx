@@ -2,6 +2,7 @@ import { SearchX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../components/empty-state";
 
+/** Página 404 para cualquier ruta no definida en app.tsx. */
 export function NotFound() {
   const { t } = useTranslation();
   return (

@@ -1,6 +1,6 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { buildChartData, currentPrices } from "./history.ts";
-import type { Offer } from "./offers.ts";
+import { buildChartData, currentPrices } from "../../src/lib/history.ts";
+import type { Offer } from "../../src/lib/offers.ts";
 
 const map = new Map([[1, 1], [2, 2]]);
 

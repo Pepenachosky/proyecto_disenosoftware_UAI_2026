@@ -22,6 +22,9 @@ create table auth.identities (
   identity_data jsonb
 );
 
+-- Como en Supabase: devuelve el sub del JWT. Las pruebas lo fijan con
+-- set local request.jwt.claim.sub; sin él es null, como en el SQL Editor o con
+-- la clave secreta.
 create function auth.uid() returns uuid
 language sql stable
 as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
@@ -92,6 +95,7 @@ create table public.product_reviews (
   created_at timestamptz
 );
 
+-- RLS activo en todas, como en la base real.
 alter table public.stores enable row level security;
 alter table public.store_branches enable row level security;
 alter table public.branch_hours enable row level security;
@@ -114,8 +118,8 @@ grant select on public.stores, public.products, public.price_history to anon, au
 grant select on public.profiles to authenticated;
 -- Como los permisos por defecto de Supabase: product_reviews abierta a nivel de grants.
 grant select, insert, update, delete on public.product_reviews to anon, authenticated;
--- service_role (clave secreta) puede todo sobre las tablas existentes.
 -- Igual que Supabase: anon y authenticated tienen todos los permisos por defecto en las tablas de tiendas.
 grant select, insert, update, delete on public.store_branches, public.branch_hours to anon, authenticated;
+-- service_role (clave secreta) puede todo sobre las tablas existentes.
 grant all on all tables in schema public to service_role;
 grant usage, select on all sequences in schema public to service_role;

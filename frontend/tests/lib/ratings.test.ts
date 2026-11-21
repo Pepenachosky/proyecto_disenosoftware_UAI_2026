@@ -8,7 +8,7 @@ import {
   PRIOR_WEIGHT,
   type Rated,
   weightedScore,
-} from "./ratings.ts";
+} from "../../src/lib/ratings.ts";
 
 Deno.test("PRIOR_WEIGHT es 5", () => {
   assertEquals(PRIOR_WEIGHT, 5);

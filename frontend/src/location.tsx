@@ -1,3 +1,5 @@
+// Contexto de ubicación: geolocalización del navegador bajo demanda, sin persistencia
+// (solo GPS; sin permiso no se calculan distancias).
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { LatLng } from "./lib/geo";
@@ -19,8 +21,14 @@ type LocationValue = {
 
 const LocationContext = createContext<LocationValue | null>(null);
 
+/**
+ * Ubicación del usuario para ordenar tiendas por distancia. Expone el estado,
+ * `start` (pide el GPS una sola vez, al entrar a un producto con ofertas) y
+ * `requestGps` (reintento manual desde LocationBar).
+ */
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<UserLocation>({ estado: "inicial" });
+  // El permiso se pide solo una vez por visita aunque se abran varios productos.
   const startedRef = useRef(false);
   // Solo cuenta la última petición (por si se pulsa "Usar mi ubicación" varias veces).
   const seqRef = useRef(0);
@@ -50,6 +58,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;
 }
 
+/** Acceso al contexto de ubicación; lanza error si se usa fuera de LocationProvider. */
 export function useUserLocation(): LocationValue {
   const ctx = useContext(LocationContext);
   if (!ctx) throw new Error("useUserLocation debe usarse dentro de LocationProvider");

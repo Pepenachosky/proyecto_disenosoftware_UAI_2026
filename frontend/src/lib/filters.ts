@@ -1,7 +1,11 @@
+// Filtros del catálogo: deslizador de precio máximo (sincronizado con el
+// parámetro de URL `max`) y conteo de filtros activos.
+
 // Paso del deslizador de precio en pesos chilenos.
 export const PRICE_STEP = 10_000;
 
 // Máximo del deslizador: mayor precio no nulo redondeado hacia arriba al paso.
+// Sin precios (o todos muy bajos) devuelve un paso, para que el deslizador no quede en 0.
 export function sliderMax(bestPrices: (number | null)[]): number {
   const prices = bestPrices.filter((p): p is number => p != null);
   if (prices.length === 0) return PRICE_STEP;
@@ -10,12 +14,14 @@ export function sliderMax(bestPrices: (number | null)[]): number {
 }
 
 // Lee el parámetro de URL `max`: entero no negativo o null.
+// Solo dígitos: rechaza "", "-5", "1.5", "1e5" y espacios.
 export function parseMaxPrice(param: string | null): number | null {
   if (param == null || !/^\d+$/.test(param)) return null;
   return Number(param);
 }
 
 // Posición del deslizador: el límite equivale a "sin filtro".
+// Un `max` mayor que el límite (URL vieja o precios que bajaron) se muestra en el tope.
 export function sliderValue(max: number | null, limit: number): number {
   if (max == null || max >= limit) return limit;
   return max;

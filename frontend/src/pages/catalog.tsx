@@ -1,3 +1,5 @@
+// Página del catálogo (/): lista de componentes (CPU, GPU, RAM) con el mejor precio
+// entre tiendas; el estado de filtros, orden y página se guarda en la URL.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CatalogSkeleton } from "../components/skeleton";
 import { EmptyState } from "../components/empty-state";
@@ -20,21 +22,30 @@ import { ProductCard } from "../components/product-card.tsx";
 
 type Sort = "name" | "price-asc" | "price-desc" | "rating";
 
+// Productos por página (múltiplo de 2, 3 y 4 para llenar filas completas en la grilla).
 const PAGE_SIZE = 48;
 
+// Validan los parámetros de la URL: un valor desconocido cae al valor por defecto.
 const isCategory = (v: string | null): v is Category => v === "cpu" || v === "gpu" || v === "ram";
 const isSort = (v: string | null): v is Sort =>
   v === "name" || v === "price-asc" || v === "price-desc" || v === "rating";
 
+/**
+ * Página principal: catálogo de grupos de producto con búsqueda, filtros, orden
+ * (nombre, precio o valoración) y paginación. Usa el catálogo y las notas
+ * cacheados en data.ts y el locale de LanguageProvider para ordenar.
+ */
 export function Catalog() {
   const { t } = useTranslation();
   const { locale } = useLanguage();
+  // Si el catálogo ya se descargó en esta visita, se pinta al instante sin esqueleto.
   const [groups, setGroups] = useState<GroupWithOffers[]>(() => cachedCatalog() ?? []);
   const [loading, setLoading] = useState(() => cachedCatalog() === null);
   const [error, setError] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Map<number, RatingStats>>(
     () => cachedRatings() ?? new Map(),
   );
+  // "Ahora" fijo al montar: el estado de cada oferta (vigente/agotada) no cambia entre renders.
   const [now] = useState(() => new Date());
 
   // Filtros, búsqueda y página viven en la URL (?q=&cat=&store=&max=&stock=&sort=&page=)
@@ -51,6 +62,7 @@ export function Catalog() {
   const sort: Sort = isSort(sortParam) ? sortParam : "name";
   const page = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
 
+  // Aplica cambios a la URL; null o "" borra el parámetro.
   const update = (changes: Record<string, string | null>, replace = false) =>
     setParams(
       (prev) => {
@@ -83,6 +95,7 @@ export function Catalog() {
     };
   }, []);
 
+  // Resumen y texto de búsqueda precalculados por grupo: no dependen de los filtros.
   const entries = useMemo(
     () =>
       groups.map((group) => ({
@@ -93,6 +106,7 @@ export function Catalog() {
     [groups, now],
   );
 
+  // Media global de notas: compareByRating la usa para no premiar productos con pocas reseñas.
   const mean = useMemo(() => globalMean(ratings.values()), [ratings]);
 
   const filtered = useMemo(() => {
@@ -107,6 +121,7 @@ export function Catalog() {
     const byPrice = (a: (typeof list)[number], b: (typeof list)[number], dir: 1 | -1) => {
       const pa = a.summary.bestPrice;
       const pb = b.summary.bestPrice;
+      // Sin precio (sin stock vigente) siempre al final, en ambos sentidos.
       if (pa == null && pb == null) return 0;
       if (pa == null) return 1;
       if (pb == null) return -1;
@@ -140,6 +155,7 @@ export function Catalog() {
   // El diálogo se desmonta al pasar a escritorio, lo que lo cierra.
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Si los filtros dejan menos páginas que la de la URL, se muestra la última.
   const current = Math.min(page, pages);
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
@@ -148,11 +164,13 @@ export function Catalog() {
   const filterCount = activeFilterCount({ category, storeId, maxPrice, onlyInStock });
   const priceLimit = useMemo(() => sliderMax(entries.map((e) => e.summary.bestPrice)), [entries]);
 
+  // Limpia filtros y búsqueda pero conserva el orden elegido.
   const clear = () => update({ q: null, cat: null, store: null, stock: null, max: null, page: null });
 
   if (loading) return <CatalogSkeleton />;
   if (error) return <main className="wrap error">{t("common.error", { message: error })}</main>;
 
+  // El mismo panel se monta en la barra lateral (escritorio) o en el diálogo (móvil/tablet).
   const filtersPanel = (
     <FiltersPanel
       category={category}
@@ -184,6 +202,7 @@ export function Catalog() {
             className="search glass"
             placeholder={t("catalog.searchPlaceholder")}
             value={query}
+            // replace: escribir no llena el historial con una entrada por tecla.
             onChange={(e) => setFilter("q", e.target.value, true)}
             aria-label={t("catalog.searchLabel")}
           />
@@ -259,6 +278,7 @@ export function Catalog() {
             if (e.target === e.currentTarget && downOnBackdrop.current) e.currentTarget.close();
             downOnBackdrop.current = false;
           }}
+          // Al cerrar, el foco vuelve al botón que abrió el diálogo.
           onClose={() => openerRef.current?.focus()}
         >
           <div className="dialog-panel">

@@ -23,7 +23,9 @@ function blockAt(css: string, open: number): string {
   return css.slice(css.indexOf("{", open) + 1, blockEnd(css, open));
 }
 
-const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
+// Las hojas viven en src/styles; esta prueba está en tests/styles.
+const stylesDir = new URL("../../src/styles/", import.meta.url);
+const css = await Deno.readTextFile(new URL("tokens.css", stylesDir));
 const darkAt = css.indexOf("@media (prefers-color-scheme: dark)");
 assert(darkAt >= 0, "falta el bloque oscuro");
 const darkBlock = blockAt(css, darkAt);
@@ -77,12 +79,13 @@ Deno.test("--focus es el acento", () => {
 });
 
 Deno.test("ningún color fuera de tokens.css", async () => {
-  const files = [new URL("../app.css", import.meta.url)];
-  for await (const e of Deno.readDir(new URL("./", import.meta.url))) {
+  const files = [new URL("../app.css", stylesDir)];
+  for await (const e of Deno.readDir(stylesDir)) {
     if (e.name.endsWith(".css") && e.name !== "tokens.css") {
-      files.push(new URL(`./${e.name}`, import.meta.url));
+      files.push(new URL(e.name, stylesDir));
     }
   }
+  assert(files.length > 1, "no se encontraron hojas de estilo en src/styles");
   for (const f of files) {
     const text = (await Deno.readTextFile(f)).replace(/\/\*[\s\S]*?\*\//g, "");
     assert(

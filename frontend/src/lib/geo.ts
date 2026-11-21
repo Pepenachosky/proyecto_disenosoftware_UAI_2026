@@ -1,10 +1,12 @@
 // Distancia en línea recta entre dos puntos (no es la ruta por calle).
+/** Coordenadas en grados decimales (WGS84, como las entrega el navegador). */
 export type LatLng = { lat: number; lng: number };
 
 const RADIO_TIERRA_KM = 6371;
 const aRadianes = (grados: number) => (grados * Math.PI) / 180;
 
-// Fórmula de Haversine.
+// Fórmula de Haversine: estable para distancias cortas y suficiente para una ciudad
+// (supone la Tierra esférica; el error es menor al 0,5 %).
 export function distanceKm(a: LatLng, b: LatLng): number {
   const dLat = aRadianes(b.lat - a.lat);
   const dLng = aRadianes(b.lng - a.lng);

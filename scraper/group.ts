@@ -1,9 +1,11 @@
 // Agrupador: asigna group_id a los productos (mismo producto en distintas tiendas).
 // Uso:  deno run --env-file=.env --allow-net --allow-env group.ts
 // Sin variables de entorno de Supabase solo avisa (modo prueba, no toca nada).
+// Se corre después de los scrapers; es idempotente: repetirlo no cambia nada.
 
 import { type Category, groupKey } from "./group_key.ts";
 
+/** Columnas de products que usa el agrupador (solo filas con group_locked = false). */
 interface Row {
   id: number;
   store_id: number;
@@ -27,6 +29,7 @@ export function pickGroupImage(
   return null;
 }
 
+// PAGE coincide con el tope por defecto de filas por respuesta de la API de Supabase.
 const PAGE = 1000; // filas por página al leer productos
 const BATCH = 100; // filas por lote al escribir
 
@@ -34,6 +37,7 @@ const BATCH = 100; // filas por lote al escribir
 async function fetchProducts(base: string, headers: Record<string, string>): Promise<Row[]> {
   const rows: Row[] = [];
   const select = "id,store_id,name,category,group_id,group_locked,image_url";
+  // order=id da un orden estable, para que las páginas no se pisen ni dejen huecos.
   for (let from = 0;; from += PAGE) {
     const res = await fetch(
       `${base}/rest/v1/products?select=${select}&group_locked=eq.false&order=id`,
@@ -42,11 +46,15 @@ async function fetchProducts(base: string, headers: Record<string, string>): Pro
     if (!res.ok) throw new Error(`Error al leer productos: ${res.status} ${await res.text()}`);
     const page: Row[] = await res.json();
     rows.push(...page);
+    // Una página incompleta es la última.
     if (page.length < PAGE) return rows;
   }
 }
 
-/** Crea/actualiza grupos por slug y devuelve slug -> id. */
+/**
+ * Crea/actualiza grupos por slug y devuelve slug -> id. Un grupo existente conserva
+ * su id (y sus reseñas); solo se reescriben name, category e image_url.
+ */
 async function upsertGroups(
   base: string,
   headers: Record<string, string>,
@@ -55,6 +63,7 @@ async function upsertGroups(
   const ids = new Map<string, number>();
   const all = [...groups.values()];
   for (let i = 0; i < all.length; i += BATCH) {
+    // return=representation: la respuesta trae los id, nuevos o existentes.
     const res = await fetch(`${base}/rest/v1/product_groups?on_conflict=slug`, {
       method: "POST",
       headers: { ...headers, Prefer: "resolution=merge-duplicates,return=representation" },
@@ -75,6 +84,8 @@ async function assign(
   for (const [groupId, productIds] of byGroup) {
     for (let i = 0; i < productIds.length; i += BATCH) {
       const list = productIds.slice(i, i + BATCH).join(",");
+      // group_locked=eq.false otra vez: si alguien bloqueó la fila a mano después de
+      // leerla, el PATCH no la pisa.
       const res = await fetch(`${base}/rest/v1/products?id=in.(${list})&group_locked=eq.false`, {
         method: "PATCH",
         headers: { ...headers, Prefer: "return=minimal" },
@@ -85,6 +96,10 @@ async function assign(
   }
 }
 
+/**
+ * Lee productos, calcula la clave de cada uno, guarda los grupos y reasigna group_id.
+ * Los grupos que se quedan sin productos no se borran aquí.
+ */
 async function main() {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -113,6 +128,7 @@ async function main() {
   for (const r of rows) {
     const g = groupKey(r.name, r.category);
     if (!g) sinPatron++;
+    // "p-<id>" es estable entre corridas porque depende solo del id del producto.
     const slug = g ? g.key : `p-${r.id}`;
     slugOf.set(r.id, slug);
     if (!groups.has(slug)) {

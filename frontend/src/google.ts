@@ -1,3 +1,5 @@
+// Inicio de sesión con Google: carga el script de Google Identity Services bajo
+// demanda y entrega el token a Supabase (signInWithIdToken).
 import { supabase } from "./supabase";
 import i18n from "./i18n/index.ts";
 import { createNonce } from "./lib/nonce";
@@ -12,6 +14,7 @@ type GoogleButtonOptions = {
   logo_alignment: "left";
   locale: "es" | "en";
 };
+/** API de google.accounts.id que usa el botón de inicio de sesión. */
 export type GoogleId = {
   initialize(config: {
     client_id: string;
@@ -29,6 +32,7 @@ declare global {
 
 const SCRIPT_URL = "https://accounts.google.com/gsi/client";
 
+// Inserta el script; resuelve false (nunca rechaza) si no carga, p. ej. por un bloqueador.
 function loadScript(): Promise<boolean> {
   return new Promise((resolve) => {
     const script = document.createElement("script");
@@ -61,6 +65,7 @@ async function init(): Promise<GoogleId | null> {
     id.initialize({
       client_id: clientId,
       nonce: hashed,
+      // Sin inicio de sesión automático: el usuario siempre pulsa el botón.
       auto_select: false,
       callback: (response) => {
         supabase.auth
@@ -80,9 +85,11 @@ async function init(): Promise<GoogleId | null> {
   }
 }
 
+// Se guarda la promesa (no el resultado) para que llamadas simultáneas compartan la carga.
 let cached: Promise<GoogleId | null> | null = null;
 
-// Carga e inicializa una sola vez por página.
+// Carga e inicializa una sola vez por página. Un null también queda guardado:
+// no se reintenta hasta recargar.
 export function googleIdentity(): Promise<GoogleId | null> {
   return (cached ??= init());
 }

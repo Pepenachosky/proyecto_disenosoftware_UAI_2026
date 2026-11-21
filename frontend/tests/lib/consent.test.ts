@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { keysToClear, parseConsent, resolveDecision, serializeConsent, startLang, withTimeout } from "./consent.ts";
+import { keysToClear, parseConsent, resolveDecision, serializeConsent, startLang, withTimeout } from "../../src/lib/consent.ts";
 
 Deno.test("serializeConsent y parseConsent hacen ida y vuelta", () => {
   const raw = serializeConsent("aceptado", new Date("2026-11-21T12:00:00Z"));

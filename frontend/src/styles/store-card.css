@@ -41,6 +41,7 @@
   gap: var(--space-2);
 }
 
+/* Etiqueta Mejor, en la oferta vigente más barata */
 .store-best {
   padding: 0 var(--space-2);
   border-radius: var(--radius-pill);
@@ -68,6 +69,7 @@
   overflow-wrap: anywhere;
 }
 
+/* Fila de datos: stock, distancia, abierta/cerrada y enlace a la tienda */
 .store-meta {
   display: flex;
   flex-wrap: wrap;
@@ -76,6 +78,7 @@
   font-size: 0.875rem;
 }
 
+/* Estados en verde, rojo o gris, nunca con el acento */
 .store-meta .stock {
   color: var(--text-muted);
 }
@@ -115,6 +118,7 @@
   list-style: none;
 }
 
+/* Safari ignora list-style en summary, así se oculta su triángulo */
 .store-card summary::-webkit-details-marker {
   display: none;
 }
@@ -128,6 +132,7 @@
   transform: rotate(90deg);
 }
 
+/* --- Horario semanal (dentro del desplegable) --- */
 .schedule {
   width: auto;
   margin-top: var(--space-2);
@@ -144,6 +149,7 @@
   padding: 2px 0;
 }
 
+/* Objetivos táctiles de 44 px en pantallas táctiles */
 @media (width < 900px) {
   .store-card summary,
   .store-meta a {

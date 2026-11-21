@@ -1,7 +1,9 @@
 /* Barra de navegación: píldora de vidrio */
 .nav-bar {
+  /* sticky (no fixed): flota arriba al desplazarse y conserva su hueco en el flujo */
   position: sticky;
   top: var(--space-2);
+  /* Sobre el contenido, pero bajo el aviso de consentimiento (z-index 20) */
   z-index: 10;
   display: flex;
   align-items: center;
@@ -15,6 +17,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  /* Objetivo táctil mínimo de 44 px */
   min-height: 44px;
   color: inherit;
   text-decoration: none;
@@ -22,6 +25,7 @@
   border-radius: var(--radius-pill);
   white-space: nowrap;
 }
+/* Enlace activo: pastilla de vidrio más opaca */
 .nav-bar a.active {
   font-weight: 600;
   background: var(--glass-solid);
@@ -32,12 +36,15 @@
   padding-left: var(--space-1);
   font-weight: 700;
 }
+/* Logo: ancho automático para conservar la proporción */
 .brand-logo {
   display: block;
   height: 32px;
   width: auto;
   flex-shrink: 0;
 }
+/* Globo con el número de guardados: oculto en escritorio (el texto del enlace
+   ya lo incluye), se muestra en celular cuando el texto se oculta. */
 .nav-count {
   display: none;
   min-width: 20px;
@@ -50,6 +57,8 @@
   line-height: 20px;
   text-align: center;
 }
+/* Idioma, usuario y botón de Google empujados a la derecha. min-width 0 deja
+   que se encoja y el nombre se recorte. */
 .nav-user {
   margin-left: auto;
   display: flex;
@@ -63,6 +72,7 @@
   white-space: nowrap;
   max-width: 20vw;
 }
+/* Botón de solo ícono (Salir en la barra compacta) */
 .nav-icon-button {
   display: inline-flex;
   align-items: center;
@@ -81,11 +91,13 @@
     gap: 0 var(--space-1);
   }
   .nav-bar a {
+    /* Ancla del globo .nav-count, que en celular va en posición absoluta */
     position: relative;
     min-width: 44px;
     justify-content: center;
     padding-inline: var(--space-2);
   }
+  /* En la barra compacta se usa el logo vertical, más alto */
   .brand-logo {
     height: 40px;
   }
@@ -106,6 +118,7 @@
   .nav-bar {
     gap: 0;
   }
+  /* Mismo patrón que .sr-only: el texto sigue disponible para lectores de pantalla */
   .nav-label {
     position: absolute;
     width: 1px;
@@ -125,6 +138,8 @@
   }
 }
 
+/* --- Botón de Google (lo dibuja el script oficial) ---
+   Alto reservado para que la barra no salte mientras carga. */
 .google-button {
   min-height: 40px;
 }
@@ -156,6 +171,7 @@
   background: var(--surface-2);
 }
 .lang-switch button:focus-visible {
+  /* Anillo hacia adentro: el contenedor tiene overflow hidden y lo recortaría */
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }

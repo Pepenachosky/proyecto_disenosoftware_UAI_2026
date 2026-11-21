@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { es } from "./es.ts";
-import { en } from "./en.ts";
+import { es } from "../../src/i18n/es.ts";
+import { en } from "../../src/i18n/en.ts";
 
 // Aplana { a: { b: "x" } } a { "a.b": "x" }.
 function flatten(obj: object, prefix = ""): Record<string, string> {

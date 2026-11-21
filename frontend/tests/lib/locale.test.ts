@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { detectLang, initialLang, intlLocale, onLogin, parseLang } from "./locale.ts";
+import { detectLang, initialLang, intlLocale, onLogin, parseLang } from "../../src/lib/locale.ts";
 
 Deno.test("parseLang acepta solo es y en exactos", () => {
   assertEquals(parseLang("es"), "es");

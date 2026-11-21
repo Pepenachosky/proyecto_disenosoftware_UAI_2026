@@ -6,7 +6,7 @@ import {
   PRICE_STEP,
   sliderMax,
   sliderValue,
-} from "./filters.ts";
+} from "../../src/lib/filters.ts";
 
 Deno.test("PRICE_STEP es 10000", () => {
   assertEquals(PRICE_STEP, 10_000);

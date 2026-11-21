@@ -1,11 +1,18 @@
 name: Scrape diario - PC Express
 
+# Disparador diario de PC Express: el trabajo real (pruebas, scraper y agrupado)
+# está en scrape-tienda.yml.
+
 on:
   schedule:
+    # Horas escalonadas cada 20 min (SP Digital, PC Express, Winpy) para no
+    # lanzar las tres tiendas a la vez.
     # 07:20 UTC = 03:20/04:20 en Chile según horario de verano
     - cron: "20 7 * * *"
   workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
 
+# Una sola corrida por tienda a la vez: una manual que coincide con la
+# programada espera en cola en lugar de scrapear en paralelo.
 concurrency:
   group: scrape-pcexpress
   cancel-in-progress: false
@@ -15,6 +22,7 @@ jobs:
     uses: ./.github/workflows/scrape-tienda.yml
     with:
       tienda: pcexpress
+    # Sin `secrets: inherit` el reutilizable no recibe secrets: se pasan uno a uno.
     secrets:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

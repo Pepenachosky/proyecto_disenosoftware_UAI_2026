@@ -1,3 +1,4 @@
+// Raíz de la aplicación: providers de contexto globales y tabla de rutas.
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ConsentProvider } from "./consent";
 import { AuthProvider } from "./auth";
@@ -14,6 +15,10 @@ import { SavedPage } from "./pages/saved-page";
 import { PrivacyPage } from "./pages/privacy";
 import "./app.css";
 
+/**
+ * Componente raíz. El orden de los providers importa: un provider solo puede
+ * usar los de fuera (LanguageProvider usa Consent y Auth; SavedProvider usa Auth).
+ */
 export default function App() {
   return (
     <BrowserRouter>
@@ -31,6 +36,7 @@ export default function App() {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <SiteFooter />
+                {/* El aviso va al final y fuera de Routes: se muestra sobre cualquier página. */}
                 <ConsentBanner />
               </LocationProvider>
             </SavedProvider>

@@ -1,3 +1,5 @@
+// Contexto de consentimiento de cookies: la decisión vive en localStorage (consent-storage.ts)
+// y condiciona si se guardan sesión e idioma y si se carga el script de Google.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CONSENT_KEY, withTimeout, type Decision } from "./lib/consent.ts";
@@ -24,11 +26,18 @@ type ConsentValue = {
 
 const ConsentContext = createContext<ConsentValue | null>(null);
 
+/**
+ * Guarda la decisión de cookies/almacenamiento (aceptado, rechazado o null si
+ * aún no se decide) y controla el aviso. Expone accept/reject, reabrir/cerrar
+ * el aviso y `onDecision` para que otros providers (idioma) reaccionen.
+ */
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const [decision, setDecision] = useState<Decision | null>(readDecision);
   const [reopened, setReopened] = useState(false);
   const [busy, setBusy] = useState(false);
   const [focusSignal, setFocusSignal] = useState(0);
+  // Refs para que accept/reject sean estables (useCallback sin dependencias) y vean
+  // el valor actual; busyRef además bloquea dobles clics antes de que llegue el re-render.
   const decisionRef = useRef(decision);
   const busyRef = useRef(false);
   const listenersRef = useRef(new Set<(d: Decision) => void>());
@@ -37,6 +46,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   // datos (o los vuelve a guardar) y el script de Google se carga o se descarga.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
+      // key === null: la otra pestaña vació todo el localStorage.
       if (e.key === CONSENT_KEY || e.key === null) location.reload();
     };
     window.addEventListener("storage", onStorage);
@@ -71,6 +81,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
         console.warn("No se pudo cerrar la sesión al rechazar (se borra igual):", result);
       }
     }
+    // Se borra aunque el cierre de sesión haya fallado o vencido: rechazar no debe quedar a medias.
     clearStoredData();
     writeDecision("rechazado");
     decisionRef.current = "rechazado";
@@ -86,6 +97,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     for (const cb of listenersRef.current) cb("rechazado");
   }, []);
 
+  // Reabrir el aviso (lo usa LoginButton cuando falta el consentimiento) no cambia la decisión vigente.
   const reopen = useCallback(() => {
     setReopened(true);
     setFocusSignal((n) => n + 1);
@@ -95,6 +107,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ConsentValue>(
     () => ({
       decision,
+      // Sin decisión el aviso siempre está abierto; con decisión, solo si se reabrió.
       bannerOpen: decision === null || reopened,
       busy,
       focusSignal,
@@ -109,6 +122,7 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }
 
+/** Acceso al contexto de consentimiento; lanza error si se usa fuera de ConsentProvider. */
 export function useConsent(): ConsentValue {
   const ctx = useContext(ConsentContext);
   if (!ctx) throw new Error("useConsent debe usarse dentro de ConsentProvider");

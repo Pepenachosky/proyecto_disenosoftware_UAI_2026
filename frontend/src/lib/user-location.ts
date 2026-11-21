@@ -1,3 +1,4 @@
+// Pide la ubicación del usuario una vez, con tiempo límite, para ordenar tiendas por distancia.
 import type { LatLng } from "./geo.ts";
 
 // Forma mínima de navigator.geolocation (Deno no trae los tipos del DOM).
@@ -36,9 +37,11 @@ export function requestPosition(
       geo.getCurrentPosition(
         (pos) => fin({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => fin(null),
+        // Precisión baja y una posición de hasta 10 min basta para comparar distancias a tiendas.
         { enableHighAccuracy: false, maximumAge: 600000, timeout: timeoutMs },
       );
     } catch {
+      // Por si la implementación lanza en vez de llamar al callback de error: nunca rechaza.
       fin(null);
     }
   });

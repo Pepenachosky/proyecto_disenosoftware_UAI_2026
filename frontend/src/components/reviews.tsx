@@ -10,11 +10,14 @@ import { Stars } from "./stars";
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+// Reseñas de la ficha de producto: resumen, formulario para crear, editar o borrar
+// la reseña propia (una por usuario) y lista. Sin sesión se ofrece iniciar sesión.
 export function Reviews({ groupId }: { groupId: number }) {
   const { t } = useTranslation();
   const { locale } = useLanguage();
   const dateFmt = useMemo(() => new Intl.DateTimeFormat(locale, { dateStyle: "long" }), [locale]);
   const { user } = useAuth();
+  // version sube tras publicar o borrar y fuerza a recargar la lista.
   const [version, setVersion] = useState(0);
   const [list, setList] = useState<{ key: string; reviews: Review[] | null; error: string | null } | null>(null);
   const [rating, setRating] = useState(0);
@@ -77,6 +80,7 @@ export function Reviews({ groupId }: { groupId: number }) {
   let summary;
   if (!reviews || reviews.length === 0) summary = null;
   else {
+    // Media real redondeada a un decimal y formateada según el idioma.
     const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
     summary = (
       <p className="reviews-summary">
@@ -111,6 +115,7 @@ export function Reviews({ groupId }: { groupId: number }) {
           <p>{t("reviews.loginPrompt")}</p>
           <LoginButton />
         </>
+      // El formulario espera a la lista: hace falta para saber si ya hay una reseña propia.
       ) : reviews ? (
         <form className="review-form" onSubmit={onSubmit}>
           <span className="review-form-title">{mine ? t("reviews.yourReview") : t("reviews.writeReview")}</span>
@@ -124,6 +129,7 @@ export function Reviews({ groupId }: { groupId: number }) {
             aria-label={t("reviews.commentLabel")}
           />
           <div className="review-actions">
+            {/* Sin estrellas elegidas no se puede publicar; locked cubre el envío y la recarga. */}
             <button type="submit" disabled={locked || rating === 0}>
               {mine ? t("reviews.saveChanges") : t("reviews.publish")}
             </button>
@@ -143,6 +149,7 @@ export function Reviews({ groupId }: { groupId: number }) {
             <li key={r.id} className="review">
               <div className="review-head">
                 <Stars value={r.rating} />
+                {/* La base pone "Usuario" si la cuenta no tiene nombre; se traduce al idioma activo. */}
                 <strong className="review-author">{r.author_name === "Usuario" ? t("reviews.anonymous") : r.author_name}</strong>
                 <span className="review-date">
                   {dateFmt.format(new Date(r.created_at))}

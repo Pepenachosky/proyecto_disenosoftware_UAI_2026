@@ -4,10 +4,12 @@ import { useAuth } from "../auth";
 import { useSaved } from "../saved";
 import { LoginButton } from "./login-button";
 
+// Botón Guardar/Guardado del panel de cotización. Sin sesión muestra el inicio de sesión.
 export function SaveButton({ groupId }: { groupId: number }) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const { ids, toggle, loading: savedLoading, pending } = useSaved();
+  // Mientras se resuelve la sesión se muestra deshabilitado, sin saltar al botón de Google.
   if (loading) {
     return (
       <button type="button" className="save-button" disabled>
@@ -26,6 +28,7 @@ export function SaveButton({ groupId }: { groupId: number }) {
   }
   const saved = ids.has(groupId);
   return (
+    // Bloqueado mientras cargan los guardados o hay un cambio en curso para este producto.
     <button
       type="button"
       className={saved ? "save-button on" : "save-button"}

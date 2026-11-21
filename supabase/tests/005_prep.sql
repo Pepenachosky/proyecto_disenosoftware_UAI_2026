@@ -21,6 +21,8 @@ create policy "perfil propio: editar" on public.profiles
   for update using (id = auth.uid());
 
 -- Trigger real: crea el perfil sin language (lo pone el default).
+-- security definer: sigue creando perfiles después de que la 005 quite los
+-- permisos de escritura a authenticated (lo comprueba 005_test.sql).
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql

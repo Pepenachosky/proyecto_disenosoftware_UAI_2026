@@ -1,3 +1,5 @@
+/* Punto de entrada de los estilos: importa las hojas por área.
+   El orden importa: primero los tokens (variables), luego la base y después cada área. */
 @import "./styles/tokens.css";
 @import "./styles/base.css";
 @import "./styles/nav.css";

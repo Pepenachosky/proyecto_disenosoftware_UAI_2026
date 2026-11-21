@@ -7,10 +7,12 @@ import { BELOW_DESKTOP, useMediaQuery } from "../media";
 import { LoginButton } from "./login-button";
 import { LanguageSwitch } from "./language-switch";
 
+// Barra superior global (app.tsx): logo, enlaces a productos y guardados, idioma y sesión.
 export function NavBar() {
   const { user, loading, signOut } = useAuth();
   const { ids } = useSaved();
   const { t } = useTranslation();
+  // Bajo escritorio: logo vertical, botón de Google solo icono y cerrar sesión como icono.
   const compact = useMediaQuery(BELOW_DESKTOP);
   return (
     <nav className="nav-bar glass">
@@ -28,10 +30,12 @@ export function NavBar() {
       <NavLink to="/guardados">
         <Bookmark size={18} aria-hidden="true" />
         <span className="nav-label">{t("nav.saved", { count: ids.size })}</span>
+        {/* El contador es aria-hidden porque el texto de nav.saved ya incluye la cantidad. */}
         {ids.size > 0 && <span className="nav-count" aria-hidden="true">{ids.size}</span>}
       </NavLink>
       <div className="nav-user">
         <LanguageSwitch />
+        {/* Mientras se resuelve la sesión no se muestra nada, para no parpadear entre estados. */}
         {loading ? null : user ? (
           <>
             <span className="nav-name">{user.name || t("nav.user")}</span>

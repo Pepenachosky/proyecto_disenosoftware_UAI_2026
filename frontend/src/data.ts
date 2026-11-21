@@ -1,3 +1,5 @@
+// Acceso a datos del frontend: todas las consultas a Supabase pasan por aquí.
+// Las funciones lanzan Error con el mensaje de PostgREST si la consulta falla.
 import { supabase } from "./supabase";
 import type { Lang } from "./lib/locale.ts";
 import { groupOffers } from "./lib/offers.ts";
@@ -6,10 +8,13 @@ import type { HistoryRow } from "./lib/history.ts";
 import type { HoursRow } from "./lib/hours.ts";
 import { aggregateRatings, type RatingRow, type RatingStats } from "./lib/ratings.ts";
 
+// Tamaño de página: coincide con el máximo de filas por respuesta de PostgREST por defecto.
 const PAGE = 1000;
 const GROUP_COLS = "id, slug, name, category, image_url";
 const OFFER_COLS = "id, store_id, group_id, name, url, category, price, in_stock, last_seen_at";
 
+// Pide páginas de PAGE filas hasta recibir una incompleta. `page` debe ordenar
+// por una columna única para que las páginas no se solapen ni salten filas.
 async function fetchAll<T>(
   page: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
 ): Promise<T[]> {
@@ -29,12 +34,14 @@ async function fetchAll<T>(
 let catalogPromise: Promise<GroupWithOffers[]> | null = null;
 let catalogValue: GroupWithOffers[] | null = null;
 
+/** Grupos con al menos una oferta, cada uno con todas sus ofertas (vigentes o no). */
 export function fetchCatalog(): Promise<GroupWithOffers[]> {
   if (!catalogPromise) {
     const p = loadCatalog();
     catalogPromise = p;
     p.then(
       (groups) => {
+        // Solo si sigue siendo la promesa actual (no se reemplazó mientras cargaba).
         if (catalogPromise === p) catalogValue = groups;
       },
       () => {
@@ -56,6 +63,7 @@ async function loadCatalog(): Promise<GroupWithOffers[]> {
       supabase.from("product_groups").select(GROUP_COLS).order("id").range(a, b)
     ),
     fetchAll<Offer>((a, b) =>
+      // Las ofertas aún sin agrupar (group_id null) no se pueden mostrar en el catálogo.
       supabase.from("products").select(OFFER_COLS).not("group_id", "is", null).order("id").range(a, b)
     ),
   ]);
@@ -85,6 +93,7 @@ export function fetchRatings(): Promise<Map<number, RatingStats>> {
   return ratingsPromise;
 }
 
+/** Último valor descargado, aunque esté marcado como desactualizado; null si nunca cargó. */
 export function cachedRatings(): Map<number, RatingStats> | null {
   return ratingsValue;
 }
@@ -100,6 +109,7 @@ async function loadRatings(): Promise<Map<number, RatingStats>> {
   return aggregateRatings(rows);
 }
 
+/** Sucursal física con su horario; lat/lng null si no se conocen (no se calcula distancia). */
 export type Branch = {
   store_id: number;
   address: string | null;
@@ -128,12 +138,14 @@ async function loadBranches(): Promise<Branch[]> {
   return fetchAll<Branch>((a, b) =>
     supabase
       .from("store_branches")
+      // branch_hours viene embebido (relación por clave foránea): una sola consulta.
       .select("store_id, address, city, lat, lng, branch_hours(weekday, opens, closes)")
       .order("store_id")
       .range(a, b)
   );
 }
 
+/** Grupo por slug con todas sus ofertas; null si el slug no existe. No usa caché. */
 export async function fetchGroup(slug: string): Promise<GroupWithOffers | null> {
   const { data, error } = await supabase
     .from("product_groups")
@@ -168,6 +180,7 @@ export async function fetchGroupsByIds(ids: number[]): Promise<GroupWithOffers[]
   return groups.map((g) => ({ ...g, offers: byGroup.get(g.id)! }));
 }
 
+/** Historial de precios de esas ofertas, ordenado por fecha. Lista vacía → [] sin consultar. */
 export async function fetchHistory(productIds: number[]): Promise<HistoryRow[]> {
   if (productIds.length === 0) return [];
   const { data, error } = await supabase
@@ -179,6 +192,7 @@ export async function fetchHistory(productIds: number[]): Promise<HistoryRow[]> 
   return (data ?? []) as HistoryRow[];
 }
 
+/** Reseña tal como se muestra; user_id, author_name y las fechas los pone un trigger de la base. */
 export type Review = {
   id: number;
   group_id: number;
@@ -190,6 +204,7 @@ export type Review = {
   updated_at: string;
 };
 
+/** Reseñas de un grupo, la más reciente primero. */
 export async function fetchReviews(groupId: number): Promise<Review[]> {
   const { data, error } = await supabase
     .from("product_reviews")
@@ -200,6 +215,10 @@ export async function fetchReviews(groupId: number): Promise<Review[]> {
   return (data ?? []) as Review[];
 }
 
+/**
+ * Crea la reseña o, con existingId, edita la propia. user_id no se envía: la base
+ * lo rellena con auth.uid() y RLS impide tocar reseñas ajenas. Invalida la caché de notas.
+ */
 export async function upsertReview(
   groupId: number,
   rating: number,
@@ -214,12 +233,14 @@ export async function upsertReview(
   invalidateRatings();
 }
 
+/** Borra una reseña (RLS solo permite las propias) e invalida la caché de notas. */
 export async function deleteReview(id: number): Promise<void> {
   const { error } = await supabase.from("product_reviews").delete().eq("id", id);
   if (error) throw new Error(error.message);
   invalidateRatings();
 }
 
+/** group_id guardados por el usuario con sesión; sin filtro explícito porque RLS solo devuelve los propios. */
 export async function fetchSavedIds(): Promise<number[]> {
   const { data, error } = await supabase.from("saved_products").select("group_id");
   if (error) throw new Error(error.message);
@@ -234,6 +255,7 @@ export async function addSaved(groupId: number): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Quita un guardado; el filtro por user_id lo pone RLS. */
 export async function removeSaved(groupId: number): Promise<void> {
   const { error } = await supabase.from("saved_products").delete().eq("group_id", groupId);
   if (error) throw new Error(error.message);
@@ -250,6 +272,7 @@ export async function fetchProfileLanguage(userId: string): Promise<unknown> {
   return data?.language ?? null;
 }
 
+/** Guarda el idioma elegido en el perfil del usuario. */
 export async function saveProfileLanguage(userId: string, lang: Lang): Promise<void> {
   const { error } = await supabase.from("profiles").update({ language: lang }).eq("id", userId);
   if (error) throw new Error(error.message);

@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { CATEGORY_ORDER, cheapestOf, groupByCategory } from "./compare.ts";
+import { CATEGORY_ORDER, cheapestOf, groupByCategory } from "../../src/lib/compare.ts";
 
 const p = (name: string, category: "cpu" | "gpu" | "ram") => ({ name, category });
 
