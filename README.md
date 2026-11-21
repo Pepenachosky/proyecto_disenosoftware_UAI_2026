@@ -11,7 +11,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Frontend: tienda, buscador, filtros (categoría, stock, presupuesto) y paginación
 - [x] Orden del catálogo por "Mejor valorados" con media ponderada de las reseñas; cada tarjeta muestra la media y la cantidad de reseñas (ver [Orden por valoración](#orden-por-valoración))
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
-- [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (probado con Google y Supabase reales)
+- [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado, en una tabla por categoría: CPU, RAM y GPU (probado con Google y Supabase reales)
 - [x] Multilenguaje propio (español e inglés, i18next; idioma en el navegador y en el perfil). Las traducciones viven en `frontend/src/i18n/` (`es.ts` y `en.ts`, tipadas con `Messages`); para agregar un idioma:
   1. Crear el archivo de traducciones tipado `Messages` en `frontend/src/i18n/`.
   2. Sumarlo a `Lang` y `LANGS`, y a `parseLang`, `detectLang` e `intlLocale` en `frontend/src/lib/locale.ts`.

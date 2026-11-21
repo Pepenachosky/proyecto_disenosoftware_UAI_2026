@@ -4,6 +4,16 @@
   color: var(--text-muted);
 }
 
+/* Una sección por categoría (CPU, RAM, GPU). */
+.saved-section + .saved-section {
+  margin-top: var(--space-6);
+}
+
+.saved-section-title {
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+}
+
 /* Contenedor sólido: es el único que se desliza de lado. */
 .compare-wrap {
   background: var(--surface);

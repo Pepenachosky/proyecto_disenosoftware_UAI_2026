@@ -701,6 +701,34 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 24: Guardados con una tabla por categoría
+
+**Prompt (condensado):**
+> Pedí, usando superpowers, cambiar la sección de comparación de precios (Guardados), porque ponía en la misma tabla productos que no se pueden comparar, como una CPU junto a una RAM. Pedí una tabla para CPU, otra para RAM y otra para GPU. Aprobé el diseño y el plan, y pedí ejecutarlo de forma directa.
+
+**Resultado obtenido:**
+- **Proceso:** grafo de conocimiento (graphify) actualizado antes de empezar; brainstorming (superpowers) con tres enfoques (tablas apiladas, pestañas o un filtro); diseño corto y plan de 2 tareas con TDD, ejecutadas en esta sesión; prueba en un navegador sin interfaz con Supabase simulado (no se escribió nada en la base real), en español e inglés, modo claro y oscuro, escritorio y 360 px; revisión final de la rama por un subagente.
+- **Arreglo de fondo:** "Más barato" se calculaba sobre todas las columnas, así que una RAM barata quedaba como "más barata" frente a una GPU. Ahora se decide dentro de cada tabla.
+- **Commits en `dev`** (diseño: `docs/superpowers/specs/2026-11-21-guardados-por-categoria-design.md`; plan: `docs/superpowers/plans/2026-11-21-guardados-por-categoria.md`):
+  - `d7b1d06` y `555a357`: diseño y plan.
+  - `107ccee`: lógica pura `groupByCategory` y `cheapestOf` (`frontend/src/lib/compare.ts`, con pruebas en `compare.test.ts`).
+  - El commit de esta entrada: una sección por categoría en `saved-page.tsx` (título con las traducciones del catálogo y la tabla de antes, sin la fila "Categoría").
+
+**Decisiones propias:**
+- Una tabla por categoría, en el orden CPU, RAM, GPU.
+- Tablas apiladas (todo visible de un vistazo), en vez de pestañas o un filtro.
+- Ejecución directa del plan, con una revisión final.
+
+**Supuestos del asistente por confirmar:**
+- Una categoría sin productos guardados no se muestra.
+- "Más barato" solo aparece en una tabla con dos o más productos con precio (la misma regla de antes, ahora por tabla).
+- Los títulos reutilizan las traducciones del catálogo ("Procesadores (CPU)", "Memorias RAM", "Tarjetas de video (GPU)").
+
+**Pendiente de verificar:**
+- Con sesión y guardados reales: ver las tres tablas y quitar productos con la ✕.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -739,6 +767,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Probar los tres workflows de scraping (Prompt 22) lanzándolos a mano desde *Actions* después del merge a `main`.
 - [x] Ordenar el catálogo por "Mejor valorados" con media ponderada (Prompt 23).
 - [ ] Probar el orden por valoración con reseñas reales y resolver los detalles menores de la revisión (Prompt 23).
+- [x] Guardados: una tabla de comparación por categoría (CPU, RAM, GPU) y "Más barato" por tabla (Prompt 24).
+- [ ] Probar Guardados por categoría con sesión y guardados reales (Prompt 24).
 
 ---
 
