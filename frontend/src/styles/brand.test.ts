@@ -26,3 +26,7 @@ Deno.test("la barra usa el logo en vez del cuadrado degradado", () => {
   assert(css.includes(".brand-logo"), "falta .brand-logo");
   assert(!css.includes(".brand-mark"), "sigue .brand-mark");
 });
+
+Deno.test("index.html tiene el título Rigly antes de cargar el JS", () => {
+  assert(read("index.html").includes("<title>Rigly</title>"), "el <title> no es Rigly");
+});
