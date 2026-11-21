@@ -35,6 +35,7 @@ export const es = {
     sortName: "Nombre (A-Z)",
     sortPriceAsc: "Precio: menor a mayor",
     sortPriceDesc: "Precio: mayor a menor",
+    sortRating: "Mejor valorados",
     filters: "Filtros",
     filtersCount: "Filtros ({{count}})",
     availability: "Disponibilidad",

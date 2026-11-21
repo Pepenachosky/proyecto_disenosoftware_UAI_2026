@@ -37,6 +37,7 @@ export const en: Messages = {
     sortName: "Name (A-Z)",
     sortPriceAsc: "Price: low to high",
     sortPriceDesc: "Price: high to low",
+    sortRating: "Top rated",
     filters: "Filters",
     filtersCount: "Filters ({{count}})",
     availability: "Availability",
