@@ -4,6 +4,7 @@ import { groupOffers } from "./lib/offers.ts";
 import type { Group, GroupWithOffers, Offer } from "./lib/offers.ts";
 import type { HistoryRow } from "./lib/history.ts";
 import type { HoursRow } from "./lib/hours.ts";
+import { aggregateRatings, type RatingRow, type RatingStats } from "./lib/ratings.ts";
 
 const PAGE = 1000;
 const GROUP_COLS = "id, slug, name, category, image_url";
@@ -59,6 +60,44 @@ async function loadCatalog(): Promise<GroupWithOffers[]> {
     ),
   ]);
   return groupOffers(groups, offers);
+}
+
+// Notas de las reseñas por grupo, para ordenar el catálogo y mostrar la media
+// en las tarjetas. Solo se piden group_id y rating. Mismo patrón de caché que
+// el catálogo; al escribir o borrar una reseña se marca como desactualizada
+// (se olvida la promesa, pero el valor sigue disponible para pintar al instante).
+let ratingsPromise: Promise<Map<number, RatingStats>> | null = null;
+let ratingsValue: Map<number, RatingStats> | null = null;
+
+export function fetchRatings(): Promise<Map<number, RatingStats>> {
+  if (!ratingsPromise) {
+    const p = loadRatings();
+    ratingsPromise = p;
+    p.then(
+      (ratings) => {
+        if (ratingsPromise === p) ratingsValue = ratings;
+      },
+      () => {
+        if (ratingsPromise === p) ratingsPromise = null;
+      },
+    );
+  }
+  return ratingsPromise;
+}
+
+export function cachedRatings(): Map<number, RatingStats> | null {
+  return ratingsValue;
+}
+
+function invalidateRatings(): void {
+  ratingsPromise = null;
+}
+
+async function loadRatings(): Promise<Map<number, RatingStats>> {
+  const rows = await fetchAll<RatingRow>((a, b) =>
+    supabase.from("product_reviews").select("group_id, rating").order("id").range(a, b)
+  );
+  return aggregateRatings(rows);
 }
 
 export type Branch = {
@@ -172,11 +211,13 @@ export async function upsertReview(
     : supabase.from("product_reviews").insert({ group_id: groupId, rating, comment });
   const { error } = await q;
   if (error) throw new Error(error.message);
+  invalidateRatings();
 }
 
 export async function deleteReview(id: number): Promise<void> {
   const { error } = await supabase.from("product_reviews").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  invalidateRatings();
 }
 
 export async function fetchSavedIds(): Promise<number[]> {

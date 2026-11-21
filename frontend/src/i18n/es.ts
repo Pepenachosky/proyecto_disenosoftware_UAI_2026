@@ -35,6 +35,7 @@ export const es = {
     sortName: "Nombre (A-Z)",
     sortPriceAsc: "Precio: menor a mayor",
     sortPriceDesc: "Precio: mayor a menor",
+    sortRating: "Mejor valorados",
     filters: "Filtros",
     filtersCount: "Filtros ({{count}})",
     availability: "Disponibilidad",
@@ -55,6 +56,8 @@ export const es = {
     stores_other: "en {{count}} tiendas",
     inStock: "En stock",
     outOfStock: "Sin stock",
+    rating_one: "{{value}} de 5 estrellas, {{count}} reseña",
+    rating_other: "{{value}} de 5 estrellas, {{count}} reseñas",
   },
   saved: {
     title: "Guardados",

@@ -5,25 +5,26 @@ import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X } from "lucide-react";
 import { useLanguage } from "../language.tsx";
-import { cachedCatalog, fetchCatalog } from "../data.ts";
+import { cachedCatalog, cachedRatings, fetchCatalog, fetchRatings } from "../data.ts";
 import {
   summarize,
   type Category,
   type GroupWithOffers,
 } from "../lib/offers.ts";
 import { matchesQuery } from "../lib/search.ts";
+import { compareByRating, globalMean, type RatingStats } from "../lib/ratings.ts";
 import { activeFilterCount, parseMaxPrice, sliderMax } from "../lib/filters.ts";
 import { BELOW_DESKTOP, useMediaQuery } from "../media.ts";
 import { FiltersPanel } from "../components/filters-panel.tsx";
 import { ProductCard } from "../components/product-card.tsx";
 
-type Sort = "name" | "price-asc" | "price-desc";
+type Sort = "name" | "price-asc" | "price-desc" | "rating";
 
 const PAGE_SIZE = 48;
 
 const isCategory = (v: string | null): v is Category => v === "cpu" || v === "gpu" || v === "ram";
 const isSort = (v: string | null): v is Sort =>
-  v === "name" || v === "price-asc" || v === "price-desc";
+  v === "name" || v === "price-asc" || v === "price-desc" || v === "rating";
 
 export function Catalog() {
   const { t } = useTranslation();
@@ -31,6 +32,9 @@ export function Catalog() {
   const [groups, setGroups] = useState<GroupWithOffers[]>(() => cachedCatalog() ?? []);
   const [loading, setLoading] = useState(() => cachedCatalog() === null);
   const [error, setError] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<Map<number, RatingStats>>(
+    () => cachedRatings() ?? new Map(),
+  );
   const [now] = useState(() => new Date());
 
   // Filtros, búsqueda y página viven en la URL (?q=&cat=&store=&max=&stock=&sort=&page=)
@@ -70,6 +74,10 @@ export function Catalog() {
       .then((g) => active && setGroups(g))
       .catch((e) => active && setError(e instanceof Error ? e.message : String(e)))
       .finally(() => active && setLoading(false));
+    // Sin notas el catálogo se muestra igual (sin estrellas en las tarjetas).
+    fetchRatings()
+      .then((r) => active && setRatings(r))
+      .catch((e) => console.warn("No se pudieron cargar las reseñas:", e));
     return () => {
       active = false;
     };
@@ -84,6 +92,8 @@ export function Catalog() {
       })),
     [groups, now],
   );
+
+  const mean = useMemo(() => globalMean(ratings.values()), [ratings]);
 
   const filtered = useMemo(() => {
     const list = entries.filter(({ group, summary, text }) => {
@@ -102,12 +112,20 @@ export function Catalog() {
       if (pb == null) return -1;
       return (pa - pb) * dir;
     };
+    const byRating = (a: (typeof list)[number], b: (typeof list)[number]) =>
+      compareByRating(
+        { name: a.group.name, stats: ratings.get(a.group.id) },
+        { name: b.group.name, stats: ratings.get(b.group.id) },
+        mean,
+        locale,
+      );
     return list.sort((a, b) =>
       sort === "price-asc" ? byPrice(a, b, 1)
       : sort === "price-desc" ? byPrice(a, b, -1)
+      : sort === "rating" ? byRating(a, b)
       : a.group.name.localeCompare(b.group.name, locale),
     );
-  }, [entries, query, category, storeId, onlyInStock, maxPrice, sort, locale]);
+  }, [entries, query, category, storeId, onlyInStock, maxPrice, sort, locale, ratings, mean]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: groups.length };
@@ -196,6 +214,7 @@ export function Catalog() {
               <option value="name">{t("catalog.sortName")}</option>
               <option value="price-asc">{t("catalog.sortPriceAsc")}</option>
               <option value="price-desc">{t("catalog.sortPriceDesc")}</option>
+              <option value="rating">{t("catalog.sortRating")}</option>
             </select>
           </div>
 
@@ -204,7 +223,7 @@ export function Catalog() {
         ) : (
           <div className="grid">
             {visible.map(({ group }) => (
-              <ProductCard key={group.id} group={group} now={now} />
+              <ProductCard key={group.id} group={group} now={now} rating={ratings.get(group.id)} />
             ))}
           </div>
         )}

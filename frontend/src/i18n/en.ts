@@ -37,6 +37,7 @@ export const en: Messages = {
     sortName: "Name (A-Z)",
     sortPriceAsc: "Price: low to high",
     sortPriceDesc: "Price: high to low",
+    sortRating: "Top rated",
     filters: "Filters",
     filtersCount: "Filters ({{count}})",
     availability: "Availability",
@@ -57,6 +58,8 @@ export const en: Messages = {
     stores_other: "at {{count}} stores",
     inStock: "In stock",
     outOfStock: "Out of stock",
+    rating_one: "{{value}} out of 5 stars, {{count}} review",
+    rating_other: "{{value}} out of 5 stars, {{count}} reviews",
   },
   saved: {
     title: "Saved",
