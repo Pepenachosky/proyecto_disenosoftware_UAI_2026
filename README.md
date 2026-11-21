@@ -28,8 +28,6 @@ Rigly es una plataforma web que compara precios de **procesadores (CPU), tarjeta
 - [x] Rediseño visual (tech oscuro, naranja + amarillo, vidrio en los controles)
 - [x] Política de privacidad y cookies (`/privacidad`) con aviso de consentimiento Aceptar/Rechazar (ver [Privacidad y cookies](#privacidad-y-cookies))
 
-> **Quedó fuera de la geolocalización:** el stock por sucursal (`branch_stock`, y guardar `quantityInStore` y `quantityOnline` de SP Digital) y la función `nearby_branches`, que siguen sin usarse. Cada tienda tiene una sola sucursal (su casa matriz), cargada a mano en la migración 004 desde los sitios oficiales.
-
 Varios pasos son **manuales**:
 
 - Configurar Google OAuth (ver [Configurar inicio de sesión con Google](#configurar-inicio-de-sesión-con-google)).
@@ -80,7 +78,6 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 ├── supabase/
 │   ├── migrations/      Migraciones SQL (001 sin SQL, solo una cabecera; 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
 │   └── tests/           Pruebas de las migraciones 002 a 005 (run_002.sh, usa podman)
-├── api/                 Reservado (vacío por ahora)
 ├── docs/
 │   ├── autoria.md       Registro de prompts y estado del proyecto
 │   ├── configurar-google.md  Paso a paso del inicio de sesión con Google
@@ -239,13 +236,3 @@ El botón de inicio de sesión lo dibuja el script oficial de Google Identity Se
 4. Al desplegar: agrega el dominio final como origen autorizado en Google, define `VITE_GOOGLE_CLIENT_ID` en las variables del hosting (Vite incrusta las `VITE_*` al compilar, así que hay que volver a desplegar después de definirla) y configura el hosting para que todas las rutas sirvan `index.html` (la app usa rutas como `/producto/amd-ryzen-5-7600`).
 
 La guía paso a paso (pantalla de consentimiento, usuarios de prueba, cómo probarlo y errores comunes) está en [`docs/configurar-google.md`](docs/configurar-google.md).
-
-## Arquitectura (resumen del grafo de conocimiento)
-
-El grafo generado con graphify (`graphify-out/`, ignorado por git) muestra tres bloques principales:
-
-- **Scrapers** (`winpy.ts`, `pcexpress.ts`, `spdigital.ts`): comparten la misma forma (`CATEGORIES`, `parseListing`, `parsePrice`, `scrapeCategory`, `ScrapedProduct`) y escriben a Supabase vía su API REST.
-- **Supabase**: núcleo del sistema; el esquema, el trigger de historial y las políticas RLS se conectan a scrapers y frontend.
-- **Frontend**: rutas con react-router (catálogo, `/producto/:slug`, guardados); consulta `product_groups`, `products` y las sucursales con el cliente de `supabase.ts`, calcula la distancia en línea recta a la ubicación del usuario (solo si da permiso de ubicación) y si cada tienda está abierta con la hora de Chile, formatea precios en CLP y solo cuenta como oferta vigente la vista en los últimos 3 días y con stock.
-
-No se detectaron ciclos de importación.
