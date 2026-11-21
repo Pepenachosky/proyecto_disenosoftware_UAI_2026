@@ -78,7 +78,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (tests/*_test.ts)
 │                        y deno.json con las tareas
 ├── supabase/
-│   ├── migrations/      Migraciones SQL (001 vacía, 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
+│   ├── migrations/      Migraciones SQL (001 sin SQL, solo una cabecera; 002 grupos, reseñas y guardados, 003 imagen del producto, 004 ubicación y horario de las tiendas, 005 idioma del perfil)
 │   └── tests/           Pruebas de las migraciones 002 a 005 (run_002.sh, usa podman)
 ├── api/                 Reservado (vacío por ahora)
 ├── docs/
