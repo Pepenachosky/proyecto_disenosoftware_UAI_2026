@@ -162,6 +162,89 @@ export const es = {
   footer: {
     privacy: "Privacidad y cookies",
   },
+  privacy: {
+    title: "Política de privacidad y cookies",
+    meta: "Versión {{version}} · Última actualización: {{date}}",
+    intro: "Esta página explica qué datos usa Rigly, para qué, dónde se guardan y cómo puedes decidir sobre ellos. Rigly no usa analítica, publicidad ni ningún tipo de seguimiento.",
+    controller: {
+      title: "1. Quién es responsable",
+      text: "Rigly, proyecto de la asignatura de Diseño de Software de la Universidad Adolfo Ibáñez.",
+      contact: "Contacto para cualquier consulta sobre tus datos:",
+    },
+    data: {
+      title: "2. Qué datos tratamos y para qué",
+      account: "Cuenta de Google: si inicias sesión, recibimos a través de Supabase tu nombre, tu correo y un identificador de cuenta. Sirven para identificarte, mostrar tu nombre en tus reseñas y guardar tus productos.",
+      profile: "Perfil: tu idioma preferido, para que la web aparezca en ese idioma en cualquier equipo donde inicies sesión.",
+      reviews: "Reseñas: la nota, el comentario y tu nombre. Son públicas: cualquier visitante puede verlas.",
+      saved: "Productos guardados: la lista de productos que guardas. Es privada: solo la ves tú.",
+      location: "Ubicación: si das permiso al navegador, tu ubicación se usa solo en tu dispositivo para calcular la distancia a las tiendas. No se envía a ningún servidor ni se guarda.",
+    },
+    storage: {
+      title: "3. Datos en tu navegador y cookies",
+      intro: "Rigly no crea cookies propias. Guarda algunos datos en el almacenamiento local del navegador (localStorage) y, si aceptas, carga el inicio de sesión de Google, que sí usa cookies en su propio dominio.",
+      colName: "Dato",
+      colWhere: "Dónde",
+      colPurpose: "Para qué",
+      colWhen: "Cuándo se guarda",
+      consent: {
+        where: "localStorage",
+        purpose: "Recordar si aceptaste o rechazaste, para no volver a preguntarte.",
+        when: "Siempre que decides, también si rechazas.",
+      },
+      lang: {
+        where: "localStorage",
+        purpose: "Recordar el idioma de la web.",
+        when: "Solo si aceptas.",
+      },
+      session: {
+        where: "localStorage",
+        purpose: "Mantener tu sesión iniciada entre visitas.",
+        when: "Solo si aceptas e inicias sesión.",
+      },
+      google: {
+        name: "Cookies de Google",
+        where: "Dominio de Google (accounts.google.com)",
+        purpose: "Las pone el script de inicio de sesión de Google para su funcionamiento y seguridad.",
+        when: "Solo si aceptas: si no, el script no se carga.",
+      },
+      googleNote: "Si rechazas después de haber aceptado, Rigly borra lo que guardó en este navegador, pero no puede borrar las cookies que Google ya puso en su dominio: puedes borrarlas desde la configuración de tu navegador.",
+    },
+    third: {
+      title: "4. Servicios de terceros",
+      supabase: "Supabase: base de datos y autenticación de Rigly. Guarda tu cuenta, tu perfil, tus reseñas y tus productos guardados.",
+      google: "Google Identity Services: el inicio de sesión con tu cuenta de Google.",
+      vercel: "Vercel: aloja la web. Como cualquier servidor, puede registrar datos técnicos de la visita, como la dirección IP, para su funcionamiento y seguridad.",
+      stores: "Tiendas: las imágenes de los productos se cargan desde los servidores de cada tienda, y si sigues un enlace a una tienda, esa visita queda sujeta a su propia política.",
+      transfersTitle: "Transferencias internacionales",
+      transfers: "Estos proveedores pueden tratar datos en servidores ubicados fuera de Chile. Rigly solo les entrega lo necesario para que funcione cada servicio.",
+    },
+    legal: {
+      title: "5. Base legal",
+      consent: "Tu consentimiento, para guardar datos en tu navegador y para el inicio de sesión con Google. Puedes retirarlo cuando quieras desde esta página.",
+      service: "La prestación de las funciones que pides, para los datos de tu cuenta, tus reseñas y tus productos guardados.",
+    },
+    retention: {
+      title: "6. Cuánto tiempo se guardan",
+      account: "Los datos de tu cuenta, tus reseñas y tus guardados, mientras exista tu cuenta o hasta que pidas borrarlos.",
+      browser: "Lo guardado en tu navegador, hasta que cambies tu decisión o borres los datos del navegador.",
+    },
+    rights: {
+      title: "7. Tus derechos",
+      text: "Según la Ley 19.628 sobre protección de la vida privada, reformada por la Ley 21.719, tienes derecho a acceder a tus datos, rectificarlos, pedir su supresión (incluido borrar tu cuenta), oponerte a su tratamiento y pedir su portabilidad.",
+      how: "Para ejercerlos, escribe a:",
+    },
+    choice: {
+      title: "8. Tu elección",
+      accepted: "Ahora mismo aceptas que Rigly guarde datos en este navegador.",
+      rejected: "Ahora mismo rechazas que Rigly guarde datos en este navegador: la web funciona en español y sin iniciar sesión.",
+      undecided: "Todavía no has decidido si Rigly puede guardar datos en este navegador.",
+      hint: "Puedes cambiar tu decisión cuando quieras. Si rechazas con la sesión iniciada, se cerrará la sesión y se recargará la página.",
+    },
+    changes: {
+      title: "9. Cambios en esta política",
+      text: "Si esta política cambia de forma importante, se actualizará la versión y la web volverá a preguntarte.",
+    },
+  },
 };
 
 export type Messages = typeof es;

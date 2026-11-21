@@ -11,6 +11,7 @@ import { Catalog } from "./pages/catalog";
 import { ProductPage } from "./pages/product";
 import { NotFound } from "./pages/not-found";
 import { SavedPage } from "./pages/saved-page";
+import { PrivacyPage } from "./pages/privacy";
 import "./app.css";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
                   <Route path="/" element={<Catalog />} />
                   <Route path="/producto/:slug" element={<ProductPage />} />
                   <Route path="/guardados" element={<SavedPage />} />
+                  <Route path="/privacidad" element={<PrivacyPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <SiteFooter />

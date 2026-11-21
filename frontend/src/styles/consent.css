@@ -95,3 +95,28 @@ body:has(.consent-banner) .site-footer {
     min-width: 0;
   }
 }
+
+/* Página de la política: ancho de lectura cómodo */
+.privacy {
+  max-width: 70ch;
+  line-height: 1.6;
+}
+.privacy h2 {
+  margin-top: var(--space-6);
+}
+.privacy li + li {
+  margin-top: var(--space-2);
+}
+.privacy-actions {
+  justify-content: flex-start;
+}
+/* La tabla se desplaza dentro de su caja, no la página */
+.table-scroll {
+  overflow-x: auto;
+}
+.table-scroll table {
+  min-width: 560px;
+}
+.table-scroll td {
+  vertical-align: top;
+}
