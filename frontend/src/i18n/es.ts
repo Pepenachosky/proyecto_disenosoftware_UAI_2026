@@ -1,6 +1,6 @@
 export const es = {
   common: {
-    appTitle: "Comparador de precios",
+    appTitle: "Rigly",
     notFound: "Página no encontrada",
     loadingProducts: "Cargando productos…",
     loadingProduct: "Cargando producto…",
@@ -18,7 +18,7 @@ export const es = {
     language: "Idioma",
   },
   catalog: {
-    title: "Comparador de hardware",
+    title: "Encuentra el mejor precio en hardware",
     categoryLabel: "Categoría",
     all: "Todos",
     categories: {

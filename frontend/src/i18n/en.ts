@@ -2,7 +2,7 @@ import type { Messages } from "./es.ts";
 
 export const en: Messages = {
   common: {
-    appTitle: "Hardware price comparator",
+    appTitle: "Rigly",
     notFound: "Page not found",
     loadingProducts: "Loading products…",
     loadingProduct: "Loading product…",
@@ -20,7 +20,7 @@ export const en: Messages = {
     language: "Language",
   },
   catalog: {
-    title: "Hardware price comparison",
+    title: "Find the best price on hardware",
     categoryLabel: "Category",
     all: "All",
     categories: {

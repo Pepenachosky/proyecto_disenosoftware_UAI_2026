@@ -1,8 +1,10 @@
-# Comparador de precios de hardware
+# Rigly
 
-Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (GPU) y memorias RAM** entre tiendas chilenas reales. Unos scrapers recopilan nombre, precio y stock de cada producto, lo guardan en Supabase (PostgreSQL) y un frontend en React lo muestra.
+Rigly es una plataforma web que compara precios de **procesadores (CPU), tarjetas de video (GPU) y memorias RAM** entre tiendas chilenas reales. Unos scrapers recopilan nombre, precio y stock de cada producto, lo guardan en Supabase (PostgreSQL) y un frontend en React lo muestra.
 
 > Proyecto de diseño, 3er año de Informática. El registro de los prompts de IA usados está en [`docs/autoria.md`](docs/autoria.md).
+>
+> Los logos (`frontend/public/logohorizontal.png`, `logovertical.png`, `favicon.png`) y la imagen de reemplazo (`placeholder.png`) fueron creados con **Gemini** (IA de Google).
 
 ## Estado actual
 
@@ -206,7 +208,7 @@ Desde la raíz del repositorio:
 
 ```bash
 (cd scraper && deno task test)                   # pruebas del agrupador y de los scrapers (SP Digital y Winpy)
-(cd frontend && deno test --no-config --allow-read src/lib/ src/i18n/ src/styles/)  # lógica pura, traducciones y estilos del frontend (sin --no-config falla)
+(cd frontend && deno test --no-config --allow-read src/lib/ src/i18n/ src/styles/)  # lógica pura, traducciones, estilos y marca (brand.test.ts) del frontend (sin --no-config falla)
 (cd frontend && npx tsc -b && npx oxlint && npx vite build)
 bash supabase/tests/run_002.sh                   # migraciones 002 a 005 en un Postgres local (necesita podman)
 ```

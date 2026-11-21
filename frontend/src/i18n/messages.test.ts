@@ -34,3 +34,10 @@ Deno.test("los placeholders coinciden en ambos idiomas", () => {
     assertEquals(placeholders(fes[k]), placeholders(fen[k]), `placeholders en ${k}`);
   }
 });
+
+Deno.test("la marca es Rigly", () => {
+  assertEquals(es.common.appTitle, "Rigly");
+  assertEquals(en.common.appTitle, "Rigly");
+  assertEquals(es.catalog.title, "Encuentra el mejor precio en hardware");
+  assertEquals(en.catalog.title, "Find the best price on hardware");
+});
