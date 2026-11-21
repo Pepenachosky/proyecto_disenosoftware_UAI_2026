@@ -3,6 +3,8 @@
 Rigly es una plataforma web que compara precios de **procesadores (CPU), tarjetas de video (GPU) y memorias RAM** entre tiendas chilenas reales. Unos scrapers recopilan nombre, precio y stock de cada producto, lo guardan en Supabase (PostgreSQL) y un frontend en React lo muestra.
 
 > Proyecto de diseño, 3er año de Informática. El registro de los prompts de IA usados está en [`docs/autoria.md`](docs/autoria.md).
+>
+> Los logos (`frontend/public/logohorizontal.png`, `logovertical.png`, `favicon.png`) y la imagen de reemplazo (`placeholder.png`) fueron creados con **Gemini** (IA de Google).
 
 ## Estado actual
 

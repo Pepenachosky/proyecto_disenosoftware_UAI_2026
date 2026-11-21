@@ -729,6 +729,32 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 25: Marca Rigly e imágenes nuevas
+
+**Prompt (condensado):**
+> Pedí, revisando el grafo (graphify) y usando superpowers, cambiar la página para usar las imágenes nuevas de `frontend/public/` y cambiar el nombre de la plataforma a "Rigly". Después pedí no mantener el título "Comparador de hardware" y elegí reemplazarlo por un eslogan.
+
+**Imágenes creadas con Gemini:** el logo horizontal (`frontend/public/logohorizontal.png`), el logo vertical (`frontend/public/logovertical.png`), el favicon (`frontend/public/favicon.png`, el mismo carrito) y la imagen de reemplazo (`frontend/public/placeholder.png`) fueron generados con Gemini (IA de Google), no con Claude.
+
+**Resultado obtenido:**
+- **Proceso:** consulta al grafo de conocimiento; brainstorming (superpowers) con diseño corto y plan de 3 tareas con TDD, ejecutadas en esta sesión; capturas con Firefox sin interfaz (claro y oscuro, 1280 px y 375 px); revisión final hecha por el mismo asistente.
+- **Commits en `dev`** (diseño: `docs/superpowers/specs/2026-11-21-marca-rigly-design.md`; plan: `docs/superpowers/plans/2026-11-21-marca-rigly.md`):
+  - `7fce7ad`: `appTitle` = "Rigly" y eslogan del catálogo en español e inglés.
+  - `0f604e2`: logo horizontal en escritorio y vertical en celular/tablet; favicon renombrado a `.png` (era un PNG con extensión `.svg`); placeholder reducido de 2,1 MB a 56 KB (800 px de ancho).
+  - `eb59383`: README, diseño y plan.
+  - `56ebd98`: `<title>` de `index.html` = "Rigly" (lo encontró la revisión final).
+
+**Decisiones propias:**
+- Nombre "Rigly" y las imágenes hechas con Gemini.
+- Reemplazar "Comparador de hardware" por el eslogan "Encuentra el mejor precio en hardware" / "Find the best price on hardware".
+- Revisar el resultado en el navegador antes del push.
+
+**Supuestos del asistente por confirmar:**
+- Logo horizontal en escritorio y vertical bajo 900 px.
+- El placeholder sigue siendo un JPEG con nombre `.png` (como el original), para no tocar `product-image.tsx`.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -769,6 +795,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] Probar el orden por valoración con reseñas reales y resolver los detalles menores de la revisión (Prompt 23).
 - [x] Guardados: una tabla de comparación por categoría (CPU, RAM, GPU) y "Más barato" por tabla (Prompt 24).
 - [ ] Probar Guardados por categoría con sesión y guardados reales (Prompt 24).
+- [x] Marca Rigly: nombre, logos, favicon y placeholder (imágenes creadas con Gemini; Prompt 25).
 
 ---
 
