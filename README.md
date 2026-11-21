@@ -9,6 +9,7 @@ Plataforma web que compara precios de **procesadores (CPU), tarjetas de video (G
 - [x] Scrapers de 3 tiendas × 3 categorías (9 scrapers) con precio y stock
 - [x] Base de datos en Supabase con historial automático de precios
 - [x] Frontend: tienda, buscador, filtros (categoría, stock, presupuesto) y paginación
+- [x] Orden del catálogo por "Mejor valorados" con media ponderada de las reseñas; cada tarjeta muestra la media y la cantidad de reseñas (ver [Orden por valoración](#orden-por-valoración))
 - [x] Agrupación de productos iguales entre tiendas (`product_groups`) y subpágina por producto con gráfico de precio histórico
 - [x] Inicio de sesión con Google (SSO), reseñas con estrellas y productos guardados con comparación lado a lado (probado con Google y Supabase reales)
 - [x] Multilenguaje propio (español e inglés, i18next; idioma en el navegador y en el perfil). Las traducciones viven en `frontend/src/i18n/` (`es.ts` y `en.ts`, tipadas con `Messages`); para agregar un idioma:
@@ -63,7 +64,7 @@ El detalle completo está en la sección "Por hacer" de [`docs/autoria.md`](docs
 │       ├── components/          tarjeta, estrellas, reseñas, gráfico, botones, quote-panel,
 │       │                        filters-panel, skeleton (carga) y empty-state (estados vacíos)
 │       ├── styles/              Estilos por área; tokens.css es la fuente de colores y medidas (con pruebas)
-│       └── lib/                 Lógica pura con pruebas: search, offers, history, filters.ts
+│       └── lib/                 Lógica pura con pruebas: search, offers, history, ratings (orden por valoración), filters.ts
 │                                (deslizador de precio y conteo de filtros), distancia y horarios
 ├── scraper/             Un scraper por tienda (winpy.ts, pcexpress.ts, spdigital.ts),
 │                        el agrupador (group_key.ts, group.ts), sus pruebas (*_test.ts)
@@ -110,6 +111,36 @@ Tablas: `stores`, `products` (precio, stock, fecha de precio), `price_history`, 
 - **RLS:** con la clave pública, cualquiera lee productos, precios, grupos y reseñas; un usuario con sesión iniciada solo escribe sus propias reseñas y sus propios guardados. Productos, precios y grupos solo los escriben los scrapers y el script de agrupado (clave de servicio).
 
 > Nota: `supabase/migrations/001_init.sql` está vacío en el repositorio; el esquema se ejecutó manualmente en Supabase (ver Prompt 8 en `docs/autoria.md`). La `002`, la `003` y la `004` son migraciones nuevas y también se ejecutan a mano (se puede correr más de una vez sin error).
+
+## Orden por valoración
+
+El catálogo tiene el orden **"Mejor valorados"** (`?sort=rating`). No usa la media simple: con ella, un producto con una sola reseña de 5★ quedaría por encima de uno con 40 reseñas y media 4,8. Tampoco usa la cantidad de reseñas, que mide popularidad y no calidad. Usa una **media ponderada (bayesiana)**:
+
+```
+puntuación = (C × m + suma de estrellas del producto) / (C + n)
+```
+
+- `n`: número de reseñas del producto.
+- `m`: media de todas las reseñas de la tienda.
+- `C = 5`: peso de la media global. Equivale a sumarle a cada producto 5 reseñas "imaginarias" con nota `m`.
+
+Con pocas reseñas la puntuación se queda cerca de `m`; a medida que llegan más, se acerca a la media real del producto. Ejemplo con `m = 4`:
+
+| Producto | Reseñas | Media real | Puntuación |
+|---|---|---|---|
+| B | 40 | 4,8 | (20 + 192) / 45 = **4,71** |
+| A | 1 | 5,0 | (20 + 5) / 6 = **4,17** |
+| C | 30 | 2,1 | (20 + 63) / 35 = **2,37** |
+
+Reglas del orden:
+
+1. Productos con reseñas, por puntuación de mayor a menor.
+2. Si empatan, primero el que tiene más reseñas y después por nombre.
+3. Los productos sin reseñas van siempre al final, por nombre.
+
+La tarjeta muestra la **media real** y la cantidad ("★ 4,8 (40)"), no la puntuación interna.
+
+**Cómo está implementado:** la fórmula vive en `frontend/src/lib/ratings.ts` (`weightedScore`, `compareByRating`; `C` es la constante `PRIOR_WEIGHT`, que se puede ajustar) y tiene pruebas en `ratings.test.ts`. Se calcula en el navegador, sin migración. `fetchRatings()` en `frontend/src/data.ts` descarga solo `group_id, rating` de `product_reviews` (lectura pública por RLS) y las guarda en caché. Al escribir o borrar una reseña, la caché se marca como desactualizada para que el orden se actualice al volver al catálogo. Si un día hay muchas reseñas, el siguiente paso sería una vista agregada en la base (cantidad y suma por grupo); solo cambiaría `data.ts`.
 
 ## Puesta en marcha
 

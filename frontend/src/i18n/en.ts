@@ -58,6 +58,8 @@ export const en: Messages = {
     stores_other: "at {{count}} stores",
     inStock: "In stock",
     outOfStock: "Out of stock",
+    rating_one: "{{value}} out of 5 stars, {{count}} review",
+    rating_other: "{{value}} out of 5 stars, {{count}} reviews",
   },
   saved: {
     title: "Saved",

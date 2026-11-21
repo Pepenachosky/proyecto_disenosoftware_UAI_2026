@@ -520,3 +520,15 @@ td a {
   border-radius: var(--radius-pill);
   background: currentColor;
 }
+
+.card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.card-rating svg {
+  color: var(--accent-2);
+}

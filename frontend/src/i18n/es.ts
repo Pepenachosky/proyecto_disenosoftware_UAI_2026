@@ -56,6 +56,8 @@ export const es = {
     stores_other: "en {{count}} tiendas",
     inStock: "En stock",
     outOfStock: "Sin stock",
+    rating_one: "{{value}} de 5 estrellas, {{count}} reseña",
+    rating_other: "{{value}} de 5 estrellas, {{count}} reseñas",
   },
   saved: {
     title: "Guardados",

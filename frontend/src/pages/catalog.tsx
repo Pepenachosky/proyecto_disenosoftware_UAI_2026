@@ -223,7 +223,7 @@ export function Catalog() {
         ) : (
           <div className="grid">
             {visible.map(({ group }) => (
-              <ProductCard key={group.id} group={group} now={now} />
+              <ProductCard key={group.id} group={group} now={now} rating={ratings.get(group.id)} />
             ))}
           </div>
         )}
