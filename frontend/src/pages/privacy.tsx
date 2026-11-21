@@ -45,7 +45,7 @@ export function PrivacyPage() {
       <h2>{t("privacy.storage.title")}</h2>
       <p>{t("privacy.storage.intro")}</p>
       <div className="table-scroll">
-        <table>
+        <table className="storage-table">
           <thead>
             <tr>
               <th scope="col">{t("privacy.storage.colName")}</th>
@@ -57,10 +57,10 @@ export function PrivacyPage() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.name}>
-                <td className="mono">{r.name}</td>
-                <td>{r.where}</td>
-                <td>{r.purpose}</td>
-                <td>{r.when}</td>
+                <td className="mono" data-label={t("privacy.storage.colName")}>{r.name}</td>
+                <td data-label={t("privacy.storage.colWhere")}>{r.where}</td>
+                <td data-label={t("privacy.storage.colPurpose")}>{r.purpose}</td>
+                <td data-label={t("privacy.storage.colWhen")}>{r.when}</td>
               </tr>
             ))}
           </tbody>
