@@ -1,3 +1,5 @@
+// Página de guardados: compara lado a lado los productos guardados, en una tabla por
+// categoría, con el mejor precio de cada uno en cada tienda.
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { TableSkeleton } from "../components/skeleton";
@@ -21,8 +23,11 @@ import {
   type Offer,
 } from "../lib/offers.ts";
 
+// `requested`: ids pedidos en la última carga, para saber si hay que volver a pedir.
 type Loaded = { requested: Set<number>; groups: GroupWithOffers[]; error: string | null };
 
+// Celda de una tienda: precio vigente más bajo; si no hay, el último precio conocido
+// marcado como agotado o sin datos recientes; "—" si la tienda nunca lo tuvo.
 function storeCell(
   group: GroupWithOffers,
   storeId: number,
@@ -47,6 +52,7 @@ function storeCell(
   );
 }
 
+/** Tabla comparativa de una categoría: una columna por producto guardado, filas por tienda. */
 function CompareTable({
   columns,
   now,
@@ -142,6 +148,10 @@ function CompareTable({
   );
 }
 
+/**
+ * Página /guardados: los productos guardados del usuario agrupados por categoría.
+ * Depende de Auth (sin sesión pide iniciarla) y de SavedProvider (ids y toggle).
+ */
 export function SavedPage() {
   const { t } = useTranslation();
   const { locale } = useLanguage();
@@ -155,6 +165,8 @@ export function SavedPage() {
   const needFetch = !savedLoading && [...ids].some((id) => !loaded?.requested.has(id));
   const fetchKey = needFetch ? [...ids].sort((a, b) => a - b).join(",") : null;
 
+  // Con error, `requested` queda vacío: needFetch sigue en true y se muestra el error, pero
+  // fetchKey no cambia, así que no se reintenta en bucle (sí al cambiar los ids).
   useEffect(() => {
     if (fetchKey === null) return;
     const want = fetchKey.split(",").map(Number);

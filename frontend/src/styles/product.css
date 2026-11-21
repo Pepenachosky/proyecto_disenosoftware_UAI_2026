@@ -1,4 +1,5 @@
 /* Subpágina de producto */
+/* --- Migas de pan --- */
 .crumbs {
   display: flex;
   align-items: center;
@@ -22,6 +23,7 @@
   color: var(--text);
 }
 
+/* --- Disposición: una columna en celular, dos en escritorio con el panel a la derecha --- */
 .product-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -43,6 +45,7 @@
   min-width: 0;
 }
 
+/* Escritorio: el panel de cotización ocupa toda la altura de la columna derecha */
 @media (width >= 900px) {
   .product-layout {
     grid-template-columns: minmax(0, 1fr) 400px;
@@ -67,6 +70,7 @@
   }
 }
 
+/* --- Cabecera: imagen, categoría y nombre --- */
 .product-img {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -97,6 +101,7 @@
   overflow-wrap: anywhere;
 }
 
+/* --- Botón Guardar --- */
 .save-button {
   font: inherit;
   padding: var(--space-2) var(--space-4);
@@ -117,6 +122,7 @@
   cursor: not-allowed;
 }
 
+/* Control segmentado Precio / Distancia para ordenar las tiendas */
 .sort-toggle {
   display: flex;
   align-items: center;
@@ -144,6 +150,7 @@
   cursor: not-allowed;
 }
 
+/* Contenedor del gráfico de historial de precios */
 .chart {
   width: 100%;
   min-width: 0;
@@ -158,6 +165,7 @@
   color: var(--text);
 }
 
+/* Objetivos táctiles de 44 px en pantallas táctiles */
 @media (width < 900px) {
   .sort-toggle button,
   .save-button,
@@ -166,6 +174,7 @@
   }
 }
 
+/* Complemento de .save-button: alinea el ícono con el texto */
 .save-button {
   display: inline-flex;
   align-items: center;
@@ -240,6 +249,7 @@
   text-decoration: none;
 }
 
+/* Texto de iniciar sesión para guardar (sin sesión): ocupa una fila completa */
 .quote-actions > div {
   flex-basis: 100%;
 }
@@ -274,6 +284,8 @@
   color: var(--text-muted);
 }
 
+/* Lista de tarjetas de tienda. min-height 0 deja que se encoja dentro del panel
+   flex y se desplace (ver la media query de abajo). */
 .quote-scroll {
   min-height: 0;
   scrollbar-color: var(--text-muted) transparent;

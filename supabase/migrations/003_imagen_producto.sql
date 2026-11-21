@@ -4,6 +4,9 @@
 
 begin;
 
+-- Admite null: PC Express no aporta imagen (su servidor responde 403 a pedidos
+-- desde otro sitio) y el frontend muestra /placeholder.png. Las políticas de
+-- products no cambian: la columna se lee igual que el resto de la tabla.
 alter table public.products add column if not exists image_url text;
 
 commit;

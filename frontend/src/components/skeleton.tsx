@@ -1,9 +1,12 @@
+// Esqueletos de carga del catálogo, la ficha y los guardados. Los bloques son
+// aria-hidden; un texto sr-only con role="status" anuncia la carga al lector de pantalla.
 import { useTranslation } from "react-i18next";
 
 function Block({ className }: { className: string }) {
   return <div className={"sk " + className} aria-hidden="true" />;
 }
 
+// Imita el catálogo: título, barra lateral, buscador y una cuadrícula de 8 tarjetas.
 export function CatalogSkeleton() {
   const { t } = useTranslation();
   return (
@@ -32,6 +35,7 @@ export function CatalogSkeleton() {
   );
 }
 
+// Imita la ficha: cabecera con imagen, dos secciones y el panel de cotización.
 export function ProductSkeleton() {
   const { t } = useTranslation();
   return (
@@ -58,6 +62,7 @@ export function ProductSkeleton() {
   );
 }
 
+// Imita la tabla de guardados: cabecera y 5 filas.
 export function TableSkeleton() {
   const { t } = useTranslation();
   return (

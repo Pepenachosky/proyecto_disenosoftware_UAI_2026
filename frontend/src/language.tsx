@@ -1,3 +1,5 @@
+// Contexto de idioma: une i18next, la preferencia guardada en el navegador (solo con
+// consentimiento) y profiles.language del usuario en Supabase.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import i18n from "./i18n/index.ts";
@@ -23,6 +25,11 @@ function writeStoredLang(l: Lang): void {
   }
 }
 
+/**
+ * Idioma activo (es/en) y su locale Intl. Depende de Auth (sincroniza el idioma
+ * con el perfil del usuario) y de Consent (solo lo guarda en localStorage con
+ * consentimiento). Expone `lang`, `locale` y `setLang`.
+ */
 export function LanguageProvider({ children }: { children: ReactNode }) {
   // i18n ya se inicializó con el idioma guardado o el del navegador.
   const [lang, setLangState] = useState<Lang>(() => parseLang(i18n.language) ?? "es");
@@ -35,6 +42,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const { user } = useAuth();
   const userId = user?.id ?? null;
+  // setLang lee el usuario desde un ref para no recrearse (ni re-renderizar consumidores) al cambiar la sesión.
   const userIdRef = useRef<string | null>(userId);
   useEffect(() => {
     userIdRef.current = userId;
@@ -111,6 +119,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
+/** Acceso al contexto de idioma; lanza error si se usa fuera de LanguageProvider. */
 export function useLanguage(): LanguageValue {
   const ctx = useContext(LanguageContext);
   if (!ctx) throw new Error("useLanguage debe usarse dentro de LanguageProvider");

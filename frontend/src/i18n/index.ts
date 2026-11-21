@@ -1,3 +1,5 @@
+// Configuración de i18next: idioma inicial según consentimiento, lo guardado y el navegador.
+// Importar este módulo inicializa i18n como efecto secundario.
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { STORAGE_KEY } from "../lib/locale.ts";
@@ -20,6 +22,7 @@ void i18n.use(initReactI18next).init({
   resources: { es: { translation: es }, en: { translation: en } },
   lng: startLang(readDecision(), leerStorage(), navigator.language),
   fallbackLng: "es",
+  // React ya escapa el texto al renderizar; escapar aquí lo haría dos veces.
   interpolation: { escapeValue: false },
   initAsync: false,
 });

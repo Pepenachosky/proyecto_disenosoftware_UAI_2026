@@ -1,9 +1,11 @@
+// Cliente único de Supabase para todo el frontend.
 import { createClient } from "@supabase/supabase-js";
 import { gatedStorage } from "./consent-storage";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
+// Falla al cargar el módulo para que una configuración incompleta se note de inmediato.
 if (!url || !key) {
   throw new Error(
     "Faltan VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY en frontend/.env",

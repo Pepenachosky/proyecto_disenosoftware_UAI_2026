@@ -13,6 +13,8 @@ import {
 } from "../lib/offers.ts";
 import { SaveButton } from "./save-button.tsx";
 
+// Panel de cotización de la ficha: mejor precio vigente, ahorro frente a la tienda más
+// cara, enlace a esa oferta y botón de guardar. `children` es la lista de tiendas.
 export function QuotePanel(
   { group, now, children }: { group: GroupWithOffers; now: Date; children: ReactNode },
 ) {
@@ -21,6 +23,7 @@ export function QuotePanel(
   const { bestPrice, bestStoreId, storeCount } = summarize(group, now);
   const spread = priceSpread(group, now);
   const storeName = STORES.find((s) => s.id === bestStoreId)?.name ?? t("store.fallbackName");
+  // Enlace a la oferta concreta del mejor precio; sin ofertas vigentes no hay botón.
   const url = bestOffer(sortOffers(group.offers, now), now, { bestPrice, bestStoreId })?.url ?? null;
 
   return (
@@ -32,6 +35,7 @@ export function QuotePanel(
               <span className="quote-label">{t("product.bestToday")}</span>
               <span className="quote-price mono">{formatClp(bestPrice, locale)}</span>
               <span className="quote-store">{t("product.atStore", { store: storeName })}</span>
+              {/* El ahorro solo aparece con al menos dos precios vigentes distintos. */}
               {spread && (
                 <span className="quote-savings">
                   {t("product.savings", { price: formatClp(spread.savings, locale) })}
@@ -39,6 +43,7 @@ export function QuotePanel(
               )}
             </>
           )
+          // Sin ofertas vigentes no hay mejor precio.
           : <span className="quote-none">{t("card.outOfStock")}</span>}
         <div className="quote-actions">
           {url && (

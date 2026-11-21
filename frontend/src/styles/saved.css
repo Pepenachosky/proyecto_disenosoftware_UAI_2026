@@ -23,6 +23,7 @@
   scrollbar-color: var(--text-muted) transparent;
 }
 
+/* La tabla crece con las columnas y como mínimo ocupa el contenedor */
 .compare {
   width: auto;
   min-width: 100%;
@@ -33,6 +34,7 @@
   vertical-align: middle;
 }
 
+/* Sin borde en la última fila: el contenedor ya tiene el suyo */
 .compare tbody tr:last-child th,
 .compare tbody tr:last-child td {
   border-bottom: none;
@@ -46,12 +48,14 @@
   color: var(--text-muted);
 }
 
+/* Celda de la tienda más barata de cada producto */
 .compare td.cheapest,
 .compare .cheapest {
   color: var(--accent);
   font-weight: 700;
 }
 
+/* Etiqueta Más barato, en el producto con el menor mejor precio */
 .compare-tag {
   display: inline-block;
   margin-left: var(--space-2);
@@ -66,6 +70,7 @@
   white-space: nowrap;
 }
 
+/* Precio sin datos recientes en gris, en rojo si además está agotado */
 .compare span.stale {
   color: var(--text-muted);
 }
@@ -74,6 +79,8 @@
   color: var(--err);
 }
 
+/* Columna de nombres de fila fija al deslizar de lado. Fondo opaco para tapar
+   las celdas que pasan por debajo y z-index 1 para quedar sobre ellas. */
 .compare th:first-child,
 .compare td:first-child {
   position: sticky;
@@ -88,6 +95,7 @@
   z-index: 2;
 }
 
+/* Encabezado de cada producto: hueco a la derecha para el botón de quitar */
 .compare-head {
   position: relative;
   min-width: 140px;
@@ -107,6 +115,7 @@
   object-fit: contain;
 }
 
+/* Botón de quitar (ícono X) en la esquina del encabezado */
 .compare-remove {
   position: absolute;
   top: var(--space-1);
@@ -122,6 +131,7 @@
   cursor: default;
 }
 
+/* Área táctil de 44 px para el botón de quitar */
 .compare-remove {
   display: inline-flex;
   align-items: center;

@@ -20,6 +20,7 @@ on:
 jobs:
   scrapear:
     runs-on: ubuntu-latest
+    # Holgado a propósito: los crawl-delay (10 s en Winpy) hacen lenta la corrida.
     timeout-minutes: 120
     defaults:
       run:
@@ -29,14 +30,19 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      # Las tareas de deno.json corren con --env-file=.env, así que el archivo debe existir.
       - name: Crear scraper/.env desde los secrets
         run: |
           {
             echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}"
             echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           } > .env
+      # Una regresión en el código (no un cambio del sitio: las pruebas usan HTML/JSON
+      # de ejemplo) detiene el job aquí, antes de escribir en Supabase.
       - name: Pruebas de los scrapers y el agrupador
         run: deno task test
+      # Ojo: en deno.json las tres categorías van unidas con ";", así que este paso
+      # solo falla si falla la última categoría (gpu).
       - name: Scrapers de ${{ inputs.tienda }}
         run: deno task scrape:${{ inputs.tienda }}
 
@@ -44,6 +50,7 @@ jobs:
   # ejecutan dos a la vez: el grupo de concurrencia "agrupar" lo comparten las
   # tres tiendas. Si hay uno corriendo y llegan otros dos, GitHub cancela el que
   # esperaba y deja el último; no se pierde nada, porque ese último agrupa todo.
+  # needs: si el scrape de esta tienda falla, no se agrupa en esta corrida.
   agrupar:
     needs: scrapear
     runs-on: ubuntu-latest

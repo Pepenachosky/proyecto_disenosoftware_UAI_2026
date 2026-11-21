@@ -1,3 +1,5 @@
+// Contexto de guardados: productos que el usuario marcó para comparar en /guardados.
+// Solo existe con sesión iniciada; los datos viven en Supabase, no en el navegador.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./auth";
@@ -12,8 +14,14 @@ type SavedValue = {
 };
 
 const SavedContext = createContext<SavedValue | null>(null);
+// Conjunto vacío compartido: referencia estable para no invalidar memos sin sesión.
 const EMPTY = new Set<number>();
 
+/**
+ * Ids de los grupos de producto guardados por el usuario (tabla saved_products, filtrada por RLS).
+ * Depende de Auth: sin sesión `ids` está vacío. Expone `toggle` con
+ * actualización optimista y `pending` para deshabilitar botones en curso.
+ */
 export function SavedProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
@@ -21,10 +29,12 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   // de otro usuario no se muestran y "loading" se deriva sin efectos extra.
   const [loaded, setLoaded] = useState<{ userId: string; ids: Set<number> } | null>(null);
   const [pending, setPending] = useState<Set<number>>(EMPTY);
+  // Copia síncrona de `pending`: evita dos toggles del mismo grupo antes del re-render.
   const pendingRef = useRef(new Set<number>());
 
   const ids = userId && loaded?.userId === userId ? loaded.ids : EMPTY;
   const loading = userId !== null && loaded?.userId !== userId;
+  // toggle lee los ids actuales desde un ref para no depender de `ids` y seguir estable.
   const idsRef = useRef(ids);
   useEffect(() => {
     idsRef.current = ids;
@@ -35,6 +45,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     let active = true;
     fetchSavedIds()
       .then((list) => active && setLoaded({ userId, ids: new Set(list) }))
+      // Si falla, se marca como cargado (vacío) para no dejar la UI en "cargando" para siempre.
       .catch(() => active && setLoaded({ userId, ids: new Set() }));
     return () => {
       active = false;
@@ -58,6 +69,8 @@ export function SavedProvider({ children }: { children: ReactNode }) {
           else next.delete(groupId);
           return { userId, ids: next };
         });
+      // Optimista: se pinta el cambio ya y se revierte si la escritura falla.
+      // apply ignora el resultado si entretanto cambió el usuario.
       markPending(true);
       apply(!had);
       try {
@@ -76,6 +89,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   return <SavedContext.Provider value={value}>{children}</SavedContext.Provider>;
 }
 
+/** Acceso al contexto de guardados; lanza error si se usa fuera de SavedProvider. */
 export function useSaved(): SavedValue {
   const ctx = useContext(SavedContext);
   if (!ctx) throw new Error("useSaved debe usarse dentro de SavedProvider");

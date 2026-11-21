@@ -1,4 +1,5 @@
 -- Pruebas tras reejecutar la migración 005: no borra elecciones de idioma.
+-- Depende de que 005_test.sql deje a A con 'en' fuera de transacción.
 
 do $$ begin
   if (select language from public.profiles where id = '00000000-0000-0000-0000-0000000000a1') is distinct from 'en' then

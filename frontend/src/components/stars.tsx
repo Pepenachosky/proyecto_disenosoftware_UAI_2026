@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Star } from "lucide-react";
 
+// Estrellas de 1 a 5. Sin onChange son de solo lectura (una imagen con aria-label);
+// con onChange son un grupo de botones para puntuar (formulario de reseñas).
 export function Stars({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
   const { t } = useTranslation();
   const steps = [1, 2, 3, 4, 5];
@@ -18,6 +20,7 @@ export function Stars({ value, onChange }: { value: number; onChange?: (v: numbe
   return (
     <span className="stars" role="group" aria-label={t("stars.group")}>
       {steps.map((n) => (
+        // Solo la estrella elegida queda pressed; las anteriores se rellenan solo a la vista.
         <button
           key={n}
           type="button"

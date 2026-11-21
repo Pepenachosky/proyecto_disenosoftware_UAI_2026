@@ -6,16 +6,21 @@ import { STORES, formatClp, type Category } from "../lib/offers.ts";
 
 type Props = {
   category: Category | "all";
+  // Productos por categoría; la clave "all" es el total.
   counts: Record<string, number>;
   storeId: string;
   maxPrice: number | null;
+  // Tope del deslizador; llevarlo al tope equivale a "sin límite" (max = null).
   priceLimit: number;
   onlyInStock: boolean;
   hasFilters: boolean;
+  // Cambia un parámetro de la URL (null lo quita). `replace` reemplaza la entrada del
+  // historial en vez de apilar una nueva: el deslizador emite muchos cambios seguidos.
   onChange: (key: "cat" | "store" | "max" | "stock", value: string | null, replace?: boolean) => void;
   onClear: () => void;
 };
 
+// Lo usa el catálogo: los filtros viven en la URL y este panel solo emite cambios.
 // Controles de filtro; no sabe si está en la barra lateral o en el diálogo.
 export function FiltersPanel({
   category,
@@ -32,6 +37,7 @@ export function FiltersPanel({
   const { locale } = useLanguage();
   const id = useId();
   const value = sliderValue(maxPrice, priceLimit);
+  // En el tope se muestra "sin límite" en vez de un precio.
   const unlimited = value >= priceLimit;
 
   return (
@@ -74,6 +80,7 @@ export function FiltersPanel({
 
       <section>
         <label className="filters-title" htmlFor={id + "-max"}>{t("catalog.maxPriceLabel")}</label>
+        {/* aria-valuetext: el lector anuncia el precio formateado (o "sin límite") y no el número crudo. */}
         <input
           id={id + "-max"}
           type="range"
@@ -92,6 +99,7 @@ export function FiltersPanel({
 
       <section>
         <h2 className="filters-title">{t("catalog.availability")}</h2>
+        {/* role="switch": se anuncia como interruptor; la pista dibujada es decorativa (aria-hidden). */}
         <label className="switch">
           <input
             type="checkbox"

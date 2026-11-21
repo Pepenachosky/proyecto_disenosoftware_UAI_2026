@@ -1,0 +1,4 @@
+-- Migración 001: vacía a propósito. El esquema inicial (stores, products,
+-- price_history y su trigger, store_branches, branch_hours, branch_stock,
+-- profiles, product_reviews, nearby_branches) se creó a mano con database.sql en
+-- el SQL Editor de Supabase; ese archivo no está en el repositorio (ver README).

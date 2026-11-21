@@ -11,6 +11,7 @@ do $$ declare c record; begin
 end $$;
 
 -- Caso: sin sesión (anon) se puede leer image_url.
+-- Basta con que la consulta no lance error de permisos.
 begin;
 set local role anon;
 do $$ begin perform image_url from public.products limit 1; end $$;

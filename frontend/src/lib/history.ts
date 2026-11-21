@@ -1,17 +1,26 @@
+// Datos del gráfico de historial de precios: un punto por día con el precio de cada tienda.
 import { isCurrent, STORES, type Offer } from "./offers.ts";
 
+/** Fila de price_history; price es null cuando la tienda no publicó precio. */
 export type HistoryRow = { product_id: number; price: number | null; scraped_at: string };
+/**
+ * Un día del gráfico (AAAA-MM-DD en UTC) con el precio de cada tienda que tuvo dato ese día.
+ * `t` (medianoche UTC en ms) no lo llena este módulo: lo agrega price-chart.tsx para el eje X.
+ */
 export type ChartPoint = { date: string; t?: number } & Partial<
   Record<"winpy" | "pcexpress" | "spdigital", number>
 >;
+/** Precio actual de una tienda y el día en que se dibuja como último punto. */
 export type CurrentPrice = { storeId: number; price: number; date: string };
 type Slug = "winpy" | "pcexpress" | "spdigital";
 
+// Mismo criterio de día (UTC) que scraped_at.slice(0, 10) en buildChartData.
 const utcDay = (iso: string | Date) => new Date(iso).toISOString().slice(0, 10);
 
 // price_history solo guarda filas cuando cambia el precio o el stock, así que
 // la línea de cada tienda se alarga hasta su precio actual: hoy si la oferta
 // está vigente, o el último día en que se vio si no.
+// Con varias ofertas vigentes de la misma tienda usa la más barata; sin precio no aparece.
 export function currentPrices(offers: Offer[], now: Date): CurrentPrice[] {
   const out: CurrentPrice[] = [];
   for (const s of STORES) {
@@ -27,6 +36,12 @@ export function currentPrices(offers: Offer[], now: Date): CurrentPrice[] {
   return out;
 }
 
+/**
+ * Junta el historial de todas las ofertas del grupo en puntos diarios.
+ * storeOfProduct traduce product_id → store_id; las filas de tiendas
+ * desconocidas o sin precio se descartan. Si una tienda tiene varias filas el
+ * mismo día, queda la más reciente. Los días vienen ordenados.
+ */
 export function buildChartData(
   rows: HistoryRow[],
   storeOfProduct: Map<number, number>,
@@ -51,6 +66,7 @@ export function buildChartData(
   // El precio actual es el último punto de su tienda (gana sobre el historial de ese día).
   for (const c of current ?? []) {
     const slug = slugOf.get(c.storeId);
+    // "\uFFFF" es mayor que cualquier marca de tiempo ISO, así que siempre gana en put().
     if (slug) put(c.date, slug, c.price, "￿");
   }
   return [...days.keys()].sort().map((date) => {

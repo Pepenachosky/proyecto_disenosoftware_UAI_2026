@@ -1,3 +1,5 @@
+// Página de producto: compara las ofertas de un grupo entre tiendas, con orden por
+// precio o por distancia (si el usuario compartió su ubicación).
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, PackageX } from "lucide-react";
@@ -21,12 +23,20 @@ import { ProductImage } from "../components/product-image.tsx";
 import { Reviews } from "../components/reviews.tsx";
 import { QuotePanel } from "../components/quote-panel.tsx";
 
+// El resultado guarda el slug que lo pidió: al navegar a otro producto, el anterior
+// no se muestra mientras llega el nuevo.
 type Result = { slug: string; group: GroupWithOffers | null; error: string | null };
 
+/**
+ * Detalle de un grupo de producto (/producto/:slug): ofertas por tienda con
+ * sucursal y distancia, cotización, historial de precios y reseñas. Depende de
+ * LocationProvider para la distancia y de data.ts para grupo y sucursales.
+ */
 export function ProductPage() {
   const { slug = "" } = useParams();
   const { t } = useTranslation();
   const [result, setResult] = useState<Result | null>(null);
+  // "Ahora" fijo al montar: estado de ofertas y horarios coherentes en toda la página.
   const [now] = useState(() => new Date());
   const { location, start } = useUserLocation();
   const [branches, setBranches] = useState<Branch[] | null>(null);
@@ -44,6 +54,7 @@ export function ProductPage() {
     if (hasOffers) start();
   }, [hasOffers, start]);
 
+  // Si fallan las sucursales la página sigue: solo faltan dirección, horario y distancia.
   useEffect(() => {
     let active = true;
     fetchBranches().then(
@@ -55,6 +66,8 @@ export function ProductPage() {
     };
   }, []);
 
+  // Una sucursal por tienda. Map conserva el último valor de cada clave, por eso se
+  // invierte la lista: así gana la primera sucursal de cada tienda.
   const branchByStore = useMemo(
     () => new Map((branches ?? []).map((b) => [b.store_id, b] as const).reverse()),
     [branches],
@@ -70,6 +83,7 @@ export function ProductPage() {
 
   useEffect(() => {
     let active = true;
+    // `active` descarta la respuesta si el slug cambió antes de que llegara.
     fetchGroup(slug)
       .then((group) => active && setResult({ slug, group, error: null }))
       .catch((e) =>
@@ -122,6 +136,7 @@ export function ProductPage() {
                 <button type="button" aria-pressed={effectiveSort === "precio"} onClick={() => setSortBy("precio")}>
                   {t("product.sortPrice")}
                 </button>
+                {/* Ordenar por distancia solo tiene sentido con GPS y sucursales con coordenadas. */}
                 {point && distanceByStore.size > 0 && (
                   <button
                     type="button"
@@ -152,6 +167,7 @@ export function ProductPage() {
 
         <div className="product-rest">
           <PriceChart offers={group.offers} />
+          {/* key: al cambiar de producto se reinicia el estado interno de las reseñas. */}
           <Reviews key={group.id} groupId={group.id} />
         </div>
       </div>

@@ -8,15 +8,20 @@
 begin;
 
 -- Una sola sucursal por tienda.
+-- Además es el destino del "on conflict (store_id)" de la carga de abajo,
+-- que así actualiza en vez de duplicar al reejecutar.
 create unique index if not exists store_branches_store_id_key
   on public.store_branches (store_id);
 
 -- PC Express cierra a almorzar: dos tramos el mismo día. La clave primaria
 -- incluye opens para permitirlo (la tabla estaba vacía antes de esta migración).
+-- drop + add para poder reejecutar (supone que la clave se llama branch_hours_pkey).
 alter table public.branch_hours drop constraint if exists branch_hours_pkey;
 alter table public.branch_hours add constraint branch_hours_pkey
   primary key (branch_id, weekday, opens);
 
+-- Sucursal de cada tienda, unida por slug (datos y fuentes en
+-- docs/migracion-004.md). Una tienda que no exista en stores se omite (join).
 insert into public.store_branches (store_id, name, address, city, lat, lng, phone)
 select s.id, v.name, v.address, v.city, v.lat, v.lng, v.phone
 from (values
@@ -38,6 +43,7 @@ on conflict (store_id) do update set
 delete from public.branch_hours
 where branch_id in (select id from public.store_branches);
 
+-- Cada fila es un tramo (weekday, opens, closes) de la sucursal de la tienda.
 insert into public.branch_hours (branch_id, weekday, opens, closes)
 select b.id, v.weekday, v.opens::time, v.closes::time
 from (values
@@ -76,6 +82,10 @@ do $$ declare p record; begin
     execute format('drop policy %I on public.%I', p.policyname, p.tablename);
   end loop; end $$;
 
+-- Lectura pública: la tarjeta de tienda del frontend muestra dirección,
+-- distancia y horario sin sesión. Los grants de escritura que Supabase da por
+-- defecto quedan sin efecto porque no hay política que los permita; los datos
+-- se cambian editando esta migración.
 drop policy if exists store_branches_read on public.store_branches;
 create policy store_branches_read on public.store_branches
   for select to anon, authenticated using (true);

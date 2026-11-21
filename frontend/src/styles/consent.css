@@ -1,6 +1,8 @@
 /* Aviso de consentimiento, pie de página y política de privacidad */
+/* --- Aviso de consentimiento (flota abajo, centrado) --- */
 .consent-banner {
   position: fixed;
+  /* Por encima de la barra de navegación (z-index 10) */
   z-index: 20;
   left: var(--space-4);
   right: var(--space-4);
@@ -34,6 +36,7 @@
 .privacy a {
   color: var(--accent);
 }
+/* Cerrar: botón de solo ícono con 44 px táctiles */
 .consent-close {
   display: inline-flex;
   align-items: center;
@@ -61,11 +64,13 @@
   box-shadow: var(--shadow-glow);
 }
 
+/* --- Texto junto al inicio de sesión cuando aún no hay consentimiento --- */
 .login-consent p {
   margin: 0 0 var(--space-2);
   color: var(--text-muted);
 }
 
+/* --- Pie de página --- */
 .site-footer {
   display: flex;
   justify-content: center;
@@ -76,6 +81,7 @@ body:has(.consent-banner) .site-footer {
   padding-bottom: 240px;
 }
 
+/* Celular: aviso más pegado a los bordes y botones en dos columnas iguales */
 @media (max-width: 480px) {
   .consent-banner {
     left: var(--space-2);
@@ -115,6 +121,8 @@ body:has(.consent-banner) .site-footer {
 }
 /* En pantallas estrechas, cada fila es un bloque con la etiqueta de cada dato */
 @media (max-width: 600px) {
+  /* Encabezado oculto a la vista (sigue para lectores de pantalla), cada celda
+     muestra su etiqueta desde data-label. */
   .storage-table thead {
     position: absolute;
     width: 1px;

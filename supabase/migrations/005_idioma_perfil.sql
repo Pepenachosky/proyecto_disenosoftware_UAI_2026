@@ -7,6 +7,7 @@ begin;
 
 -- En la base real language es NOT NULL; null significa "todavía no eligió".
 -- Quitarlo es idempotente.
+-- Debe ir antes del bloque siguiente, que pone language en null.
 alter table public.profiles alter column language drop not null;
 
 -- Quita el default 'es' y deja en null los idiomas existentes, pero solo la
@@ -22,6 +23,9 @@ do $$ begin
 end $$;
 
 -- language solo admite 'es', 'en' o null.
+-- null pasa el check (la comparación da desconocido). Va en un DO porque add
+-- constraint no admite "if not exists". Un idioma nuevo exige una migración
+-- que amplíe este check.
 do $$ begin
   if not exists (select 1 from pg_constraint
                  where conrelid = 'public.profiles'::regclass
@@ -33,6 +37,8 @@ end $$;
 
 -- Permisos: authenticated solo lee y cambia la columna language.
 -- anon no tiene acceso. El trigger de registro es security definer.
+-- revoke all primero quita los grants por defecto de Supabase (anon y
+-- authenticated tenían todo). El update por columna impide tocar display_name e id.
 revoke all on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
 grant update (language) on public.profiles to authenticated;
@@ -41,6 +47,9 @@ grant update (language) on public.profiles to authenticated;
 -- "perfil propio: leer" no se toca.
 drop policy if exists "perfil propio: editar" on public.profiles;
 drop policy if exists profiles_update_own_language on public.profiles;
+-- using: solo la fila propia es visible para editar; with check: la fila
+-- resultante debe seguir siendo propia (redundante con el grant por columna,
+-- pero deja explícito el invariante).
 create policy profiles_update_own_language on public.profiles
   for update to authenticated
   using (id = auth.uid())

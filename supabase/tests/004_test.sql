@@ -50,6 +50,7 @@ do $$ declare cols text; begin
 end $$;
 
 -- Caso: existe un índice único sobre store_branches(store_id).
+-- indnatts = 1: un índice compuesto no garantizaría una sucursal por tienda.
 do $$ begin
   if not exists (
     select 1 from pg_index i

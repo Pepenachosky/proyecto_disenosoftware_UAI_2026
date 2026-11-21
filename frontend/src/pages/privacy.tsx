@@ -1,3 +1,5 @@
+// Página de política de privacidad y cookies: qué datos se tratan, qué se guarda en el
+// navegador y desde dónde el usuario puede aceptar o rechazar en cualquier momento.
 import { useTranslation } from "react-i18next";
 import { useConsent } from "../consent.tsx";
 import { useLanguage } from "../language.tsx";
@@ -5,10 +7,15 @@ import { CONSENT_KEY, CONSENT_VERSION } from "../lib/consent.ts";
 import { STORAGE_KEY } from "../lib/locale.ts";
 import { CONTACT_EMAIL, POLICY_UPDATED } from "../lib/privacy-policy.ts";
 
+// Enlace mailto al contacto del responsable (se repite en dos secciones).
 function Mail() {
   return <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 }
 
+/**
+ * Política de privacidad y cookies (/privacidad). Lee la decisión de ConsentProvider
+ * para mostrarla y permite cambiarla aquí mismo; el locale da formato a la fecha.
+ */
 export function PrivacyPage() {
   const { t } = useTranslation();
   const { locale } = useLanguage();
@@ -16,6 +23,8 @@ export function PrivacyPage() {
   // Mediodía UTC: la fecha no cambia de día por la zona horaria.
   const date = new Date(`${POLICY_UPDATED}T12:00:00Z`).toLocaleDateString(locale, { dateStyle: "long" });
 
+  // Tabla de almacenamiento: las claves de consentimiento e idioma salen de las mismas
+  // constantes que usa el código, para no desincronizarse; los textos vienen de i18n.
   const rows = [
     { name: CONSENT_KEY, ...t("privacy.storage.consent", { returnObjects: true }) },
     { name: STORAGE_KEY, ...t("privacy.storage.lang", { returnObjects: true }) },
@@ -103,6 +112,7 @@ export function PrivacyPage() {
             : t("privacy.choice.undecided")}
       </p>
       <p className="muted">{t("privacy.choice.hint")}</p>
+      {/* aria-pressed marca la opción vigente; mismos botones que el aviso de consentimiento. */}
       <div className="consent-actions privacy-actions" role="group" aria-labelledby="tu-eleccion">
         <button
           type="button"

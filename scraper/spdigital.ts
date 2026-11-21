@@ -9,6 +9,7 @@
 
 const BASE = "https://www.spdigital.cl";
 const DELAY_MS = 5_000; // crawl-delay de SP Digital (robots.txt)
+// Se identifica como bot del proyecto (no se hace pasar por un navegador).
 const USER_AGENT = "ComparadorPreciosUniversidad/0.1 (proyecto academico)";
 
 type Category = "cpu" | "gpu" | "ram";
@@ -68,7 +69,10 @@ export const pageDataUrl = (path: string) => `${BASE}/page-data${path}page-data.
 const httpsOrNull = (u: unknown): string | null =>
   typeof u === "string" && u.startsWith("https://") ? u : null;
 
-/** Extrae los productos del JSON de una categoría. */
+/**
+ * Extrae los productos del JSON de una categoría. Función pura (sin red), probada en
+ * tests/spdigital_test.ts. totalPages/totalProducts sirven para avisar si faltan páginas.
+ */
 export function parseListing(
   jsonText: string,
 ): { products: ScrapedProduct[]; totalPages: number; totalProducts: number } {
@@ -91,6 +95,7 @@ export function parseListing(
       } catch { /* JSON de precios mal formado: se deja null */ }
     }
 
+    // Sin cantidad en el JSON no se asume agotado: queda null.
     const qty = it.defaultVariant?.quantityAvailable;
     const inStock = typeof qty === "number" ? qty > 0 : null;
 
@@ -99,6 +104,7 @@ export function parseListing(
       it.media?.filter((m) => m.type === "IMAGE").map((m) => httpsOrNull(m.limitedUrl)).find((u) => u) ??
         httpsOrNull(it.thumbnail?.url);
 
+    // La página pública del producto es /<slug>/; esa URL es la clave (store_id + url) en la BD.
     products.push({ name, url: new URL(`/${it.slug}/`, BASE).href, price, inStock, imageUrl });
   }
 
@@ -111,6 +117,7 @@ export function parseListing(
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Descarga el JSON como texto. 403/429/503 se tratan como bloqueo; otro no 2xx, como error. */
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
   if ([403, 429, 503].includes(res.status)) {
@@ -136,7 +143,11 @@ async function scrapeCategory(path: string): Promise<ScrapedProduct[]> {
   return products;
 }
 
-/** Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza. */
+/**
+ * Guarda en Supabase (REST). Si ya existe (store_id + url) solo actualiza.
+ * Siempre renueva last_seen_at: el frontend da por vigente una oferta vista en los
+ * últimos 3 días, así que los productos que dejan de aparecer caducan solos.
+ */
 async function save(items: ScrapedProduct[], category: Category) {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -178,6 +189,7 @@ async function save(items: ScrapedProduct[], category: Category) {
   console.log(`Guardados ${rows.length} productos (${category}).`);
 }
 
+// Sin argumento recorre las tres categorías; `deno task scrape:spdigital` las lanza de a una.
 if (import.meta.main) {
   const arg = Deno.args[0] as Category | undefined;
   const cats = (arg ? [arg] : Object.keys(CATEGORIES)) as Category[];
@@ -198,6 +210,7 @@ if (import.meta.main) {
     console.log(`\n${cat}: ${items.length} productos`);
     for (const p of items.slice(0, 5)) console.log(`  - ${p.name} | $${p.price} | stock: ${p.inStock} | img: ${p.imageUrl ? "sí" : "no"}`);
     await save(items, cat);
+    // Pausa entre categorías (no tras la última, para no alargar la corrida en vano).
     if (cats.indexOf(cat) < cats.length - 1) await sleep(DELAY_MS);
   }
 }

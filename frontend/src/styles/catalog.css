@@ -1,4 +1,5 @@
 /* Catálogo: barra lateral de filtros, diálogo, cuadrícula y paginador */
+/* --- Piezas genéricas: tabla desplazable, stock y botón con aspecto de enlace --- */
 .table-scroll {
   overflow-x: auto;
 }
@@ -49,6 +50,8 @@ td a {
   }
 }
 
+/* Panel lateral de vidrio fijo al bajar. Si es más alto que la ventana, se
+   desplaza por dentro en vez de quedar cortado. */
 .filters-side {
   position: sticky;
   top: var(--sticky-top);
@@ -66,6 +69,7 @@ td a {
   min-width: 0;
 }
 
+/* --- Buscador y barra de herramientas --- */
 .search,
 .field {
   font-size: 1rem;
@@ -105,6 +109,7 @@ td a {
   max-width: 100%;
 }
 
+/* Botón que abre el diálogo de filtros */
 .filters-open {
   flex: none;
   white-space: nowrap;
@@ -170,6 +175,7 @@ td a {
   gap: var(--space-1);
 }
 
+/* Categorías: la activa se rellena con el acento */
 .cat-btn {
   display: flex;
   justify-content: space-between;
@@ -207,6 +213,7 @@ td a {
   color: var(--on-accent);
 }
 
+/* Barra de precio máximo: accent-color tiñe el control nativo */
 .range {
   width: 100%;
   accent-color: var(--accent);
@@ -219,6 +226,8 @@ td a {
   color: var(--text);
 }
 
+/* Interruptor Solo con stock: el checkbox real queda invisible encima de la pista
+   dibujada, así conserva teclado, clic y lectores de pantalla. */
 .switch {
   display: flex;
   align-items: center;
@@ -248,6 +257,7 @@ td a {
   transition: background var(--dur-fast), border-color var(--dur-fast);
 }
 
+/* Perilla del interruptor */
 .switch-track::after {
   content: "";
   position: absolute;
@@ -270,6 +280,7 @@ td a {
   transform: translateX(20px);
 }
 
+/* El foco del checkbox invisible se dibuja en la pista */
 .switch input:focus-visible + .switch-track {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -297,12 +308,14 @@ td a {
   justify-content: center;
 }
 
+/* Fondo del diálogo modal: oscurece y desenfoca la página */
 .filters-dialog::backdrop {
   background: var(--backdrop);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
+/* Transparencia reducida: el fondo oscurece sin desenfoque */
 @media (prefers-reduced-transparency: reduce) {
   .filters-dialog::backdrop {
     -webkit-backdrop-filter: none;
@@ -315,6 +328,7 @@ td a {
   animation: dialog-in var(--dur) ease-out;
 }
 
+/* Solo se define el inicio, termina en el estado normal del panel */
 @keyframes dialog-in {
   from {
     opacity: 0;
@@ -322,6 +336,7 @@ td a {
   }
 }
 
+/* En celular, hoja inferior con las esquinas de arriba redondeadas */
 .dialog-panel {
   width: 100%;
   max-height: 85dvh;
@@ -335,6 +350,7 @@ td a {
   box-shadow: var(--shadow-1);
 }
 
+/* Desde tablet: diálogo centrado y angosto */
 @media (width >= 640px) {
   .filters-dialog[open] {
     align-items: center;
@@ -421,6 +437,7 @@ td a {
   }
 }
 
+/* --- Tarjeta de producto (la tarjeta entera es un enlace) --- */
 .card {
   display: flex;
   flex-direction: column;
@@ -440,6 +457,7 @@ td a {
   box-shadow: var(--shadow-glow);
 }
 
+/* Marco de la imagen: las bandas que deja contain toman el fondo del marco */
 .card-frame {
   display: block;
   margin-bottom: var(--space-2);
@@ -463,6 +481,8 @@ td a {
   color: var(--accent-2);
 }
 
+/* Nombre en 2 líneas como máximo, con alto mínimo fijo para que los precios
+   queden alineados entre tarjetas. anywhere corta modelos largos sin espacios. */
 .card-name {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -502,6 +522,7 @@ td a {
   gap: var(--space-1);
 }
 
+/* Stock en verde o rojo, gris sin datos recientes (nunca el acento) */
 .card-stock.yes {
   color: var(--ok);
 }
@@ -514,6 +535,7 @@ td a {
   color: var(--text-muted);
 }
 
+/* El punto toma el color del texto de estado */
 .card-stock .dot {
   width: 8px;
   height: 8px;
@@ -521,6 +543,7 @@ td a {
   background: currentColor;
 }
 
+/* Valoración media con estrellas en el acento secundario */
 .card-rating {
   display: inline-flex;
   align-items: center;
