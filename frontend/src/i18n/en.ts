@@ -175,9 +175,9 @@ export const en: Messages = {
     },
     data: {
       title: "2. What data we process and why",
-      account: "Google account: if you sign in, we receive your name, your email and an account identifier through Supabase. They are used to identify you, show your name on your reviews and keep your saved products.",
+      account: "Google account: if you sign in, we receive your name, your email, your profile photo and an account identifier through Supabase. They are used to identify you, show your name on your reviews and keep your saved products.",
       profile: "Profile: your preferred language, so the site appears in that language on any device where you sign in.",
-      reviews: "Reviews: the rating, the comment and your name. They are public: any visitor can see them.",
+      reviews: "Reviews: the rating, the comment, the date and your name. They are public: any visitor can see them.",
       saved: "Saved products: the list of products you save. It is private: only you can see it.",
       location: "Location: if you allow it in your browser, your location is used only on your device to calculate the distance to stores. It is never sent to any server or stored.",
     },
@@ -213,7 +213,7 @@ export const en: Messages = {
     },
     third: {
       title: "4. Third-party services",
-      supabase: "Supabase: Rigly's database and authentication. It stores your account, your profile, your reviews and your saved products.",
+      supabase: "Supabase: Rigly's database and authentication. It stores your account, your profile, your reviews and your saved products and, as part of signing in, the IP address and browser of each session and a security log.",
       google: "Google Identity Services: signing in with your Google account.",
       vercel: "Vercel: hosts the site. Like any server, it may log technical data about the visit, such as the IP address, for its operation and security.",
       stores: "Stores: product images are loaded from each store's servers, and if you follow a link to a store, that visit is subject to the store's own policy.",
@@ -240,7 +240,7 @@ export const en: Messages = {
       accepted: "You currently allow Rigly to store data in this browser.",
       rejected: "You currently decline to let Rigly store data in this browser: the site works in Spanish and without signing in.",
       undecided: "You have not decided yet whether Rigly may store data in this browser.",
-      hint: "You can change your decision at any time. If you decline while signed in, you will be signed out and the page will reload.",
+      hint: "You can change your decision at any time. If you decline after having previously accepted, you will be signed out (if you were signed in) and the page will reload.",
     },
     changes: {
       title: "9. Changes to this policy",

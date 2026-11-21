@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { keysToClear, parseConsent, serializeConsent, startLang } from "./consent.ts";
+import { keysToClear, parseConsent, resolveDecision, serializeConsent, startLang, withTimeout } from "./consent.ts";
 
 Deno.test("serializeConsent y parseConsent hacen ida y vuelta", () => {
   const raw = serializeConsent("aceptado", new Date("2026-11-21T12:00:00Z"));
@@ -39,4 +39,22 @@ Deno.test("keysToClear elige idioma y sb-*, nada más", () => {
     ["idioma", "sb-", "sb-abc-auth-token"],
   );
   assertEquals(keysToClear([]), []);
+});
+
+Deno.test("resolveDecision: manda lo guardado; la memoria solo si no hay nada guardado", () => {
+  assertEquals(resolveDecision("rechazado", "aceptado"), "rechazado"); // otra pestaña rechazó
+  assertEquals(resolveDecision("aceptado", "rechazado"), "aceptado");
+  assertEquals(resolveDecision(null, "aceptado"), "aceptado"); // localStorage no guardó (modo privado)
+  assertEquals(resolveDecision(null, null), null);
+});
+
+Deno.test("withTimeout no espera más del límite", async () => {
+  const lenta = new Promise<string>((r) => setTimeout(() => r("tarde"), 200));
+  assertEquals(await withTimeout(lenta, 20), "timeout");
+  assertEquals(await withTimeout(Promise.resolve("ok"), 20), "ok");
+  await lenta; // no dejar temporizadores vivos
+});
+
+Deno.test("withTimeout convierte un rechazo en 'error'", async () => {
+  assertEquals(await withTimeout(Promise.reject(new Error("red")), 20), "error");
 });

@@ -173,9 +173,9 @@ export const es = {
     },
     data: {
       title: "2. Qué datos tratamos y para qué",
-      account: "Cuenta de Google: si inicias sesión, recibimos a través de Supabase tu nombre, tu correo y un identificador de cuenta. Sirven para identificarte, mostrar tu nombre en tus reseñas y guardar tus productos.",
+      account: "Cuenta de Google: si inicias sesión, recibimos a través de Supabase tu nombre, tu correo, tu foto de perfil y un identificador de cuenta. Sirven para identificarte, mostrar tu nombre en tus reseñas y guardar tus productos.",
       profile: "Perfil: tu idioma preferido, para que la web aparezca en ese idioma en cualquier equipo donde inicies sesión.",
-      reviews: "Reseñas: la nota, el comentario y tu nombre. Son públicas: cualquier visitante puede verlas.",
+      reviews: "Reseñas: la nota, el comentario, la fecha y tu nombre. Son públicas: cualquier visitante puede verlas.",
       saved: "Productos guardados: la lista de productos que guardas. Es privada: solo la ves tú.",
       location: "Ubicación: si das permiso al navegador, tu ubicación se usa solo en tu dispositivo para calcular la distancia a las tiendas. No se envía a ningún servidor ni se guarda.",
     },
@@ -211,7 +211,7 @@ export const es = {
     },
     third: {
       title: "4. Servicios de terceros",
-      supabase: "Supabase: base de datos y autenticación de Rigly. Guarda tu cuenta, tu perfil, tus reseñas y tus productos guardados.",
+      supabase: "Supabase: base de datos y autenticación de Rigly. Guarda tu cuenta, tu perfil, tus reseñas y tus productos guardados y, como parte del inicio de sesión, la dirección IP y el navegador de cada sesión y un registro de seguridad.",
       google: "Google Identity Services: el inicio de sesión con tu cuenta de Google.",
       vercel: "Vercel: aloja la web. Como cualquier servidor, puede registrar datos técnicos de la visita, como la dirección IP, para su funcionamiento y seguridad.",
       stores: "Tiendas: las imágenes de los productos se cargan desde los servidores de cada tienda, y si sigues un enlace a una tienda, esa visita queda sujeta a su propia política.",
@@ -238,7 +238,7 @@ export const es = {
       accepted: "Ahora mismo aceptas que Rigly guarde datos en este navegador.",
       rejected: "Ahora mismo rechazas que Rigly guarde datos en este navegador: la web funciona en español y sin iniciar sesión.",
       undecided: "Todavía no has decidido si Rigly puede guardar datos en este navegador.",
-      hint: "Puedes cambiar tu decisión cuando quieras. Si rechazas con la sesión iniciada, se cerrará la sesión y se recargará la página.",
+      hint: "Puedes cambiar tu decisión cuando quieras. Si rechazas y antes habías aceptado, se cerrará la sesión (si la tenías iniciada) y se recargará la página.",
     },
     changes: {
       title: "9. Cambios en esta política",

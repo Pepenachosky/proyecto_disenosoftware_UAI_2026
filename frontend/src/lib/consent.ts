@@ -40,3 +40,17 @@ export function startLang(
 export function keysToClear(keys: readonly string[]): string[] {
   return keys.filter((k) => k === STORAGE_KEY || k.startsWith("sb-"));
 }
+
+/** Manda lo guardado (puede venir de otra pestaña); la memoria solo cubre un localStorage que no guardó. */
+export function resolveDecision(stored: Decision | null, memory: Decision | null): Decision | null {
+  return stored ?? memory;
+}
+
+/** Espera la promesa como mucho `ms`; nunca lanza: devuelve "timeout" o "error" si no termina bien. */
+export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | "timeout" | "error"> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limit = new Promise<"timeout">((r) => {
+    timer = setTimeout(() => r("timeout"), ms);
+  });
+  return Promise.race([p.catch(() => "error" as const), limit]).finally(() => clearTimeout(timer));
+}

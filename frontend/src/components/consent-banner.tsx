@@ -8,12 +8,13 @@ import { useConsent } from "../consent.tsx";
 // Rechazar y Aceptar tienen el mismo estilo: ninguno empuja al otro.
 export function ConsentBanner() {
   const { t } = useTranslation();
-  const { decision, bannerOpen, accept, reject, close } = useConsent();
+  const { decision, bannerOpen, busy, focusSignal, accept, reject, close } = useConsent();
   const firstRef = useRef<HTMLButtonElement>(null);
 
+  // Al abrirse, y cada vez que se pulsa «Revisar preferencias» (aunque ya estuviera abierto).
   useEffect(() => {
     if (bannerOpen) firstRef.current?.focus();
-  }, [bannerOpen]);
+  }, [bannerOpen, focusSignal]);
 
   if (!bannerOpen) return null;
   return (
@@ -30,10 +31,10 @@ export function ConsentBanner() {
         {t("consent.text")} <Link to="/privacidad">{t("consent.policyLink")}</Link>
       </p>
       <div className="consent-actions">
-        <button ref={firstRef} type="button" className="consent-choice" onClick={() => void reject()}>
+        <button ref={firstRef} type="button" className="consent-choice" disabled={busy} onClick={() => void reject()}>
           {t("consent.reject")}
         </button>
-        <button type="button" className="consent-choice" onClick={accept}>
+        <button type="button" className="consent-choice" disabled={busy} onClick={accept}>
           {t("consent.accept")}
         </button>
       </div>

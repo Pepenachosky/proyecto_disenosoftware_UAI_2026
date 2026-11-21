@@ -1,17 +1,26 @@
 // Lectura y escritura de la decisión de consentimiento fuera de React: Supabase e i18n
 // se inicializan al importar sus módulos, antes de que exista ningún componente.
-import { CONSENT_KEY, keysToClear, parseConsent, serializeConsent, type Decision } from "./lib/consent.ts";
+import {
+  CONSENT_KEY,
+  keysToClear,
+  parseConsent,
+  resolveDecision,
+  serializeConsent,
+  type Decision,
+} from "./lib/consent.ts";
 
-// Decisión tomada en esta visita: sirve aunque localStorage falle (modo privado).
+// Decisión tomada en esta visita: respaldo si localStorage no la guardó (modo privado).
 let current: Decision | null = null;
 
+// Siempre se mira lo guardado primero: otra pestaña puede haber cambiado la decisión.
 export function readDecision(): Decision | null {
-  if (current) return current;
+  let stored: Decision | null = null;
   try {
-    return parseConsent(localStorage.getItem(CONSENT_KEY));
+    stored = parseConsent(localStorage.getItem(CONSENT_KEY));
   } catch {
-    return null;
+    // Sin localStorage, vale la decisión en memoria.
   }
+  return resolveDecision(stored, current);
 }
 
 export function writeDecision(d: Decision): void {

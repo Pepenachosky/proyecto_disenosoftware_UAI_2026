@@ -12,7 +12,7 @@ function Mail() {
 export function PrivacyPage() {
   const { t } = useTranslation();
   const { locale } = useLanguage();
-  const { decision, accept, reject } = useConsent();
+  const { decision, busy, accept, reject } = useConsent();
   // Mediodía UTC: la fecha no cambia de día por la zona horaria.
   const date = new Date(`${POLICY_UPDATED}T12:00:00Z`).toLocaleDateString(locale, { dateStyle: "long" });
 
@@ -107,6 +107,7 @@ export function PrivacyPage() {
         <button
           type="button"
           className="consent-choice"
+          disabled={busy}
           aria-pressed={decision === "rechazado"}
           onClick={() => void reject()}
         >
@@ -115,6 +116,7 @@ export function PrivacyPage() {
         <button
           type="button"
           className="consent-choice"
+          disabled={busy}
           aria-pressed={decision === "aceptado"}
           onClick={accept}
         >
