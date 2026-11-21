@@ -15,8 +15,11 @@ export function NavBar() {
   return (
     <nav className="nav-bar glass">
       <Link to="/" className="brand">
-        <span className="brand-mark" aria-hidden="true" />
-        <span className="brand-name">{t("common.appTitle")}</span>
+        <img
+          className="brand-logo"
+          src={compact ? "/logovertical.png" : "/logohorizontal.png"}
+          alt={t("common.appTitle")}
+        />
       </Link>
       <NavLink to="/" end>
         <LayoutGrid size={18} aria-hidden="true" />

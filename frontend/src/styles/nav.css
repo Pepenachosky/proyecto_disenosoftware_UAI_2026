@@ -32,12 +32,11 @@
   padding-left: var(--space-1);
   font-weight: 700;
 }
-.brand-mark {
-  width: 24px;
-  height: 24px;
+.brand-logo {
+  display: block;
+  height: 32px;
+  width: auto;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 .nav-count {
   display: none;
@@ -87,13 +86,8 @@
     justify-content: center;
     padding-inline: var(--space-2);
   }
-  .brand-name {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
+  .brand-logo {
+    height: 40px;
   }
   .nav-name {
     max-width: 16vw;
