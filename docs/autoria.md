@@ -667,6 +667,40 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 23: Ordenar el catálogo por reseñas
+
+**Prompt (condensado):**
+> Pedí revisar el proyecto con graphify y, usando superpowers y las skills instaladas, implementar una función para ordenar los productos según sus reseñas, para que el usuario vea los mejor valorados antes que los peores o sin valoración. Pedí una recomendación entre darle más peso a las estrellas o a la cantidad de reseñas; elegí la media ponderada (opción 3) y pedí anotar su fórmula en el README. Elegí calcularla en el navegador sin migración (enfoque A), aprobé el diseño y pedí ejecutar el plan de forma directa (sin un subagente por tarea).
+
+**Resultado obtenido:**
+- **Proceso:** consulta al grafo de conocimiento (graphify) para ubicar el orden del catálogo y las reseñas; brainstorming (superpowers) con tres criterios comparados con un ejemplo (solo estrellas, solo cantidad, media ponderada) y dos enfoques (en el navegador o con una vista en la base); diseño corto y plan de 3 tareas con TDD, ejecutadas en esta sesión; prueba en un navegador sin interfaz con reseñas simuladas (la base todavía no tiene reseñas, y no se escribió nada en Supabase); revisión final de toda la rama por un subagente, sin problemas críticos ni importantes.
+- **Fórmula:** `puntuación = (C × m + suma de estrellas) / (C + n)`, con `C = 5` y `m` la media de todas las reseñas. Desempate: más reseñas y después nombre; los productos sin reseñas van al final. Explicada con un ejemplo en la sección "Orden por valoración" del README.
+- **Commits en `dev`** (diseño: `docs/superpowers/specs/2026-11-20-orden-por-valoracion-design.md`; plan: `docs/superpowers/plans/2026-11-20-orden-por-valoracion.md`):
+  - `a009346`: diseño y plan.
+  - `c2a5ac0`: lógica pura de la media ponderada y el orden (`frontend/src/lib/ratings.ts`, con pruebas en `ratings.test.ts`).
+  - `fa56d9d`: `fetchRatings()` en `data.ts` (solo `group_id, rating`, con caché que se marca como desactualizada al escribir o borrar una reseña) y la opción "Mejor valorados" (`?sort=rating`) en el catálogo. Si falla la descarga de reseñas, el catálogo se muestra igual, sin notas.
+  - `678cee7`: la tarjeta muestra la media real y la cantidad ("★ 4,8 (40)") cuando hay reseñas; sección del README con la fórmula.
+
+**Decisiones propias:**
+- Mostrar primero los mejor valorados y al final los peores y los sin valoración.
+- Media ponderada (bayesiana) en vez de solo estrellas o solo cantidad.
+- Calcularla en el navegador, sin migración (enfoque A).
+- Anotar la fórmula en el README.
+- Ejecución directa del plan, con una revisión final.
+
+**Supuestos del asistente por confirmar:**
+- `C = 5` (constante `PRIOR_WEIGHT` en `ratings.ts`).
+- Desempate por cantidad de reseñas y después por nombre.
+- La tarjeta no muestra nada cuando el producto no tiene reseñas.
+- Las notas se descargan aparte del catálogo, con su propia caché; al volver tras reseñar, se ve el orden anterior y cambia alrededor de un segundo después.
+- Reseñas de otros usuarios no se ven hasta recargar la página (igual que el catálogo).
+
+**Pendiente de verificar:**
+- Con sesión y reseñas reales: dejar, editar y borrar una reseña, volver al catálogo y ver que el orden cambia.
+- Detalles menores de la revisión: desempate afectado por redondeo cuando dos productos tienen media igual a `m`; formato de la media repetido en `reviews.tsx` y `formatRating`; comprobación redundante en `product-card.tsx`.
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -703,6 +737,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [ ] El botón de Google no cambia de idioma con la interfaz (el script de Google lo decide); ver más adelante.
 - [ ] Hacer las verificaciones pendientes del rediseño visual (Prompt 21).
 - [ ] Probar los tres workflows de scraping (Prompt 22) lanzándolos a mano desde *Actions* después del merge a `main`.
+- [x] Ordenar el catálogo por "Mejor valorados" con media ponderada (Prompt 23).
+- [ ] Probar el orden por valoración con reseñas reales y resolver los detalles menores de la revisión (Prompt 23).
 
 ---
 
