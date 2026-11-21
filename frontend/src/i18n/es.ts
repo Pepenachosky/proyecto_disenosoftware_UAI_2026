@@ -150,6 +150,18 @@ export const es = {
     anonymous: "Usuario",
     loginFailed: "No se pudo iniciar sesión: {{message}}",
   },
+  consent: {
+    title: "Datos en tu navegador",
+    text: "Rigly puede guardar en este navegador tu idioma y tu sesión de Google. Si lo rechazas, la web funciona en español y sin iniciar sesión.",
+    policyLink: "Política de privacidad y cookies",
+    accept: "Aceptar",
+    reject: "Rechazar",
+    loginNeedsConsent: "Para iniciar sesión, acepta guardar datos en este navegador.",
+    review: "Revisar preferencias",
+  },
+  footer: {
+    privacy: "Privacidad y cookies",
+  },
 };
 
 export type Messages = typeof es;

@@ -49,7 +49,7 @@ export function NavBar() {
             )}
           </>
         ) : (
-          <LoginButton size="medium" type={compact ? "icon" : "standard"} />
+          <LoginButton size="medium" type={compact ? "icon" : "standard"} hideWithoutConsent />
         )}
       </div>
     </nav>

@@ -5,6 +5,8 @@ import { LanguageProvider } from "./language";
 import { SavedProvider } from "./saved";
 import { LocationProvider } from "./location";
 import { NavBar } from "./components/nav-bar";
+import { SiteFooter } from "./components/site-footer";
+import { ConsentBanner } from "./components/consent-banner";
 import { Catalog } from "./pages/catalog";
 import { ProductPage } from "./pages/product";
 import { NotFound } from "./pages/not-found";
@@ -26,6 +28,8 @@ export default function App() {
                   <Route path="/guardados" element={<SavedPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <SiteFooter />
+                <ConsentBanner />
               </LocationProvider>
             </SavedProvider>
           </LanguageProvider>

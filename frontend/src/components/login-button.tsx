@@ -1,10 +1,29 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { googleIdentity } from "../google";
 import { useLanguage } from "../language.tsx";
+import { useConsent } from "../consent.tsx";
 
+type Props = { size?: "medium" | "large"; type?: "standard" | "icon" };
+
+// Sin consentimiento aceptado no se carga el script de Google (deja cookies):
+// en su lugar se explica por qué y se ofrece volver a abrir el aviso.
 export function LoginButton(
-  { size = "large", type = "standard" }: { size?: "medium" | "large"; type?: "standard" | "icon" },
+  { hideWithoutConsent = false, ...props }: Props & { hideWithoutConsent?: boolean },
 ) {
+  const { t } = useTranslation();
+  const { decision, reopen } = useConsent();
+  if (decision === "aceptado") return <GoogleButton {...props} />;
+  if (hideWithoutConsent) return null;
+  return (
+    <div className="login-consent">
+      <p>{t("consent.loginNeedsConsent")}</p>
+      <button type="button" onClick={reopen}>{t("consent.review")}</button>
+    </div>
+  );
+}
+
+function GoogleButton({ size = "large", type = "standard" }: Props) {
   const { lang } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
 

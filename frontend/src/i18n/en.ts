@@ -152,4 +152,16 @@ export const en: Messages = {
     anonymous: "User",
     loginFailed: "Could not sign in: {{message}}",
   },
+  consent: {
+    title: "Data in your browser",
+    text: "Rigly can store your language and your Google session in this browser. If you decline, the site works in Spanish and without signing in.",
+    policyLink: "Privacy and cookie policy",
+    accept: "Accept",
+    reject: "Decline",
+    loginNeedsConsent: "To sign in, allow data to be stored in this browser.",
+    review: "Review preferences",
+  },
+  footer: {
+    privacy: "Privacy and cookies",
+  },
 };
