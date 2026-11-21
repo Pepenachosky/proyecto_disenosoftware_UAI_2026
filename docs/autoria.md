@@ -755,6 +755,30 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 
 ---
 
+## Prompt 26: Política de privacidad y cookies
+
+**Prompt (condensado):**
+> Pregunté, usando el grafo (graphify), si la web tenía política de cookies (no la tenía). Después pedí, usando superpowers, añadir una política de privacidad y cookies y un aviso que pregunte si se pueden guardar datos en el navegador; si se rechaza, la web usa español y no hay sesión iniciada.
+
+**Resultado obtenido:**
+- **Proceso:** consulta al grafo y búsqueda en el código (no había cookies propias, pero sí `localStorage` para el idioma y la sesión de Supabase, y el script de Google pone cookies en su dominio); brainstorming (superpowers) con revisión del diseño por un subagente; plan de 7 tareas con TDD ejecutado en esta sesión; verificación en Firefox con Playwright (39 comprobaciones: primera visita, rechazar, aceptar, rechazar después de aceptar, datos antiguos, valor corrupto y capturas a 375 px y 1280 px en claro y oscuro).
+- **Diseño:** `docs/superpowers/specs/2026-11-21-privacidad-cookies-design.md`; **plan:** `docs/superpowers/plans/2026-11-21-privacidad-cookies.md`.
+- **Código:** lógica pura `frontend/src/lib/consent.ts` (con pruebas), `consent-storage.ts` (Supabase solo usa `localStorage` con consentimiento), `consent.tsx` (proveedor), aviso, pie de página, página `/privacidad` en español e inglés, y el botón de Google sustituido por «Revisar preferencias» sin consentimiento.
+
+**Decisiones propias:**
+- Aviso con dos botones de igual peso, Aceptar y Rechazar (sin opción «Configurar»).
+- Implementación propia con un módulo de consentimiento, sin librerías externas de banners.
+- Responsable: «Rigly, proyecto de la asignatura de Diseño de Software de la Universidad Adolfo Ibáñez»; contacto `pedmoya@alumnos.uai.cl`.
+- Aceptar las propuestas del asistente: guardar la decisión, poder cambiar a inglés durante la visita tras rechazar (sin guardarlo), cerrar sesión y borrar lo guardado al rechazar después de aceptar, y un pie de página con el enlace a la política.
+
+**Supuestos del asistente por confirmar:**
+- Sin decidir: idioma del navegador, sin cargar Google ni mostrar el botón de inicio de sesión.
+- Lo guardado antes del aviso se ignora hasta decidir y se borra al rechazar.
+- Las transferencias internacionales se describen de forma genérica (sin nombrar la región de Supabase).
+- Marco legal: Ley 19.628 reformada por la Ley 21.719 (Chile).
+
+---
+
 ## Por hacer (estado actual)
 
 - [x] Precio y stock en los scrapers de Winpy, PC Express y SP Digital (SP Digital probado con procesadores).
@@ -796,6 +820,8 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - [x] Guardados: una tabla de comparación por categoría (CPU, RAM, GPU) y "Más barato" por tabla (Prompt 24).
 - [ ] Probar Guardados por categoría con sesión y guardados reales (Prompt 24).
 - [x] Marca Rigly: nombre, logos, favicon y placeholder (imágenes creadas con Gemini; Prompt 25).
+- [x] Política de privacidad y cookies con aviso de consentimiento (Prompt 26).
+- [ ] Probar Rechazar con una sesión de Google real (en la verificación se simuló la sesión) y revisar el texto de la política con alguien de la asignatura (Prompt 26).
 
 ---
 
