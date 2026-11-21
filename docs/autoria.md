@@ -712,7 +712,7 @@ Registro de los prompts usados con Claude (asistente de IA) durante el proyecto.
 - **Commits en `dev`** (diseño: `docs/superpowers/specs/2026-11-21-guardados-por-categoria-design.md`; plan: `docs/superpowers/plans/2026-11-21-guardados-por-categoria.md`):
   - `d7b1d06` y `555a357`: diseño y plan.
   - `107ccee`: lógica pura `groupByCategory` y `cheapestOf` (`frontend/src/lib/compare.ts`, con pruebas en `compare.test.ts`).
-  - El commit de esta entrada: una sección por categoría en `saved-page.tsx` (título con las traducciones del catálogo y la tabla de antes, sin la fila "Categoría").
+  - `b7e8678`: una sección por categoría en `saved-page.tsx` (título con las traducciones del catálogo y la tabla de antes, sin la fila "Categoría").
 
 **Decisiones propias:**
 - Una tabla por categoría, en el orden CPU, RAM, GPU.
