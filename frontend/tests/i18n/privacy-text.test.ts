@@ -1,6 +1,6 @@
 import { assert } from "jsr:@std/assert@1";
-import { es } from "./es.ts";
-import { en } from "./en.ts";
+import { es } from "../../src/i18n/es.ts";
+import { en } from "../../src/i18n/en.ts";
 
 // La política debe nombrar todo lo que de verdad se guarda (anti-objetivo del spec).
 Deno.test("la política menciona la foto de perfil de Google", () => {

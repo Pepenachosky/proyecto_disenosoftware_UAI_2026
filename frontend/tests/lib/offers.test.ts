@@ -12,7 +12,7 @@ import {
   type Group,
   type GroupWithOffers,
   type Offer,
-} from "./offers.ts";
+} from "../../src/lib/offers.ts";
 
 const now = new Date("2026-11-10T12:00:00Z");
 

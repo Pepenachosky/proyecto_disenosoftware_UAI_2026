@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { requestPosition } from "./user-location.ts";
+import { requestPosition } from "../../src/lib/user-location.ts";
 
 Deno.test("requestPosition sin geolocation", async () => {
   assertEquals(await requestPosition(undefined, 20), null);

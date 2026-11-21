@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { pickGroupImage } from "./group.ts";
+import { pickGroupImage } from "../group.ts";
 
 Deno.test("pickGroupImage: SP Digital antes que Winpy", () => {
   assertEquals(

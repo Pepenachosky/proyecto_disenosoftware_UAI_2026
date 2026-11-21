@@ -1,5 +1,5 @@
 import { assertEquals, assert } from "jsr:@std/assert@1";
-import { createNonce, sha256Hex } from "./nonce.ts";
+import { createNonce, sha256Hex } from "../../src/lib/nonce.ts";
 
 Deno.test("sha256Hex es el digest SHA-256 en hex minúsculas", async () => {
   assertEquals(

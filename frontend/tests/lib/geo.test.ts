@@ -1,5 +1,5 @@
 import { assertAlmostEquals, assertEquals } from "jsr:@std/assert@1";
-import { distanceKm, formatKm } from "./geo.ts";
+import { distanceKm, formatKm } from "../../src/lib/geo.ts";
 
 Deno.test("distanceKm entre Plaza de Armas y Plaza Ñuñoa ≈ 5,4 km", () => {
   const d = distanceKm(

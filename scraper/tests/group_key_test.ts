@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { groupKey } from "./group_key.ts";
+import { groupKey } from "../group_key.ts";
 
 const key = (n: string, c: "cpu" | "gpu" | "ram") => groupKey(n, c)?.key;
 

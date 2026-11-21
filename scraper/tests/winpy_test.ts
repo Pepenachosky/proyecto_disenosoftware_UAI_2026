@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { fullImageUrl, parseListing } from "./winpy.ts";
+import { fullImageUrl, parseListing } from "../winpy.ts";
 
 Deno.test("Winpy: fullImageUrl quita tumb_ y resuelve contra el dominio", () => {
   assertEquals(

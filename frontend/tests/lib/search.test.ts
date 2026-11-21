@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { matchesQuery, normalize } from "./search.ts";
+import { matchesQuery, normalize } from "../../src/lib/search.ts";
 
 Deno.test("normalize", () => {
   assertEquals(normalize("Núcleos"), "nucleos");

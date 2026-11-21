@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { parseListing } from "./spdigital.ts";
+import { parseListing } from "../spdigital.ts";
 
 // Arma un JSON mínimo de categoría con un solo item (slug y nombre válidos).
 function listing(extra: Record<string, unknown>): string {
