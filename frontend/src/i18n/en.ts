@@ -69,7 +69,6 @@ export const en: Messages = {
     empty: "You haven't saved any products yet",
     feature: "Feature",
     remove: "Remove {{name}}",
-    category: "Category",
     bestPrice: "Best price",
     cheapestStore: "Cheapest store",
     soldOut: "Out of stock",

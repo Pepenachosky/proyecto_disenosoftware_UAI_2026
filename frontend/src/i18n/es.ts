@@ -67,7 +67,6 @@ export const es = {
     empty: "Aún no guardas productos",
     feature: "Característica",
     remove: "Quitar {{name}}",
-    category: "Categoría",
     bestPrice: "Mejor precio",
     cheapestStore: "Tienda más barata",
     soldOut: "Agotado",
