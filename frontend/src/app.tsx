@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import { ConsentProvider } from "./consent";
 import { AuthProvider } from "./auth";
 import { LanguageProvider } from "./language";
 import { SavedProvider } from "./saved";
@@ -13,21 +14,23 @@ import "./app.css";
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <LanguageProvider>
-          <SavedProvider>
-            <LocationProvider>
-              <NavBar />
-              <Routes>
-                <Route path="/" element={<Catalog />} />
-                <Route path="/producto/:slug" element={<ProductPage />} />
-                <Route path="/guardados" element={<SavedPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </LocationProvider>
-          </SavedProvider>
-        </LanguageProvider>
-      </AuthProvider>
+      <ConsentProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <SavedProvider>
+              <LocationProvider>
+                <NavBar />
+                <Routes>
+                  <Route path="/" element={<Catalog />} />
+                  <Route path="/producto/:slug" element={<ProductPage />} />
+                  <Route path="/guardados" element={<SavedPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </LocationProvider>
+            </SavedProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </ConsentProvider>
     </BrowserRouter>
   );
 }
